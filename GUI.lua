@@ -2,7 +2,26 @@ local _, Bagger = ...
 
 Bagger.G = {}
 
+local ITEM_FRAME_POOL_COUNT = 200
+local HEADER_FRAME_POOL_COUNT = 20
 local LIST_ITEM_HEIGHT = 32
+
+local InactiveItemFrames = {}
+local InactiveHeaderFrames = {}
+local ActiveItemFrames = {}
+local ActiveHeaderFrames = {}
+
+function Bagger.G.InitializeFramePools()
+    for i = 1, ITEM_FRAME_POOL_COUNT do
+        local frame = Bagger.G.CreateItemFramePlaceholder()
+        table.insert(InactiveItemFrames, frame)
+    end
+
+    for i = 1, HEADER_FRAME_POOL_COUNT do
+        local frame = Bagger.G.CreateCategoryHeaderPlaceholder()
+        table.insert(InactiveHeaderFrames, frame)
+    end
+end
 
 function Bagger.G.InitializeGUI()
     local f = CreateFrame("Frame", "Bagger", UIParent)
@@ -13,14 +32,14 @@ function Bagger.G.InitializeGUI()
     f:SetResizable(true)
     f:SetResizeBounds(600, 396, 600, 2000)
 
-    f.texture = f:CreateTexture(nil,"BACKGROUND")
+    f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.5)
 
     -- Frame Header
     -- TODO: Close Button, Bag View, Switch to "WoW mode", Gold View
     local header = CreateFrame("Frame", nil, f)
-    header:SetSize(f:GetWidth()-2, 32)
+    header:SetSize(f:GetWidth() - 2, 32)
     header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     header:EnableMouse(true)
 
@@ -79,23 +98,16 @@ function Bagger.G.InitializeGUI()
     scroller:SetScrollChild(scrollChild)
     scrollChild:SetSize(scroller:GetWidth(), 1)
 
-    f.listView = scrollChild
+    f.ListView = scrollChild
     f:Hide()
 
     table.insert(UISpecialFrames, f:GetName())
 
     Bagger.View = f
 
-        -- listView should have (200?) frames we can recycle
-        for i = 1, 200 do
-            local phFrame = Bagger.G.CreateItemFramePlaceholder(f.listView)
-            phFrame:SetPoint("TOP", 0, -((i-1)*LIST_ITEM_HEIGHT))
-            phFrame:Hide()
-        end
-
----@diagnostic disable-next-line: undefined-global
+    ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
----@diagnostic disable-next-line: undefined-global
+        ---@diagnostic disable-next-line: undefined-global
         ConsolePort:AddInterfaceCursorFrame(Bagger.View)
     end
 end
@@ -107,26 +119,34 @@ function Bagger.G.UpdateView(type)
 
     Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
 
-    -- Hide what we're not going to use
-    for i = #Bagger.Session.Filtered, 200 do
-        local frame = select(i, Bagger.View.listView:GetChildren())
-        if frame ~= nil then
-            frame:Hide()
+    -- Cleanup
+    for i, frame in ipairs(ActiveItemFrames) do
+        if frame.isItem and frame.isItem == true then
+            frame:SetParent()
+            tinsert(InactiveItemFrames, frame)
+            tremove(ActiveItemFrames, i)
+        end
+
+        if frame.isHeader and frame.isHeader == true then
+            frame:SetParent()
+            tinsert(InactiveHeaderFrames, frame)
+            tremove(ActiveHeaderFrames, i)
         end
     end
 
-    for index,item in ipairs(Bagger.Session.Filtered) do
+    -- Build
+    for index, item in ipairs(Bagger.Session.Filtered) do
         Bagger.G.BuildItemFrame(item, index)
     end
 end
 
 -- Items
-function Bagger.G.CreateItemFramePlaceholder(parent)
+function Bagger.G.CreateItemFramePlaceholder()
+    local f = CreateFrame("Button")
+    f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
 
-    local f = CreateFrame("Button", nil, parent)
-    f:SetSize(Bagger.View.listView:GetWidth(), LIST_ITEM_HEIGHT)
-
-    f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    f:RegisterForClicks("LeftButtonUp")
+    f:RegisterForClicks("RightButtonUp")
     f:RegisterForDrag("LeftButton")
 
     f:HookScript("OnLeave", function()
@@ -136,28 +156,28 @@ function Bagger.G.CreateItemFramePlaceholder(parent)
     -- Icon
     local icon = CreateFrame("Frame", nil, f)
     icon:SetPoint("LEFT", f, "LEFT")
-    icon:SetSize(Bagger.Settings.Defaults.Columns.ICON, parent:GetHeight())
+    icon:SetSize(Bagger.Settings.Defaults.Columns.ICON, LIST_ITEM_HEIGHT)
     local iconTexture = icon:CreateTexture(nil, "ARTWORK")
     iconTexture:SetSize(24, 24)
     iconTexture:SetPoint("CENTER", icon, "CENTER")
-    
+
     f.icon = iconTexture
 
     -- Name
     local name = CreateFrame("Frame", nil, f)
     name:SetPoint("LEFT", icon, "RIGHT", 8, 0)
-    name:SetHeight(parent:GetHeight())
+    name:SetHeight(LIST_ITEM_HEIGHT)
     name:SetWidth(Bagger.Settings.Defaults.Columns.NAME)
     local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     nameText:SetAllPoints(name)
     nameText:SetJustifyH("LEFT")
-    
+
     f.name = nameText
 
     -- type
     local type = CreateFrame("Frame", nil, f)
     type:SetPoint("LEFT", name, "RIGHT")
-    type:SetHeight(parent:GetHeight())
+    type:SetHeight(LIST_ITEM_HEIGHT)
     type:SetWidth(Bagger.Settings.Defaults.Columns.CATEGORY)
 
     local typeTex = type:CreateTexture(nil, "ARTWORK")
@@ -166,20 +186,10 @@ function Bagger.G.CreateItemFramePlaceholder(parent)
 
     f.type = typeTex
 
-    -- TODO:DECIDE >>> subType (Could be useful for trinkets / rings / neck?) 
-    -- local subType = CreateFrame("Frame", nil, parent)
-    -- subType:SetPoint("LEFT", type, "RIGHT")
-    -- subType:SetHeight(parent:GetHeight())
-    -- subType:SetWidth(80)
-    -- local subTypeText = subType:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    -- subTypeText:SetAllPoints(subType)
-    -- subTypeText:SetJustifyH("CENTER")
-    -- subTypeText:SetText(item.subType)
-
     -- ilvl
     local ilvl = CreateFrame("Frame", nil, f)
     ilvl:SetPoint("LEFT", type, "RIGHT")
-    ilvl:SetHeight(parent:GetHeight())
+    ilvl:SetHeight(LIST_ITEM_HEIGHT)
     ilvl:SetWidth(Bagger.Settings.Defaults.Columns.ILVL)
     local ilvlText = ilvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     ilvlText:SetAllPoints(ilvl)
@@ -190,7 +200,7 @@ function Bagger.G.CreateItemFramePlaceholder(parent)
     -- reqlvl
     local reqlvl = CreateFrame("Frame", nil, f)
     reqlvl:SetPoint("LEFT", ilvl, "RIGHT")
-    reqlvl:SetHeight(parent:GetHeight())
+    reqlvl:SetHeight(LIST_ITEM_HEIGHT)
     reqlvl:SetWidth(Bagger.Settings.Defaults.Columns.REQLVL)
     local reqlvlText = reqlvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     reqlvlText:SetAllPoints(reqlvl)
@@ -201,7 +211,7 @@ function Bagger.G.CreateItemFramePlaceholder(parent)
     -- value
     local value = CreateFrame("Frame", nil, f)
     value:SetPoint("LEFT", reqlvl, "RIGHT")
-    value:SetHeight(parent:GetHeight())
+    value:SetHeight(LIST_ITEM_HEIGHT)
     value:SetWidth(Bagger.Settings.Defaults.Columns.VALUE)
     local valueText = value:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     valueText:SetAllPoints(value)
@@ -209,13 +219,53 @@ function Bagger.G.CreateItemFramePlaceholder(parent)
 
     f.value = valueText
 
+    f.isItem = true
+
     return f
 end
 
+function Bagger.G.CreateCategoryHeaderPlaceholder()
+    local f = CreateFrame("Button")
+    f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
+
+    f:RegisterForClicks("LeftButtonUp")
+
+        -- type
+        local type = CreateFrame("Frame", nil, f)
+        type:SetPoint("LEFT", f, "LEFT", 8, 0)
+        type:SetHeight(LIST_ITEM_HEIGHT)
+        type:SetWidth(Bagger.Settings.Defaults.Columns.CATEGORY)
+
+        local typeTex = type:CreateTexture(nil, "ARTWORK")
+        typeTex:SetPoint("CENTER", type, "CENTER")
+        typeTex:SetSize(24, 24)
+
+        f.type = typeTex
+
+        -- Name
+        local name = CreateFrame("Frame", nil, f)
+        name:SetPoint("LEFT", type, "RIGHT", 8, 0)
+        name:SetHeight(LIST_ITEM_HEIGHT)
+        name:SetWidth(Bagger.Settings.Defaults.Columns.NAME)
+        local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        nameText:SetAllPoints(name)
+        nameText:SetJustifyH("LEFT")
+    
+        f.name = nameText
+
+        f.isHeader = true
+
+        return f
+end
+
 function Bagger.G.BuildItemFrame(item, index)
-    local frame = select(index, Bagger.View.listView:GetChildren())
+    local frame = InactiveItemFrames[1]
+    tremove(ActiveItemFrames, 1)
     if frame == nil then return end
 
+    frame:SetPoint("TOP", 0, -((index-1)*LIST_ITEM_HEIGHT))
+    frame:SetParent(Bagger.View.ListView)
+    
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     frame:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
     frame:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
@@ -295,7 +345,6 @@ end
 
 -- Filtering
 function Bagger.G.BuildFilterFrame(parent)
-
     local cFrame = CreateFrame("Frame", nil, parent)
     cFrame:SetSize(parent:GetWidth(), 32)
     cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
@@ -305,7 +354,7 @@ function Bagger.G.BuildFilterFrame(parent)
     all:SetPoint("LEFT", cFrame, "LEFT", 10, 0)
     all:SetText("ALL")
     all:SetScript("OnClick", function()
-         Bagger.G.UpdateView()
+        Bagger.G.UpdateView()
     end)
     all:RegisterForClicks("AnyDown", "AnyUp")
 
@@ -345,23 +394,22 @@ function Bagger.G.BuildHeaderFrame(parent)
 
     -- rarity
     local icon = Bagger.G.BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.ICON,
-    Bagger.E.SORT_FIELDS.ICON, true)
+        Bagger.E.SORT_FIELDS.ICON, true)
 
     local name = Bagger.G.BuildSortButton(hFrame, icon, "NAME", Bagger.Settings.Defaults.Columns.NAME,
-    Bagger.E.SORT_FIELDS.NAME, false)
+        Bagger.E.SORT_FIELDS.NAME, false)
 
     local category = Bagger.G.BuildSortButton(hFrame, name, "CAT", Bagger.Settings.Defaults.Columns.CATEGORY,
-    Bagger.E.SORT_FIELDS.CATEGORY, false)
+        Bagger.E.SORT_FIELDS.CATEGORY, false)
 
     local ilvl = Bagger.G.BuildSortButton(hFrame, category, "ILVL", Bagger.Settings.Defaults.Columns.ILVL,
-    Bagger.E.SORT_FIELDS.ILVL, false)
+        Bagger.E.SORT_FIELDS.ILVL, false)
 
     local reqlvl = Bagger.G.BuildSortButton(hFrame, ilvl, "REQ", Bagger.Settings.Defaults.Columns.REQLVL,
-    Bagger.E.SORT_FIELDS.REQLVL, false)
+        Bagger.E.SORT_FIELDS.REQLVL, false)
 
     local value = Bagger.G.BuildSortButton(hFrame, reqlvl, "VALUE", Bagger.Settings.Defaults.Columns.VALUE,
-    Bagger.E.SORT_FIELDS.VALUE, false)
-
+        Bagger.E.SORT_FIELDS.VALUE, false)
 end
 
 function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initial)
@@ -461,21 +509,21 @@ function Bagger.G.BuildHeaderAdjuster(parent, anchor)
 end
 
 -- Utils
-Bagger.G.CreateBorder =  function(self)
+Bagger.G.CreateBorder = function(self)
     if not self.borders then
         self.borders = {}
-        for i=1, 4 do
+        for i = 1, 4 do
             self.borders[i] = self:CreateLine(nil, "BACKGROUND", nil, 0)
             local l = self.borders[i]
             l:SetThickness(1)
             l:SetColorTexture(0, 0, 0, 1)
-            if i==1 then
+            if i == 1 then
                 l:SetStartPoint("TOPLEFT")
                 l:SetEndPoint("TOPRIGHT")
-            elseif i==2 then
+            elseif i == 2 then
                 l:SetStartPoint("TOPRIGHT")
                 l:SetEndPoint("BOTTOMRIGHT")
-            elseif i==3 then
+            elseif i == 3 then
                 l:SetStartPoint("BOTTOMRIGHT")
                 l:SetEndPoint("BOTTOMLEFT")
             else
