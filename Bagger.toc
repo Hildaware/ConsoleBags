@@ -1,0 +1,13 @@
+## Interface: 100200
+## Title: Bagger
+## Notes: List Mode for Items
+## Authors: Sel
+## Version: 1
+## SavedVariables: BaggerData
+
+GUI.lua
+DataTypes.lua
+Resolver.lua
+Utils.lua
+Enums.lua
+Bagger.lua
