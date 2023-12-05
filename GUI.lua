@@ -105,6 +105,8 @@ function Bagger.G.InitializeGUI()
 
     Bagger.View = f
 
+    Bagger.G.InitializeFramePools()
+
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
         ---@diagnostic disable-next-line: undefined-global
@@ -116,19 +118,22 @@ function Bagger.G.UpdateView(type)
     if Bagger.View == nil then return end
 
     Bagger.GatherItems(type)
-
     Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
 
     -- Cleanup
-    for i, frame in ipairs(ActiveItemFrames) do
-        if frame.isItem and frame.isItem == true then
-            frame:SetParent()
-            tinsert(InactiveItemFrames, frame)
-            tremove(ActiveItemFrames, i)
+    for i = 1, #ActiveItemFrames do
+        if ActiveItemFrames[i] and ActiveItemFrames[i].isItem then
+            ActiveItemFrames[i]:SetParent(nil)
+            ActiveItemFrames[i]:Hide()
+            Bagger.G.InsertInactiveItemFrame(ActiveItemFrames[i])
+            Bagger.G.RemoveActiveItemFrame(i)
         end
+    end
 
+    for i, frame in ipairs(ActiveHeaderFrames) do
         if frame.isHeader and frame.isHeader == true then
-            frame:SetParent()
+            frame:Hide()
+            frame:SetParent(nil)
             tinsert(InactiveHeaderFrames, frame)
             tremove(ActiveHeaderFrames, i)
         end
@@ -259,12 +264,13 @@ function Bagger.G.CreateCategoryHeaderPlaceholder()
 end
 
 function Bagger.G.BuildItemFrame(item, index)
-    local frame = InactiveItemFrames[1]
-    tremove(ActiveItemFrames, 1)
+    local frame = Bagger.G.FetchInactiveItemFrame(1)
+    Bagger.G.InsertActiveFrame(frame)
+
     if frame == nil then return end
 
-    frame:SetPoint("TOP", 0, -((index-1)*LIST_ITEM_HEIGHT))
     frame:SetParent(Bagger.View.ListView)
+    frame:SetPoint("TOP", 0, -((index-1)*LIST_ITEM_HEIGHT))
     
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     frame:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
@@ -279,7 +285,6 @@ function Bagger.G.BuildItemFrame(item, index)
         frame:GetNormalTexture():SetVertexColor(0, 0, 0, 0)
     end
 
-    -- frame.stack:SetText(tostring(item.stackCount))
     frame.icon:SetTexture(item.texture)
 
     local stackString = (item.stackCount and item.stackCount > 1) and "(" .. item.stackCount .. ")" or nil
@@ -288,6 +293,7 @@ function Bagger.G.BuildItemFrame(item, index)
         nameString = nameString .. " " .. stackString
     end
     frame.name:SetText(nameString)
+
     -- Color
     frame.name:SetTextColor(r, g, b)
 
@@ -448,7 +454,8 @@ function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initia
             end
         end
 
-        Bagger.SortItems(sortField, sortOrder)
+        Bagger.Settings.SortField.Field = sortField
+        Bagger.Settings.SortField.Sort = sortOrder
 
         if Bagger.Settings.SortField.Sort ~= Bagger.E.SORT_ORDER.DESC then
             arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
@@ -532,4 +539,22 @@ Bagger.G.CreateBorder = function(self)
             end
         end
     end
+end
+
+Bagger.G.RemoveActiveItemFrame = function(index)
+    ActiveItemFrames[index] = nil
+end
+
+Bagger.G.InsertActiveFrame = function(frame)
+    tinsert(ActiveItemFrames, frame)
+end
+
+Bagger.G.InsertInactiveItemFrame = function(frame)
+    tinsert(InactiveItemFrames, frame)
+end
+
+Bagger.G.FetchInactiveItemFrame = function(index)
+    local frame = InactiveItemFrames[1]
+    tremove(InactiveItemFrames, 1)
+    return frame
 end

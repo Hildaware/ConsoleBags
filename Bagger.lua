@@ -107,80 +107,79 @@ end
 function Bagger.SortItems(type, order)
     if type == Bagger.E.SORT_FIELDS.COUNT then
         table.sort(Bagger.Session.Filtered,
-        function(a, b)
-            if a.isNew == true then return true end
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.stackCount > b.stackCount
-            else
-                return a.stackCount < b.stackCount
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.stackCount > b.stackCount
+                else
+                    return a.stackCount < b.stackCount
+                end
+            end)
     end
 
     if type == Bagger.E.SORT_FIELDS.NAME then
         table.sort(Bagger.Session.Filtered,
-                function(a, b)
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.name < b.name
-            else
-                return a.name > b.name
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.name < b.name
+                else
+                    return a.name > b.name
+                end
+            end)
     end
 
     if type == Bagger.E.SORT_FIELDS.ICON then
         table.sort(Bagger.Session.Filtered,
-        function(a, b)
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.quality > b.quality
-            else
-                return a.quality < b.quality
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.quality > b.quality
+                else
+                    return a.quality < b.quality
+                end
+            end)
     end
 
     if type == Bagger.E.SORT_FIELDS.CATEGORY then
         table.sort(Bagger.Session.Filtered,
-        function(a, b)
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.type > b.type
-            else
-                return a.type < b.type
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.type > b.type
+                else
+                    return a.type < b.type
+                end
+            end)
     end
 
     if type == Bagger.E.SORT_FIELDS.ILVL then
         table.sort(Bagger.Session.Filtered,
-        function(a, b)
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.ilvl > b.ilvl
-            else
-                return a.ilvl < b.ilvl
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.ilvl > b.ilvl
+                else
+                    return a.ilvl < b.ilvl
+                end
+            end)
     end
 
     if type == Bagger.E.SORT_FIELDS.REQLVL then
         table.sort(Bagger.Session.Filtered,
-        function(a, b)
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.reqLvl > b.reqLvl
-            else
-                return a.reqLvl < b.reqLvl
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.reqLvl > b.reqLvl
+                else
+                    return a.reqLvl < b.reqLvl
+                end
+            end)
     end
 
     if type == Bagger.E.SORT_FIELDS.VALUE then
         table.sort(Bagger.Session.Filtered,
-        function(a, b)
-            if order == Bagger.E.SORT_ORDER.DESC then
-                return a.value > b.value
-            else
-                return a.value < b.value
-            end
-        end)
+            function(a, b)
+                if order == Bagger.E.SORT_ORDER.DESC then
+                    return a.value > b.value
+                else
+                    return a.value < b.value
+                end
+            end)
     end
 
     -- Always put new on top
@@ -223,16 +222,7 @@ function Bagger.G.Show()
 
     if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not Bagger.View:IsShown() then
 
-        if Bagger.Session.InitialView then
-            Bagger.Session.InitialView = false
-            local items = Bagger.GatherItems()
-            -- TODO: Sorting on these items
-            for index,item in ipairs(items) do
-                Bagger.G.BuildItemFrame(item, index)
-            end
-        else
-            Bagger.G.UpdateView()
-        end
+        Bagger.G.UpdateView()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
         Bagger.View:Show()

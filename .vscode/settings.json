@@ -250,7 +250,8 @@
         "ARMOR",
         "ALL",
         "CATEGORY",
-        "ContainerFrameItemButtonMixin"
+        "ContainerFrameItemButtonMixin",
+        "toString"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
