@@ -12,6 +12,16 @@ Bagger.U.GetCategoyIcon = function(classId)
     local className = Bagger.U.GetItemClass(classId)
     local path = "Interface\\Addons\\Bagger\\Media\\Categories\\"
 
+    -- Custom Categories
+    if className == nil then
+        for key, value in pairs(Bagger.E.CustomCategory) do
+            if value == classId then
+                className = key
+                break
+            end
+        end
+    end
+
     if className == nil then return nil end
     return path .. className
 end

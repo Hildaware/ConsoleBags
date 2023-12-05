@@ -10,9 +10,12 @@ local InactiveItemFrames = {}
 local InactiveHeaderFrames = {}
 local ActiveItemFrames = {}
 local ActiveHeaderFrames = {}
+local InactiveFilterFrames = {}
+local ActiveFilterFrames = {}
 
 local CollapsedCategories = {}
 
+-- TODO: Instead of doing this, create them when we need them, THEN fetch from pools
 function Bagger.G.InitializeFramePools()
     for i = 1, ITEM_FRAME_POOL_COUNT do
         local frame = Bagger.G.CreateItemFramePlaceholder()
@@ -23,16 +26,21 @@ function Bagger.G.InitializeFramePools()
         local frame = Bagger.G.CreateCategoryHeaderPlaceholder()
         table.insert(InactiveHeaderFrames, frame)
     end
+
+    for i = 1, 25 do
+        local frame = Bagger.G.CreateFilterButtonPlaceholder()
+        table.insert(InactiveFilterFrames, frame)
+    end
 end
 
 function Bagger.G.InitializeGUI()
     local f = CreateFrame("Frame", "Bagger", UIParent)
-    f:SetSize(600, 396)
+    f:SetSize(632, 396)
     f:SetPoint("CENTER", 0, 0)
     f:SetMovable(true)
     f:EnableMouse(true)
     f:SetResizable(true)
-    f:SetResizeBounds(600, 396, 600, 2000)
+    f:SetResizeBounds(632, 396, 632, 2000)
 
     f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetAllPoints(f)
@@ -90,7 +98,7 @@ function Bagger.G.InitializeGUI()
     Bagger.G.BuildHeaderFrame(f)
 
     local scroller = CreateFrame("ScrollFrame", "BaggerScrollView", f, "UIPanelScrollFrameTemplate")
-    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 4, -98)
+    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
     scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
     scroller:SetWidth(f:GetWidth())
 
@@ -139,6 +147,15 @@ function Bagger.G.UpdateView(type)
         end
     end
 
+    if type == nil then
+        for i = 1, #ActiveFilterFrames do
+            ActiveFilterFrames[i]:Hide()
+            ActiveFilterFrames[i]:SetParent(nil)
+            tinsert(InactiveFilterFrames, ActiveFilterFrames[i])
+            ActiveFilterFrames[i] = nil
+        end
+    end
+
     local categorizedItems = Bagger.U.BuildCategoriesTable()
     for _, cat in pairs(categorizedItems) do
         cat.items = {}
@@ -183,15 +200,20 @@ function Bagger.G.UpdateView(type)
         orderedCategories[value.order].key = key
     end
 
-    local catIndex = 1
+    local row = 1
+    local catIndex = 2
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, catIndex)
+            Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, row)
+            if type == nil then
+                Bagger.G.BuildFilterButton(categoryData.key, catIndex)
+            end
             catIndex = catIndex + 1
+            row = row + 1
             if CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    Bagger.G.BuildItemFrame(item, catIndex)
-                    catIndex = catIndex + 1
+                    Bagger.G.BuildItemFrame(item, row)
+                    row = row + 1
                 end
             end
         end
@@ -432,47 +454,80 @@ function Bagger.G.BuildCategoryFrame(categoryName, count, categoryType, index)
 end
 
 -- Filtering
+function Bagger.G.CreateFilterButtonPlaceholder()
+    local f = CreateFrame("Button")
+    f:SetSize(32, 32)
+
+    local tex = f:CreateTexture(nil, "ARTWORK")
+    tex:SetPoint("CENTER", 0, "CENTER")
+    tex:SetSize(24, 24)
+
+    f.texture = tex
+    -- tex:SetTexture(Bagger.U.GetCategoyIcon(categoryType) or Bagger.U.GetCategoyIcon(1))
+
+    -- f:SetScript("OnClick", function()
+    --     Bagger.G.UpdateView(categoryType)
+    --     print("Filtering...")
+    -- end)
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
+
+    return f
+end
+
 function Bagger.G.BuildFilterFrame(parent)
     local cFrame = CreateFrame("Frame", nil, parent)
-    cFrame:SetSize(parent:GetWidth(), 32)
+    cFrame:SetSize(32, parent:GetHeight())
     cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
 
-    local all = CreateFrame("Button", nil, cFrame, "UIPanelButtonTemplate")
-    all:SetSize(32, 32)
-    all:SetPoint("LEFT", cFrame, "LEFT", 10, 0)
-    all:SetText("ALL")
-    all:SetScript("OnClick", function()
+    local tex = cFrame:CreateTexture(nil, "BACKGROUND")
+    tex:SetAllPoints(cFrame)
+    tex:SetColorTexture(0, 0, 0, 0.25)
+
+    parent.FilterFrame = cFrame
+
+    -- All
+    local f = CreateFrame("Button", nil, cFrame)
+    f:SetSize(32, 32)
+    f:SetPoint("TOP", cFrame, "TOP", 0, -32)
+
+    local aTex = f:CreateTexture(nil, "ARTWORK")
+    aTex:SetPoint("CENTER", 0, "CENTER")
+    aTex:SetSize(24, 24)
+    aTex:SetTexture(Bagger.U.GetCategoyIcon(1))
+
+    f:SetScript("OnClick", function()
         Bagger.G.UpdateView()
+        print("Filtering...")
     end)
-    all:RegisterForClicks("AnyDown")
-    all:RegisterForClicks("AnyUp")
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
+end
 
-    local weapons = CreateFrame("Button", nil, cFrame, "UIPanelButtonTemplate")
-    weapons:SetSize(32, 32)
-    weapons:SetPoint("LEFT", all, "RIGHT", 10, 0)
-    weapons:SetText("WEAP")
-    weapons:SetScript("OnClick", function()
-        Bagger.G.UpdateView(Enum.ItemClass.Weapon)
-    end)
-    weapons:RegisterForClicks("AnyDown")
-    weapons:RegisterForClicks("AnyUp")
+function Bagger.G.BuildFilterButton(categoryType, index)
+    local f = InactiveFilterFrames[1]
+    if f == nil then return end
+    tremove(InactiveFilterFrames, 1)
+    tinsert(ActiveFilterFrames, f)
 
-    local armor = CreateFrame("Button", nil, cFrame, "UIPanelButtonTemplate")
-    armor:SetSize(32, 32)
-    armor:SetPoint("LEFT", weapons, "RIGHT", 10, 0)
-    armor:SetText("ARM")
-    armor:SetScript("OnClick", function()
-        Bagger.G.UpdateView(Enum.ItemClass.Armor)
+    f:SetParent(Bagger.View.FilterFrame)
+    f:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+
+    f.texture:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
+
+    f:SetScript("OnClick", function()
+        Bagger.G.UpdateView(categoryType)
+        print("Filtering...")
     end)
-    armor:RegisterForClicks("AnyDown")
-    armor:RegisterForClicks("AnyUp")
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
 end
 
 -- Sorting
 function Bagger.G.BuildHeaderFrame(parent)
     local hFrame = CreateFrame("Frame", nil, parent)
-    hFrame:SetSize(parent:GetWidth(), 32)
-    hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -64)
+    hFrame:SetSize(parent:GetWidth() - 32, 32)
+    hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 32, -32)
 
     hFrame.fields = {}
 
@@ -480,10 +535,6 @@ function Bagger.G.BuildHeaderFrame(parent)
     tex:SetAllPoints(hFrame)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
-    -- local stackCount = Bagger.G.BuildSortButton(hFrame, hFrame, "#", Bagger.Settings.Defaults.Columns.COUNT,
-    -- Bagger.E.SortFields.COUNT, true)
-
-    -- rarity
     local icon = Bagger.G.BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.Icon,
         Bagger.E.SortFields.Icon, true)
 
