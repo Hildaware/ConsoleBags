@@ -5,7 +5,7 @@
 ## Version: 1
 ## SavedVariables: BaggerData
 
-GUI.lua
+GUI/GUI.xml
 DataTypes.lua
 Resolver.lua
 Utils.lua

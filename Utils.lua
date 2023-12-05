@@ -2,7 +2,7 @@ local _, Bagger = ...
 Bagger.U = {}
 
 Bagger.U.GetItemClass = function(classId)
-    for i,v in pairs(Enum.ItemClass) do
+    for i, v in pairs(Enum.ItemClass) do
         if classId == v then return i end
     end
     return nil
@@ -16,6 +16,55 @@ Bagger.U.GetCategoyIcon = function(classId)
     return path .. className
 end
 
+Bagger.U.IsEquipmentUnbound = function(item)
+    if item.bound == true then return false end
+    if not item.type then return false end
+
+    if item.type == Enum.ItemClass.Armor or item.type == Enum.ItemClass.Weapon then
+        return true
+    end
+    return false
+end
+
+Bagger.U.IsJewelry = function(item)
+    if item.equipLocation == nil then return false end
+    if item.equipLocation == Enum.InventoryType.IndexNeckType or item.equipLocation == Enum.InventoryType.IndexFingerType then
+        return true
+    end
+    return false
+end
+
+Bagger.U.IsTrinket = function(item)
+    if item.equipLocation == nil then return false end
+    if item.equipLocation == Enum.InventoryType.IndexTrinketType then
+        return true
+    end
+    return false
+end
+
+Bagger.U.CopyTable = function(table)
+    local orig_type = type(table)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in pairs(table) do
+            copy[orig_key] = orig_value
+        end
+    else
+        copy = table
+    end
+    return copy
+end
+
+Bagger.U.BuildCategoriesTable = function()
+    local table = Bagger.U.CopyTable(Bagger.E.Categories)
+    for _, value in ipairs(table) do
+        value.items = {}
+        value.count = 0
+    end
+
+    return table
+end
 
 -- Bag Killing
 local killableFramesParent = CreateFrame("FRAME", nil, UIParent)
@@ -40,7 +89,7 @@ function Bagger.U.MakeBlizzBagsKillable()
             KillFramePermanently(_G["ContainerFrameCombinedBags"])
         end
         for i = 1, NUM_CONTAINER_FRAMES do
-            KillFramePermanently(_G["ContainerFrame"..i])
+            KillFramePermanently(_G["ContainerFrame" .. i])
         end
         KillFramePermanently(_G["BankFrame"])
     else
@@ -48,7 +97,7 @@ function Bagger.U.MakeBlizzBagsKillable()
             MakeFrameKillable(_G["ContainerFrameCombinedBags"])
         end
         for i = 1, NUM_CONTAINER_FRAMES do
-            MakeFrameKillable(_G["ContainerFrame"..i])
+            MakeFrameKillable(_G["ContainerFrame" .. i])
         end
         MakeFrameKillable(_G["BankFrame"])
     end

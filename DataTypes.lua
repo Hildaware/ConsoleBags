@@ -2,7 +2,7 @@ local _, Bagger = ...
 Bagger.T = {}
 
 local Item = {}
-Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew)
+Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
     local self = {}
     self.id = containerItem.itemId
     self.name = containerItem.itemName
@@ -12,7 +12,7 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew)
     self.quality = containerItem.quality
     self.type = itemInfo.type
     self.subType = itemInfo.subType
-    self.equipLocation = itemInfo.equipLocation
+    self.equipLocation = invType
     self.texture = itemInfo.texture
     self.value = itemInfo.sellPrice or 0
     self.ilvl = ilvl or 0

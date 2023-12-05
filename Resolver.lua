@@ -7,13 +7,13 @@ Bagger.R.GetContainerItemInfo = function(bagId, slotId)
 end
 
 Bagger.R.GetItemInfo = function(link)
-    local name, _, rarity, _, reqLvl, type, subType, stackCount, equipLocation, texture, sellPrice, classId, subClassId, _, xpacId = GetItemInfo(link)
+    local name, _, rarity, _, reqLvl, type, subType, stackCount, _, texture, sellPrice, classId, subClassId, _, xpacId =
+        GetItemInfo(link)
     return {
         rarity = rarity,
         type = classId,
         subType = subClassId,
         stackCount = stackCount,
-        equipLocation = equipLocation,
         texture = texture,
         sellPrice = sellPrice,
         xpacId = xpacId,
@@ -24,4 +24,8 @@ end
 Bagger.R.GetEffectiveItemLevel = function(link)
     local ilvl = GetDetailedItemLevelInfo(link)
     return ilvl
+end
+
+Bagger.R.GetInventoryType = function(link)
+    return C_Item.GetItemInventoryTypeByID(link)
 end

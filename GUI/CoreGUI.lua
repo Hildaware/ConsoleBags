@@ -11,6 +11,8 @@ local InactiveHeaderFrames = {}
 local ActiveItemFrames = {}
 local ActiveHeaderFrames = {}
 
+local CollapsedCategories = {}
+
 function Bagger.G.InitializeFramePools()
     for i = 1, ITEM_FRAME_POOL_COUNT do
         local frame = Bagger.G.CreateItemFramePlaceholder()
@@ -60,11 +62,9 @@ function Bagger.G.InitializeGUI()
     header:RegisterForDrag("LeftButton")
     header:SetScript("OnDragStart", function(self, button)
         self:GetParent():StartMoving()
-        print("OnDragStart", button)
     end)
     header:SetScript("OnDragStop", function(self)
         self:GetParent():StopMovingOrSizing()
-        print("OnDragStop")
     end)
 
     -- Drag Bar
@@ -139,35 +139,60 @@ function Bagger.G.UpdateView(type)
         end
     end
 
-    -- TODO: PERF
-    local categorizedItems = {}
-    for _, value in pairs(Enum.ItemClass) do
-        categorizedItems[value] = {}
+    local categorizedItems = Bagger.U.BuildCategoriesTable()
+    for _, cat in pairs(categorizedItems) do
+        cat.items = {}
+        cat.count = 0
     end
-
-    -- Custom categories
-        -- BoE
-        -- BoA?
-        -- Jewelry
-        -- Trinkets
 
     -- Build
     for _, item in ipairs(Bagger.Session.Filtered) do
         local iCategory = item.type
-        if iCategory ~= nil then
-            tinsert(categorizedItems[iCategory], item)
+
+        if item.quality and item.quality == Enum.ItemQuality.Heirloom then -- BoA
+            tinsert(categorizedItems[Bagger.E.CustomCategory.BindOnAccount].items, item)
+            categorizedItems[Bagger.E.CustomCategory.BindOnAccount].count =
+                categorizedItems[Bagger.E.CustomCategory.BindOnAccount].count + 1
+        elseif Bagger.U.IsEquipmentUnbound(item) then -- BoE
+            tinsert(categorizedItems[Bagger.E.CustomCategory.BindOnEquip].items, item)
+            categorizedItems[Bagger.E.CustomCategory.BindOnEquip].count =
+                categorizedItems[Bagger.E.CustomCategory.BindOnEquip].count + 1
+        elseif Bagger.U.IsJewelry(item) then -- Jewelry
+            tinsert(categorizedItems[Bagger.E.CustomCategory.Jewelry].items, item)
+            categorizedItems[Bagger.E.CustomCategory.Jewelry].count =
+                categorizedItems[Bagger.E.CustomCategory.Jewelry].count + 1
+        elseif Bagger.U.IsTrinket(item) then -- Trinkets
+            tinsert(categorizedItems[Bagger.E.CustomCategory.Trinkets].items, item)
+            categorizedItems[Bagger.E.CustomCategory.Trinkets].count =
+                categorizedItems[Bagger.E.CustomCategory.Trinkets].count + 1
+        elseif iCategory ~= nil then
+            tinsert(categorizedItems[iCategory].items, item)
+            categorizedItems[iCategory].count =
+                categorizedItems[iCategory].count + 1
+        else
+            tinsert(categorizedItems[Enum.ItemClass.Miscellaneous].items, item)
+            categorizedItems[Enum.ItemClass.Miscellaneous].count =
+                categorizedItems[Enum.ItemClass.Miscellaneous].count + 1
         end
-        -- Bagger.G.BuildItemFrame(item, index)
+    end
+
+    -- Categorize
+    local orderedCategories = {}
+    for key, value in pairs(categorizedItems) do
+        orderedCategories[value.order] = value
+        orderedCategories[value.order].key = key
     end
 
     local catIndex = 1
-    for category, items in pairs(categorizedItems) do
-        if items and #items > 0 then
-            Bagger.G.BuildCategoryFrame(category, catIndex)
-            catIndex = catIndex+1
-            for _, item in ipairs(items) do
-                Bagger.G.BuildItemFrame(item, catIndex)
-                catIndex = catIndex+1
+    for _, categoryData in ipairs(orderedCategories) do
+        if #categoryData.items > 0 then
+            Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, catIndex)
+            catIndex = catIndex + 1
+            if CollapsedCategories[categoryData.key] ~= true then
+                for _, item in ipairs(categoryData.items) do
+                    Bagger.G.BuildItemFrame(item, catIndex)
+                    catIndex = catIndex + 1
+                end
             end
         end
     end
@@ -189,7 +214,7 @@ function Bagger.G.CreateItemFramePlaceholder()
     -- Icon
     local icon = CreateFrame("Frame", nil, f)
     icon:SetPoint("LEFT", f, "LEFT")
-    icon:SetSize(Bagger.Settings.Defaults.Columns.ICON, LIST_ITEM_HEIGHT)
+    icon:SetSize(Bagger.Settings.Defaults.Columns.Icon, LIST_ITEM_HEIGHT)
     local iconTexture = icon:CreateTexture(nil, "ARTWORK")
     iconTexture:SetSize(24, 24)
     iconTexture:SetPoint("CENTER", icon, "CENTER")
@@ -200,7 +225,7 @@ function Bagger.G.CreateItemFramePlaceholder()
     local name = CreateFrame("Frame", nil, f)
     name:SetPoint("LEFT", icon, "RIGHT", 8, 0)
     name:SetHeight(LIST_ITEM_HEIGHT)
-    name:SetWidth(Bagger.Settings.Defaults.Columns.NAME)
+    name:SetWidth(Bagger.Settings.Defaults.Columns.Name)
     local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     nameText:SetAllPoints(name)
     nameText:SetJustifyH("LEFT")
@@ -211,7 +236,7 @@ function Bagger.G.CreateItemFramePlaceholder()
     local type = CreateFrame("Frame", nil, f)
     type:SetPoint("LEFT", name, "RIGHT")
     type:SetHeight(LIST_ITEM_HEIGHT)
-    type:SetWidth(Bagger.Settings.Defaults.Columns.CATEGORY)
+    type:SetWidth(Bagger.Settings.Defaults.Columns.Category)
 
     local typeTex = type:CreateTexture(nil, "ARTWORK")
     typeTex:SetPoint("CENTER", type, "CENTER")
@@ -223,7 +248,7 @@ function Bagger.G.CreateItemFramePlaceholder()
     local ilvl = CreateFrame("Frame", nil, f)
     ilvl:SetPoint("LEFT", type, "RIGHT")
     ilvl:SetHeight(LIST_ITEM_HEIGHT)
-    ilvl:SetWidth(Bagger.Settings.Defaults.Columns.ILVL)
+    ilvl:SetWidth(Bagger.Settings.Defaults.Columns.Ilvl)
     local ilvlText = ilvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     ilvlText:SetAllPoints(ilvl)
     ilvlText:SetJustifyH("CENTER")
@@ -234,7 +259,7 @@ function Bagger.G.CreateItemFramePlaceholder()
     local reqlvl = CreateFrame("Frame", nil, f)
     reqlvl:SetPoint("LEFT", ilvl, "RIGHT")
     reqlvl:SetHeight(LIST_ITEM_HEIGHT)
-    reqlvl:SetWidth(Bagger.Settings.Defaults.Columns.REQLVL)
+    reqlvl:SetWidth(Bagger.Settings.Defaults.Columns.ReqLvl)
     local reqlvlText = reqlvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     reqlvlText:SetAllPoints(reqlvl)
     reqlvlText:SetJustifyH("CENTER")
@@ -245,7 +270,7 @@ function Bagger.G.CreateItemFramePlaceholder()
     local value = CreateFrame("Frame", nil, f)
     value:SetPoint("LEFT", reqlvl, "RIGHT")
     value:SetHeight(LIST_ITEM_HEIGHT)
-    value:SetWidth(Bagger.Settings.Defaults.Columns.VALUE)
+    value:SetWidth(Bagger.Settings.Defaults.Columns.Value)
     local valueText = value:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     valueText:SetAllPoints(value)
     valueText:SetJustifyH("RIGHT")
@@ -298,8 +323,8 @@ function Bagger.G.BuildItemFrame(item, index)
     if frame == nil then return end
 
     frame:SetParent(Bagger.View.ListView)
-    frame:SetPoint("TOP", 0, -((index-1)*LIST_ITEM_HEIGHT))
-    
+    frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
+
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     frame:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
     frame:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
@@ -374,20 +399,34 @@ function Bagger.G.BuildItemFrame(item, index)
         C_Container.PickupContainerItem(item.bag, item.slot)
     end)
 
+    frame.index = index
+
     frame:Show()
 end
 
-function Bagger.G.BuildCategoryFrame(category, index)
+function Bagger.G.BuildCategoryFrame(categoryName, count, categoryType, index)
     local frame = Bagger.G.FetchInactiveHeaderFrame(1)
     Bagger.G.InsertActiveHeaderFrame(frame)
 
     if frame == nil then return end
 
     frame:SetParent(Bagger.View.ListView)
-    frame:SetPoint("TOP", 0, -((index-1)*LIST_ITEM_HEIGHT))
+    frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
 
-    frame.type:SetTexture(Bagger.U.GetCategoyIcon(category))
-    frame.name:SetText(Bagger.U.GetItemClass(category))
+    frame.type:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
+    frame.name:SetText(categoryName .. " (" .. count .. ")")
+
+    frame:SetScript("OnClick", function(self, button, down)
+        if button == "LeftButton" then
+            local isCollapsed = CollapsedCategories[categoryType] and CollapsedCategories[categoryType] == true
+            if isCollapsed then
+                CollapsedCategories[categoryType] = false
+            else
+                CollapsedCategories[categoryType] = true
+            end
+            Bagger.G.UpdateView()
+        end
+    end)
 
     frame:Show()
 end
@@ -405,7 +444,8 @@ function Bagger.G.BuildFilterFrame(parent)
     all:SetScript("OnClick", function()
         Bagger.G.UpdateView()
     end)
-    all:RegisterForClicks("AnyDown", "AnyUp")
+    all:RegisterForClicks("AnyDown")
+    all:RegisterForClicks("AnyUp")
 
     local weapons = CreateFrame("Button", nil, cFrame, "UIPanelButtonTemplate")
     weapons:SetSize(32, 32)
@@ -414,7 +454,8 @@ function Bagger.G.BuildFilterFrame(parent)
     weapons:SetScript("OnClick", function()
         Bagger.G.UpdateView(Enum.ItemClass.Weapon)
     end)
-    weapons:RegisterForClicks("AnyDown", "AnyUp")
+    weapons:RegisterForClicks("AnyDown")
+    weapons:RegisterForClicks("AnyUp")
 
     local armor = CreateFrame("Button", nil, cFrame, "UIPanelButtonTemplate")
     armor:SetSize(32, 32)
@@ -423,7 +464,8 @@ function Bagger.G.BuildFilterFrame(parent)
     armor:SetScript("OnClick", function()
         Bagger.G.UpdateView(Enum.ItemClass.Armor)
     end)
-    armor:RegisterForClicks("AnyDown", "AnyUp")
+    armor:RegisterForClicks("AnyDown")
+    armor:RegisterForClicks("AnyUp")
 end
 
 -- Sorting
@@ -439,26 +481,26 @@ function Bagger.G.BuildHeaderFrame(parent)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
     -- local stackCount = Bagger.G.BuildSortButton(hFrame, hFrame, "#", Bagger.Settings.Defaults.Columns.COUNT,
-    -- Bagger.E.SORT_FIELDS.COUNT, true)
+    -- Bagger.E.SortFields.COUNT, true)
 
     -- rarity
-    local icon = Bagger.G.BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.ICON,
-        Bagger.E.SORT_FIELDS.ICON, true)
+    local icon = Bagger.G.BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.Icon,
+        Bagger.E.SortFields.Icon, true)
 
-    local name = Bagger.G.BuildSortButton(hFrame, icon, "NAME", Bagger.Settings.Defaults.Columns.NAME,
-        Bagger.E.SORT_FIELDS.NAME, false)
+    local name = Bagger.G.BuildSortButton(hFrame, icon, "Name", Bagger.Settings.Defaults.Columns.Name,
+        Bagger.E.SortFields.Name, false)
 
-    local category = Bagger.G.BuildSortButton(hFrame, name, "CAT", Bagger.Settings.Defaults.Columns.CATEGORY,
-        Bagger.E.SORT_FIELDS.CATEGORY, false)
+    local category = Bagger.G.BuildSortButton(hFrame, name, "CAT", Bagger.Settings.Defaults.Columns.Category,
+        Bagger.E.SortFields.Category, false)
 
-    local ilvl = Bagger.G.BuildSortButton(hFrame, category, "ILVL", Bagger.Settings.Defaults.Columns.ILVL,
-        Bagger.E.SORT_FIELDS.ILVL, false)
+    local ilvl = Bagger.G.BuildSortButton(hFrame, category, "Ilvl", Bagger.Settings.Defaults.Columns.Ilvl,
+        Bagger.E.SortFields.Ilvl, false)
 
-    local reqlvl = Bagger.G.BuildSortButton(hFrame, ilvl, "REQ", Bagger.Settings.Defaults.Columns.REQLVL,
-        Bagger.E.SORT_FIELDS.REQLVL, false)
+    local reqlvl = Bagger.G.BuildSortButton(hFrame, ilvl, "REQ", Bagger.Settings.Defaults.Columns.ReqLvl,
+        Bagger.E.SortFields.ReqLvl, false)
 
-    local value = Bagger.G.BuildSortButton(hFrame, reqlvl, "VALUE", Bagger.Settings.Defaults.Columns.VALUE,
-        Bagger.E.SORT_FIELDS.VALUE, false)
+    local value = Bagger.G.BuildSortButton(hFrame, reqlvl, "Value", Bagger.Settings.Defaults.Columns.Value,
+        Bagger.E.SortFields.Value, false)
 end
 
 function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initial)
@@ -477,7 +519,7 @@ function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initia
     arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
     arrow:SetSize(8, 14)
 
-    if Bagger.Settings.SortField.Sort == Bagger.E.SORT_ORDER.DESC then
+    if Bagger.Settings.SortField.Sort == Bagger.E.SortOrder.Desc then
         arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
     else
         arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Down")
@@ -490,17 +532,17 @@ function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initia
     frame:SetScript("OnClick", function()
         local sortOrder = Bagger.Settings.SortField.Sort
         if Bagger.Settings.SortField.Field == sortField then
-            if sortOrder == Bagger.E.SORT_ORDER.ASC then
-                sortOrder = Bagger.E.SORT_ORDER.DESC
+            if sortOrder == Bagger.E.SortOrder.Asc then
+                sortOrder = Bagger.E.SortOrder.Desc
             else
-                sortOrder = Bagger.E.SORT_ORDER.ASC
+                sortOrder = Bagger.E.SortOrder.Asc
             end
         end
 
         Bagger.Settings.SortField.Field = sortField
         Bagger.Settings.SortField.Sort = sortOrder
 
-        if Bagger.Settings.SortField.Sort ~= Bagger.E.SORT_ORDER.DESC then
+        if Bagger.Settings.SortField.Sort ~= Bagger.E.SortOrder.Desc then
             arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
         else
             arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Down")
@@ -510,7 +552,7 @@ function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initia
         text:SetTextColor(1, 1, 0)
 
         -- Remove other arrows
-        for _, k in pairs(Bagger.E.SORT_FIELDS) do
+        for _, k in pairs(Bagger.E.SortFields) do
             if k ~= sortField then
                 parent.fields[k].arrow:Hide()
                 parent.fields[k].text:SetTextColor(1, 1, 1)

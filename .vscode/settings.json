@@ -247,7 +247,7 @@
         "CALENDAR_STATUS_NOT_SIGNEDUP",
         "CALENDAR_STATUS_TENTATIVE",
         "class",
-        "ARMOR",
+        "Armor",
         "ALL",
         "CATEGORY",
         "ContainerFrameItemButtonMixin",
