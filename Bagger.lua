@@ -88,6 +88,11 @@ function Bagger.GatherItems(type)
                 local invType = Bagger.R.GetInventoryType(containerItem.hyperlink)
                 local isNew = C_NewItems.IsNewItem(bag, slot)
 
+                if containerItem.hyperlink == nil then
+                    Bagger.GatherItems(type)
+                    return
+                end
+
                 -- Create Item
                 local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
                 if (type and item.type == type) or not type then

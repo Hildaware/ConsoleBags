@@ -7,7 +7,7 @@ Bagger.R.GetContainerItemInfo = function(bagId, slotId)
 end
 
 Bagger.R.GetItemInfo = function(link)
-    local name, _, rarity, _, reqLvl, type, subType, stackCount, _, texture, sellPrice, classId, subClassId, _, xpacId =
+    local _, _, rarity, _, reqLvl, _, _, stackCount, _, texture, sellPrice, classId, subClassId, _, xpacId =
         GetItemInfo(link)
     return {
         rarity = rarity,

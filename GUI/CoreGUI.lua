@@ -2,37 +2,6 @@ local _, Bagger = ...
 
 Bagger.G = {}
 
-local ITEM_FRAME_POOL_COUNT = 200
-local HEADER_FRAME_POOL_COUNT = 20
-local LIST_ITEM_HEIGHT = 32
-
-local InactiveItemFrames = {}
-local InactiveHeaderFrames = {}
-local ActiveItemFrames = {}
-local ActiveHeaderFrames = {}
-local InactiveFilterFrames = {}
-local ActiveFilterFrames = {}
-
-local CollapsedCategories = {}
-
--- TODO: Instead of doing this, create them when we need them, THEN fetch from pools
-function Bagger.G.InitializeFramePools()
-    for i = 1, ITEM_FRAME_POOL_COUNT do
-        local frame = Bagger.G.CreateItemFramePlaceholder()
-        table.insert(InactiveItemFrames, frame)
-    end
-
-    for i = 1, HEADER_FRAME_POOL_COUNT do
-        local frame = Bagger.G.CreateCategoryHeaderPlaceholder()
-        table.insert(InactiveHeaderFrames, frame)
-    end
-
-    for i = 1, 25 do
-        local frame = Bagger.G.CreateFilterButtonPlaceholder()
-        table.insert(InactiveFilterFrames, frame)
-    end
-end
-
 function Bagger.G.InitializeGUI()
     local f = CreateFrame("Frame", "Bagger", UIParent)
     f:SetSize(632, 396)
@@ -47,7 +16,7 @@ function Bagger.G.InitializeGUI()
     f.texture:SetColorTexture(0, 0, 0, 0.5)
 
     -- Frame Header
-    -- TODO: Close Button, Bag View, Switch to "WoW mode", Gold View
+    -- TODO: Bag View, Switch to "WoW mode", Gold View
     local header = CreateFrame("Frame", nil, f)
     header:SetSize(f:GetWidth() - 2, 32)
     header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
@@ -89,13 +58,13 @@ function Bagger.G.InitializeGUI()
     dragTex:SetAllPoints(drag)
     dragTex:SetColorTexture(0.5, 0.5, 0.5, 1)
 
-    Bagger.G.CreateBorder(f)
+    CreateBorder(f)
 
     -- Filters
-    Bagger.G.BuildFilterFrame(f)
+    BuildFilteringContainer(f)
 
     -- 'Header'
-    Bagger.G.BuildHeaderFrame(f)
+    BuildListViewHeader(f)
 
     local scroller = CreateFrame("ScrollFrame", "BaggerScrollView", f, "UIPanelScrollFrameTemplate")
     scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
@@ -113,8 +82,6 @@ function Bagger.G.InitializeGUI()
 
     Bagger.View = f
 
-    Bagger.G.InitializeFramePools()
-
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
         ---@diagnostic disable-next-line: undefined-global
@@ -129,32 +96,9 @@ function Bagger.G.UpdateView(type)
     Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
 
     -- Cleanup
-    for i = 1, #ActiveItemFrames do
-        if ActiveItemFrames[i] and ActiveItemFrames[i].isItem then
-            ActiveItemFrames[i]:SetParent(nil)
-            ActiveItemFrames[i]:Hide()
-            Bagger.G.InsertInactiveItemFrame(ActiveItemFrames[i])
-            Bagger.G.RemoveActiveItemFrame(i)
-        end
-    end
-
-    for i = 1, #ActiveHeaderFrames do
-        if ActiveHeaderFrames[i] and ActiveHeaderFrames[i].isHeader then
-            ActiveHeaderFrames[i]:Hide()
-            ActiveHeaderFrames[i]:SetParent(nil)
-            tinsert(InactiveHeaderFrames, ActiveHeaderFrames[i])
-            ActiveHeaderFrames[i] = nil
-        end
-    end
-
-    if type == nil then
-        for i = 1, #ActiveFilterFrames do
-            ActiveFilterFrames[i]:Hide()
-            ActiveFilterFrames[i]:SetParent(nil)
-            tinsert(InactiveFilterFrames, ActiveFilterFrames[i])
-            ActiveFilterFrames[i] = nil
-        end
-    end
+    Bagger.G.CleanupItemFrames()
+    Bagger.G.CleanupCategoryHeaderFrames()
+    Bagger.G.CleanupFilterFrames()
 
     local categorizedItems = Bagger.U.BuildCategoriesTable()
     for _, cat in pairs(categorizedItems) do
@@ -210,7 +154,7 @@ function Bagger.G.UpdateView(type)
             end
             catIndex = catIndex + 1
             row = row + 1
-            if CollapsedCategories[categoryData.key] ~= true then
+            if Bagger.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
                     Bagger.G.BuildItemFrame(item, row)
                     row = row + 1
@@ -220,262 +164,7 @@ function Bagger.G.UpdateView(type)
     end
 end
 
--- Items
-function Bagger.G.CreateItemFramePlaceholder()
-    local f = CreateFrame("Button")
-    f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
-
-    f:RegisterForClicks("LeftButtonUp")
-    f:RegisterForClicks("RightButtonUp")
-    f:RegisterForDrag("LeftButton")
-
-    f:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-
-    -- Icon
-    local icon = CreateFrame("Frame", nil, f)
-    icon:SetPoint("LEFT", f, "LEFT")
-    icon:SetSize(Bagger.Settings.Defaults.Columns.Icon, LIST_ITEM_HEIGHT)
-    local iconTexture = icon:CreateTexture(nil, "ARTWORK")
-    iconTexture:SetSize(24, 24)
-    iconTexture:SetPoint("CENTER", icon, "CENTER")
-
-    f.icon = iconTexture
-
-    -- Name
-    local name = CreateFrame("Frame", nil, f)
-    name:SetPoint("LEFT", icon, "RIGHT", 8, 0)
-    name:SetHeight(LIST_ITEM_HEIGHT)
-    name:SetWidth(Bagger.Settings.Defaults.Columns.Name)
-    local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    nameText:SetAllPoints(name)
-    nameText:SetJustifyH("LEFT")
-
-    f.name = nameText
-
-    -- type
-    local type = CreateFrame("Frame", nil, f)
-    type:SetPoint("LEFT", name, "RIGHT")
-    type:SetHeight(LIST_ITEM_HEIGHT)
-    type:SetWidth(Bagger.Settings.Defaults.Columns.Category)
-
-    local typeTex = type:CreateTexture(nil, "ARTWORK")
-    typeTex:SetPoint("CENTER", type, "CENTER")
-    typeTex:SetSize(24, 24)
-
-    f.type = typeTex
-
-    -- ilvl
-    local ilvl = CreateFrame("Frame", nil, f)
-    ilvl:SetPoint("LEFT", type, "RIGHT")
-    ilvl:SetHeight(LIST_ITEM_HEIGHT)
-    ilvl:SetWidth(Bagger.Settings.Defaults.Columns.Ilvl)
-    local ilvlText = ilvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    ilvlText:SetAllPoints(ilvl)
-    ilvlText:SetJustifyH("CENTER")
-
-    f.ilvl = ilvlText
-
-    -- reqlvl
-    local reqlvl = CreateFrame("Frame", nil, f)
-    reqlvl:SetPoint("LEFT", ilvl, "RIGHT")
-    reqlvl:SetHeight(LIST_ITEM_HEIGHT)
-    reqlvl:SetWidth(Bagger.Settings.Defaults.Columns.ReqLvl)
-    local reqlvlText = reqlvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    reqlvlText:SetAllPoints(reqlvl)
-    reqlvlText:SetJustifyH("CENTER")
-
-    f.reqlvl = reqlvlText
-
-    -- value
-    local value = CreateFrame("Frame", nil, f)
-    value:SetPoint("LEFT", reqlvl, "RIGHT")
-    value:SetHeight(LIST_ITEM_HEIGHT)
-    value:SetWidth(Bagger.Settings.Defaults.Columns.Value)
-    local valueText = value:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    valueText:SetAllPoints(value)
-    valueText:SetJustifyH("RIGHT")
-
-    f.value = valueText
-
-    f.isItem = true
-
-    return f
-end
-
-function Bagger.G.CreateCategoryHeaderPlaceholder()
-    local f = CreateFrame("Button")
-    f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
-
-    f:RegisterForClicks("LeftButtonUp")
-
-    -- type
-    local type = CreateFrame("Frame", nil, f)
-    type:SetPoint("LEFT", f, "LEFT", 8, 0)
-    type:SetHeight(LIST_ITEM_HEIGHT)
-    type:SetWidth(32)
-
-    local typeTex = type:CreateTexture(nil, "ARTWORK")
-    typeTex:SetPoint("CENTER", type, "CENTER")
-    typeTex:SetSize(24, 24)
-
-    f.type = typeTex
-
-    -- Name
-    local name = CreateFrame("Frame", nil, f)
-    name:SetPoint("LEFT", type, "RIGHT", 8, 0)
-    name:SetHeight(LIST_ITEM_HEIGHT)
-    name:SetWidth(300)
-    local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    nameText:SetAllPoints(name)
-    nameText:SetJustifyH("LEFT")
-
-    f.name = nameText
-
-    f.isHeader = true
-
-    return f
-end
-
-function Bagger.G.BuildItemFrame(item, index)
-    local frame = Bagger.G.FetchInactiveItemFrame(1)
-    Bagger.G.InsertActiveItemFrame(frame)
-
-    if frame == nil then return end
-
-    frame:SetParent(Bagger.View.ListView)
-    frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
-
-    local r, g, b, _ = GetItemQualityColor(item.quality or 0)
-    frame:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
-    frame:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
-    frame:GetHighlightTexture():SetVertexColor(r, g, b, 1)
-
-    if item.isNew == true then
-        frame:SetNormalTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
-        frame:GetNormalTexture():SetVertexColor(1, 1, 0, 1)
-    else
-        frame:SetNormalTexture("")
-        frame:GetNormalTexture():SetVertexColor(0, 0, 0, 0)
-    end
-
-    frame.icon:SetTexture(item.texture)
-
-    local stackString = (item.stackCount and item.stackCount > 1) and "(" .. item.stackCount .. ")" or nil
-    local nameString = item.name
-    if stackString then
-        nameString = nameString .. " " .. stackString
-    end
-    frame.name:SetText(nameString)
-
-    -- Color
-    frame.name:SetTextColor(r, g, b)
-
-    frame.type:SetTexture(Bagger.U.GetCategoyIcon(item.type))
-
-    if item.type == Enum.ItemClass.Armor or item.type == Enum.ItemClass.Weapon then
-        frame.ilvl:SetText(item.ilvl)
-    else
-        frame.ilvl:SetText("")
-    end
-
-    if item.reqLvl and item.reqLvl > 1 then
-        frame.reqlvl:SetText(item.reqLvl)
-    else
-        frame.reqlvl:SetText("")
-    end
-
-    if item.value and item.value > 1 then
-        frame.value:SetText(GetCoinTextureString(item.value))
-    else
-        frame.value:SetText("")
-    end
-
-    frame:SetScript("OnEnter", function(self)
-        -- This is pretty jank, but it fixes a specific issue with ConsolePort
-        self.GetBagID = function() return item.bag end
-        self.GetID = function() return item.slot end
-        self.GetSlotAndBagID = ContainerFrameItemButtonMixin.GetSlotAndBagID
-
-        if item.isNew == true then
-            C_NewItems.RemoveNewItem(item.bag, item.slot)
-        end
-
-        frame:SetNormalTexture("")
-        frame:GetNormalTexture():SetVertexColor(0, 0, 0, 0)
-
-        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
-        GameTooltip:SetBagItem(item.bag, item.slot)
-        GameTooltip:Show()
-    end)
-
-    frame:SetScript("OnClick", function(self, button, down)
-        if button == "LeftButton" then
-            C_Container.PickupContainerItem(item.bag, item.slot)
-        else
-            C_Container.UseContainerItem(item.bag, item.slot)
-        end
-    end)
-    frame:SetScript("OnDragStart", function(self)
-        C_Container.PickupContainerItem(item.bag, item.slot)
-    end)
-
-    frame.index = index
-
-    frame:Show()
-end
-
-function Bagger.G.BuildCategoryFrame(categoryName, count, categoryType, index)
-    local frame = Bagger.G.FetchInactiveHeaderFrame(1)
-    Bagger.G.InsertActiveHeaderFrame(frame)
-
-    if frame == nil then return end
-
-    frame:SetParent(Bagger.View.ListView)
-    frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
-
-    frame.type:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
-    frame.name:SetText(categoryName .. " (" .. count .. ")")
-
-    frame:SetScript("OnClick", function(self, button, down)
-        if button == "LeftButton" then
-            local isCollapsed = CollapsedCategories[categoryType] and CollapsedCategories[categoryType] == true
-            if isCollapsed then
-                CollapsedCategories[categoryType] = false
-            else
-                CollapsedCategories[categoryType] = true
-            end
-            Bagger.G.UpdateView()
-        end
-    end)
-
-    frame:Show()
-end
-
--- Filtering
-function Bagger.G.CreateFilterButtonPlaceholder()
-    local f = CreateFrame("Button")
-    f:SetSize(32, 32)
-
-    local tex = f:CreateTexture(nil, "ARTWORK")
-    tex:SetPoint("CENTER", 0, "CENTER")
-    tex:SetSize(24, 24)
-
-    f.texture = tex
-    -- tex:SetTexture(Bagger.U.GetCategoyIcon(categoryType) or Bagger.U.GetCategoyIcon(1))
-
-    -- f:SetScript("OnClick", function()
-    --     Bagger.G.UpdateView(categoryType)
-    --     print("Filtering...")
-    -- end)
-    f:RegisterForClicks("AnyDown")
-    f:RegisterForClicks("AnyUp")
-
-    return f
-end
-
-function Bagger.G.BuildFilterFrame(parent)
+function BuildFilteringContainer(parent)
     local cFrame = CreateFrame("Frame", nil, parent)
     cFrame:SetSize(32, parent:GetHeight())
     cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
@@ -498,33 +187,12 @@ function Bagger.G.BuildFilterFrame(parent)
 
     f:SetScript("OnClick", function()
         Bagger.G.UpdateView()
-        print("Filtering...")
     end)
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
 end
 
-function Bagger.G.BuildFilterButton(categoryType, index)
-    local f = InactiveFilterFrames[1]
-    if f == nil then return end
-    tremove(InactiveFilterFrames, 1)
-    tinsert(ActiveFilterFrames, f)
-
-    f:SetParent(Bagger.View.FilterFrame)
-    f:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
-
-    f.texture:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
-
-    f:SetScript("OnClick", function()
-        Bagger.G.UpdateView(categoryType)
-        print("Filtering...")
-    end)
-    f:RegisterForClicks("AnyDown")
-    f:RegisterForClicks("AnyUp")
-end
-
--- Sorting
-function Bagger.G.BuildHeaderFrame(parent)
+function BuildListViewHeader(parent)
     local hFrame = CreateFrame("Frame", nil, parent)
     hFrame:SetSize(parent:GetWidth() - 32, 32)
     hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 32, -32)
@@ -535,26 +203,26 @@ function Bagger.G.BuildHeaderFrame(parent)
     tex:SetAllPoints(hFrame)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
-    local icon = Bagger.G.BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.Icon,
+    local icon = BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.Icon,
         Bagger.E.SortFields.Icon, true)
 
-    local name = Bagger.G.BuildSortButton(hFrame, icon, "Name", Bagger.Settings.Defaults.Columns.Name,
+    local name = BuildSortButton(hFrame, icon, "NAME", Bagger.Settings.Defaults.Columns.Name,
         Bagger.E.SortFields.Name, false)
 
-    local category = Bagger.G.BuildSortButton(hFrame, name, "CAT", Bagger.Settings.Defaults.Columns.Category,
+    local category = BuildSortButton(hFrame, name, "CAT", Bagger.Settings.Defaults.Columns.Category,
         Bagger.E.SortFields.Category, false)
 
-    local ilvl = Bagger.G.BuildSortButton(hFrame, category, "Ilvl", Bagger.Settings.Defaults.Columns.Ilvl,
+    local ilvl = BuildSortButton(hFrame, category, "ILVL", Bagger.Settings.Defaults.Columns.Ilvl,
         Bagger.E.SortFields.Ilvl, false)
 
-    local reqlvl = Bagger.G.BuildSortButton(hFrame, ilvl, "REQ", Bagger.Settings.Defaults.Columns.ReqLvl,
+    local reqlvl = BuildSortButton(hFrame, ilvl, "REQ", Bagger.Settings.Defaults.Columns.ReqLvl,
         Bagger.E.SortFields.ReqLvl, false)
 
-    local value = Bagger.G.BuildSortButton(hFrame, reqlvl, "Value", Bagger.Settings.Defaults.Columns.Value,
+    local value = BuildSortButton(hFrame, reqlvl, "VALUE", Bagger.Settings.Defaults.Columns.Value,
         Bagger.E.SortFields.Value, false)
 end
 
-function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initial)
+function BuildSortButton(parent, anchor, name, width, sortField, initial)
     local frame = CreateFrame("Button", nil, parent)
     frame:SetSize(width, parent:GetHeight())
     frame:SetPoint("LEFT", anchor, initial and "LEFT" or "RIGHT", initial and 10 or 0, 0)
@@ -620,8 +288,8 @@ function Bagger.G.BuildSortButton(parent, anchor, name, width, sortField, initia
     return frame
 end
 
--- TODO: Get this working
-function Bagger.G.BuildHeaderAdjuster(parent, anchor)
+-- TODO: Eventually get this working for adjustable columns
+function BuildHeaderAdjuster(parent, anchor)
     local frame = CreateFrame("Button", nil, parent)
     frame:SetMovable(true)
     frame:RegisterForDrag("LeftButton")
@@ -652,7 +320,7 @@ function Bagger.G.BuildHeaderAdjuster(parent, anchor)
 end
 
 -- Utils
-Bagger.G.CreateBorder = function(self)
+function CreateBorder(self)
     if not self.borders then
         self.borders = {}
         for i = 1, 4 do
@@ -675,40 +343,4 @@ Bagger.G.CreateBorder = function(self)
             end
         end
     end
-end
-
-Bagger.G.RemoveActiveItemFrame = function(index)
-    ActiveItemFrames[index] = nil
-end
-
-Bagger.G.InsertActiveItemFrame = function(frame)
-    tinsert(ActiveItemFrames, frame)
-end
-
-Bagger.G.InsertInactiveItemFrame = function(frame)
-    tinsert(InactiveItemFrames, frame)
-end
-
-Bagger.G.FetchInactiveItemFrame = function(index)
-    local frame = InactiveItemFrames[1]
-    tremove(InactiveItemFrames, 1)
-    return frame
-end
-
-Bagger.G.RemoveActiveHeaderFrame = function(index)
-    ActiveHeaderFrames[index] = nil
-end
-
-Bagger.G.InsertActiveHeaderFrame = function(frame)
-    tinsert(ActiveHeaderFrames, frame)
-end
-
-Bagger.G.InsertInactiveHeaderFrame = function(frame)
-    tinsert(InactiveHeaderFrames, frame)
-end
-
-Bagger.G.FetchInactiveHeaderFrame = function(index)
-    local frame = InactiveHeaderFrames[1]
-    tremove(InactiveHeaderFrames, 1)
-    return frame
 end
