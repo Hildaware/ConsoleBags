@@ -130,18 +130,46 @@ function Bagger.G.UpdateView(type)
         end
     end
 
-    for i, frame in ipairs(ActiveHeaderFrames) do
-        if frame.isHeader and frame.isHeader == true then
-            frame:Hide()
-            frame:SetParent(nil)
-            tinsert(InactiveHeaderFrames, frame)
-            tremove(ActiveHeaderFrames, i)
+    for i = 1, #ActiveHeaderFrames do
+        if ActiveHeaderFrames[i] and ActiveHeaderFrames[i].isHeader then
+            ActiveHeaderFrames[i]:Hide()
+            ActiveHeaderFrames[i]:SetParent(nil)
+            tinsert(InactiveHeaderFrames, ActiveHeaderFrames[i])
+            ActiveHeaderFrames[i] = nil
         end
     end
 
+    -- TODO: PERF
+    local categorizedItems = {}
+    for _, value in pairs(Enum.ItemClass) do
+        categorizedItems[value] = {}
+    end
+
+    -- Custom categories
+        -- BoE
+        -- BoA?
+        -- Jewelry
+        -- Trinkets
+
     -- Build
-    for index, item in ipairs(Bagger.Session.Filtered) do
-        Bagger.G.BuildItemFrame(item, index)
+    for _, item in ipairs(Bagger.Session.Filtered) do
+        local iCategory = item.type
+        if iCategory ~= nil then
+            tinsert(categorizedItems[iCategory], item)
+        end
+        -- Bagger.G.BuildItemFrame(item, index)
+    end
+
+    local catIndex = 1
+    for category, items in pairs(categorizedItems) do
+        if items and #items > 0 then
+            Bagger.G.BuildCategoryFrame(category, catIndex)
+            catIndex = catIndex+1
+            for _, item in ipairs(items) do
+                Bagger.G.BuildItemFrame(item, catIndex)
+                catIndex = catIndex+1
+            end
+        end
     end
 end
 
@@ -235,37 +263,37 @@ function Bagger.G.CreateCategoryHeaderPlaceholder()
 
     f:RegisterForClicks("LeftButtonUp")
 
-        -- type
-        local type = CreateFrame("Frame", nil, f)
-        type:SetPoint("LEFT", f, "LEFT", 8, 0)
-        type:SetHeight(LIST_ITEM_HEIGHT)
-        type:SetWidth(Bagger.Settings.Defaults.Columns.CATEGORY)
+    -- type
+    local type = CreateFrame("Frame", nil, f)
+    type:SetPoint("LEFT", f, "LEFT", 8, 0)
+    type:SetHeight(LIST_ITEM_HEIGHT)
+    type:SetWidth(32)
 
-        local typeTex = type:CreateTexture(nil, "ARTWORK")
-        typeTex:SetPoint("CENTER", type, "CENTER")
-        typeTex:SetSize(24, 24)
+    local typeTex = type:CreateTexture(nil, "ARTWORK")
+    typeTex:SetPoint("CENTER", type, "CENTER")
+    typeTex:SetSize(24, 24)
 
-        f.type = typeTex
+    f.type = typeTex
 
-        -- Name
-        local name = CreateFrame("Frame", nil, f)
-        name:SetPoint("LEFT", type, "RIGHT", 8, 0)
-        name:SetHeight(LIST_ITEM_HEIGHT)
-        name:SetWidth(Bagger.Settings.Defaults.Columns.NAME)
-        local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-        nameText:SetAllPoints(name)
-        nameText:SetJustifyH("LEFT")
-    
-        f.name = nameText
+    -- Name
+    local name = CreateFrame("Frame", nil, f)
+    name:SetPoint("LEFT", type, "RIGHT", 8, 0)
+    name:SetHeight(LIST_ITEM_HEIGHT)
+    name:SetWidth(300)
+    local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    nameText:SetAllPoints(name)
+    nameText:SetJustifyH("LEFT")
 
-        f.isHeader = true
+    f.name = nameText
 
-        return f
+    f.isHeader = true
+
+    return f
 end
 
 function Bagger.G.BuildItemFrame(item, index)
     local frame = Bagger.G.FetchInactiveItemFrame(1)
-    Bagger.G.InsertActiveFrame(frame)
+    Bagger.G.InsertActiveItemFrame(frame)
 
     if frame == nil then return end
 
@@ -345,6 +373,21 @@ function Bagger.G.BuildItemFrame(item, index)
     frame:SetScript("OnDragStart", function(self)
         C_Container.PickupContainerItem(item.bag, item.slot)
     end)
+
+    frame:Show()
+end
+
+function Bagger.G.BuildCategoryFrame(category, index)
+    local frame = Bagger.G.FetchInactiveHeaderFrame(1)
+    Bagger.G.InsertActiveHeaderFrame(frame)
+
+    if frame == nil then return end
+
+    frame:SetParent(Bagger.View.ListView)
+    frame:SetPoint("TOP", 0, -((index-1)*LIST_ITEM_HEIGHT))
+
+    frame.type:SetTexture(Bagger.U.GetCategoyIcon(category))
+    frame.name:SetText(Bagger.U.GetItemClass(category))
 
     frame:Show()
 end
@@ -545,7 +588,7 @@ Bagger.G.RemoveActiveItemFrame = function(index)
     ActiveItemFrames[index] = nil
 end
 
-Bagger.G.InsertActiveFrame = function(frame)
+Bagger.G.InsertActiveItemFrame = function(frame)
     tinsert(ActiveItemFrames, frame)
 end
 
@@ -556,5 +599,23 @@ end
 Bagger.G.FetchInactiveItemFrame = function(index)
     local frame = InactiveItemFrames[1]
     tremove(InactiveItemFrames, 1)
+    return frame
+end
+
+Bagger.G.RemoveActiveHeaderFrame = function(index)
+    ActiveHeaderFrames[index] = nil
+end
+
+Bagger.G.InsertActiveHeaderFrame = function(frame)
+    tinsert(ActiveHeaderFrames, frame)
+end
+
+Bagger.G.InsertInactiveHeaderFrame = function(frame)
+    tinsert(InactiveHeaderFrames, frame)
+end
+
+Bagger.G.FetchInactiveHeaderFrame = function(index)
+    local frame = InactiveHeaderFrames[1]
+    tremove(InactiveHeaderFrames, 1)
     return frame
 end

@@ -18,3 +18,7 @@ TODO BEFORE PUB RELEASE
 - Money Display
 - Switch to 'WoW' view
 - Close Button
+
+
+Category Grouping
+- For this to work, we'll have to sort >>> then group
