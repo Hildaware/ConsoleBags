@@ -33,7 +33,7 @@ function Bagger.Init()
     -- }
 
     Bagger.Session = {
-        -- Items = {},
+        Items = {},
         Filtered = {},
         InitialView = true
     }
@@ -76,6 +76,7 @@ function Bagger.GatherItems(type)
     local numFreeSlots = 0
 
     local items = {}
+    local filteredItems = {}
     -- gather items in bag
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
@@ -96,15 +97,16 @@ function Bagger.GatherItems(type)
                 -- Create Item
                 local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
                 if (type and item.type == type) or not type then
-                    table.insert(items, item)
+                    table.insert(filteredItems, item)
                 end
+                table.insert(items, item)
             end
         end
     end
 
     -- Bagger.Data.Characters[playerIdentifier].Items = items
-    -- Bagger.Session.Items = items
-    Bagger.Session.Filtered = items
+    Bagger.Session.Items = items
+    Bagger.Session.Filtered = filteredItems
 
     return items
 end

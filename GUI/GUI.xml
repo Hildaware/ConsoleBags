@@ -3,4 +3,5 @@
     <Include file = "ItemFrame.lua" />
     <Include file = "CategoryHeaderFrame.lua" />
     <Include file = "FilterFrame.lua" />
+    <Include file = "BagContainer.lua" />
 </UI>

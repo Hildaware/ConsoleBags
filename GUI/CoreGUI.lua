@@ -44,6 +44,8 @@ function Bagger.G.InitializeGUI()
         self:GetParent():StopMovingOrSizing()
     end)
 
+    f.Header = header
+
     -- Drag Bar
     local drag = CreateFrame("Button", nil, f)
     drag:SetSize(40, 6)
@@ -82,6 +84,8 @@ function Bagger.G.InitializeGUI()
 
     Bagger.View = f
 
+    Bagger.G.CreateBagContainer()
+
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
         ---@diagnostic disable-next-line: undefined-global
@@ -92,8 +96,17 @@ end
 function Bagger.G.UpdateView(type)
     if Bagger.View == nil then return end
 
+    -- Update Item Counts
+    local max = 0
+    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+        local maxSlots = C_Container.GetContainerNumSlots(bag)
+        max = max + maxSlots
+    end
+
     Bagger.GatherItems(type)
     Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
+
+    Bagger.View.ItemCountText:SetText(#Bagger.Session.Items .. "/" .. max)
 
     -- Cleanup
     Bagger.G.CleanupItemFrames()
