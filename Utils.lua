@@ -67,13 +67,12 @@ Bagger.U.CopyTable = function(table)
 end
 
 Bagger.U.BuildCategoriesTable = function()
-    local table = Bagger.U.CopyTable(Bagger.E.Categories)
-    for _, value in ipairs(table) do
+    local t = Bagger.U.CopyTable(Bagger.E.Categories)
+    for _, value in pairs(t) do
         value.items = {}
         value.count = 0
     end
-
-    return table
+    return t
 end
 
 -- Bag Killing

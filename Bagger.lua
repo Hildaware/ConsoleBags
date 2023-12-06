@@ -96,7 +96,9 @@ function Bagger.GatherItems(type)
 
                 -- Create Item
                 local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
-                if (type and item.type == type) or not type then
+                if type and type > 90 then
+
+                elseif (type and item.type == type) or not type then
                     table.insert(filteredItems, item)
                 end
                 table.insert(items, item)

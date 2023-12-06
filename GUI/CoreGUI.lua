@@ -114,10 +114,6 @@ function Bagger.G.UpdateView(type)
     Bagger.G.CleanupFilterFrames()
 
     local categorizedItems = Bagger.U.BuildCategoriesTable()
-    for _, cat in pairs(categorizedItems) do
-        cat.items = {}
-        cat.count = 0
-    end
 
     -- Build
     for _, item in ipairs(Bagger.Session.Filtered) do
@@ -136,9 +132,9 @@ function Bagger.G.UpdateView(type)
             categorizedItems[Bagger.E.CustomCategory.Jewelry].count =
                 categorizedItems[Bagger.E.CustomCategory.Jewelry].count + 1
         elseif Bagger.U.IsTrinket(item) then -- Trinkets
-            tinsert(categorizedItems[Bagger.E.CustomCategory.Trinkets].items, item)
-            categorizedItems[Bagger.E.CustomCategory.Trinkets].count =
-                categorizedItems[Bagger.E.CustomCategory.Trinkets].count + 1
+            tinsert(categorizedItems[Bagger.E.CustomCategory.Trinket].items, item)
+            categorizedItems[Bagger.E.CustomCategory.Trinket].count =
+                categorizedItems[Bagger.E.CustomCategory.Trinket].count + 1
         elseif iCategory ~= nil then
             tinsert(categorizedItems[iCategory].items, item)
             categorizedItems[iCategory].count =
@@ -157,20 +153,22 @@ function Bagger.G.UpdateView(type)
         orderedCategories[value.order].key = key
     end
 
-    local row = 1
-    local catIndex = 2
+    local offset = 1
+    local filterOffset = 2
+    local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, row)
+            Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset)
             if type == nil then
-                Bagger.G.BuildFilterButton(categoryData.key, catIndex)
+                Bagger.G.BuildFilterButton(categoryData.key, filterOffset)
+                filterOffset = filterOffset + 1
             end
-            catIndex = catIndex + 1
-            row = row + 1
+            offset = offset + 1
             if Bagger.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    Bagger.G.BuildItemFrame(item, row)
-                    row = row + 1
+                    Bagger.G.BuildItemFrame(item, offset, itemIndex)
+                    offset = offset + 1
+                    itemIndex = itemIndex + 1
                 end
             end
         end

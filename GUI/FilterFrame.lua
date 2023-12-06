@@ -9,7 +9,7 @@ function Bagger.G.CleanupFilterFrames()
         for i = 1, #ActiveFilterFrames do
             ActiveFilterFrames[i]:Hide()
             ActiveFilterFrames[i]:SetParent(nil)
-            tinsert(InactiveFilterFrames, ActiveFilterFrames[i])
+            InsertInactiveFilterFrame(ActiveFilterFrames[i])
             ActiveFilterFrames[i] = nil
         end
     end

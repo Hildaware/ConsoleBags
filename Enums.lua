@@ -52,6 +52,5 @@ Bagger.E.Categories = {
     [Enum.ItemClass.Quiver] = { order = 19, name = "Quivers" },
     [Enum.ItemClass.Questitem] = { order = 20, name = "Quest Items" },
     [Enum.ItemClass.Key] = { order = 21, name = "Keys" },
-    [Enum.ItemClass.WoWToken] = { order = 22, name = "Tokens" },
-
+    [Enum.ItemClass.WoWToken] = { order = 22, name = "Tokens" }
 }

@@ -10,20 +10,20 @@ function Bagger.G.CleanupItemFrames()
         if ActiveItemFrames[i] and ActiveItemFrames[i].isItem then
             ActiveItemFrames[i]:SetParent(nil)
             ActiveItemFrames[i]:Hide()
-            InsertInactiveItemFrame(ActiveItemFrames[i])
+            InsertInactiveItemFrame(ActiveItemFrames[i], i)
             RemoveActiveItemFrame(i)
         end
     end
 end
 
-function Bagger.G.BuildItemFrame(item, index)
-    local frame = FetchInactiveItemFrame()
-    InsertActiveItemFrame(frame)
+function Bagger.G.BuildItemFrame(item, offset, index)
+    local frame = FetchInactiveItemFrame(index)
+    InsertActiveItemFrame(frame, index)
 
     if frame == nil then return end
 
     frame:SetParent(Bagger.View.ListView)
-    frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
+    frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
 
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     frame:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
@@ -99,7 +99,7 @@ function Bagger.G.BuildItemFrame(item, index)
         C_Container.PickupContainerItem(item.bag, item.slot)
     end)
 
-    frame.index = index
+    frame.index = offset
 
     frame:Show()
 end
@@ -191,19 +191,21 @@ function RemoveActiveItemFrame(index)
     ActiveItemFrames[index] = nil
 end
 
-function InsertActiveItemFrame(frame)
-    tinsert(ActiveItemFrames, frame)
+function InsertActiveItemFrame(frame, index)
+    -- tinsert(ActiveItemFrames, frame)
+    ActiveItemFrames[index] = frame
 end
 
-function InsertInactiveItemFrame(frame)
-    tinsert(InactiveItemFrames, frame)
+function InsertInactiveItemFrame(frame, index)
+    -- tinsert(InactiveItemFrames, frame)
+    InactiveItemFrames[index] = frame
 end
 
-function FetchInactiveItemFrame()
+function FetchInactiveItemFrame(index)
     local frame = nil
-    if InactiveItemFrames[1] then
-        frame = InactiveItemFrames[1]
-        tremove(InactiveItemFrames, 1)
+    if InactiveItemFrames[index] then
+        frame = InactiveItemFrames[index]
+        InactiveItemFrames[index] = nil
     else
         frame = CreateItemFramePlaceholder()
     end
