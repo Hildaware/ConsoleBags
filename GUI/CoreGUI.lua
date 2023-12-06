@@ -98,16 +98,15 @@ function Bagger.G.InitializeGUI()
     end
 end
 
-function Bagger.G.UpdateView(type)
+function Bagger.G.UpdateView()
     if Bagger.View == nil then return end
 
-    Bagger.GatherItems(type)
+    Bagger.GatherItems(Bagger.Settings.Filter)
     Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
 
     -- Cleanup
     Bagger.G.CleanupItemFrames()
     Bagger.G.CleanupCategoryHeaderFrames()
-    Bagger.G.CleanupFilterFrames()
 
     local categorizedItems = Bagger.U.BuildCategoriesTable()
 
@@ -150,15 +149,10 @@ function Bagger.G.UpdateView(type)
     end
 
     local offset = 1
-    local filterOffset = 2
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
             Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset)
-            if type == nil then
-                Bagger.G.BuildFilterButton(categoryData.key, filterOffset)
-                filterOffset = filterOffset + 1
-            end
             offset = offset + 1
             if Bagger.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
@@ -180,23 +174,38 @@ function BuildFilteringContainer(parent)
     tex:SetAllPoints(cFrame)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
-    parent.FilterFrame = cFrame
-
     -- All
     local f = CreateFrame("Button", nil, cFrame)
-    f:SetSize(32, 32)
+    f:SetSize(28, 28)
     f:SetPoint("TOP", cFrame, "TOP", 0, -32)
 
-    local aTex = f:CreateTexture(nil, "ARTWORK")
+    f:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
+    f:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
+    f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
+    f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
+
+    local aTex = f:CreateTexture(nil, "OVERLAY")
     aTex:SetPoint("CENTER", 0, "CENTER")
     aTex:SetSize(24, 24)
     aTex:SetTexture(Bagger.U.GetCategoyIcon(1))
 
-    f:SetScript("OnClick", function()
+    f:SetScript("OnClick", function(self)
+        Bagger.Settings.Filter = nil
         Bagger.G.UpdateView()
+        self:GetParent().selectedTexture:SetPoint("TOP", self:GetParent(), "TOP", 0, -32)
     end)
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
+
+    -- IsSelected
+    local selectedTex = cFrame:CreateTexture(nil, "ARTWORK")
+    selectedTex:SetPoint("TOP", cFrame, "TOP", 0, -32)
+    selectedTex:SetSize(28, 28)
+    selectedTex:SetTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
+    selectedTex:SetVertexColor(1, 1, 0, 0.25)
+
+    cFrame.selectedTexture = selectedTex
+    parent.FilterFrame = cFrame
 end
 
 function BuildListViewHeader(parent)

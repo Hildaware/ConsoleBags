@@ -1,5 +1,6 @@
 local _, Bagger = ...
 
+-- TODO: Make bags interactable (switching out bags, tooltips, etc.)
 function Bagger.G.UpdateBagContainer()
     local max = 0
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do

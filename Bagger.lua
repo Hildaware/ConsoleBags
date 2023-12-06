@@ -53,6 +53,7 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BAG_UPDATE_DELAYED" then
         Bagger.G.UpdateView()
+        Bagger.G.UpdateFilterButtons()
         Bagger.G.UpdateBagContainer()
     end
 
@@ -92,7 +93,8 @@ function Bagger.Init()
         SortField = { -- TODO: SavedVariables
             Field = Bagger.E.SortFields.Name,
             Sort = Bagger.E.SortOrder.Desc
-        }
+        },
+        Filter = nil
     }
 
     -- Build player data
@@ -270,6 +272,7 @@ function Bagger.G.Show()
 
     if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not Bagger.View:IsShown() then
         Bagger.G.UpdateView()
+        Bagger.G.UpdateFilterButtons()
         Bagger.G.UpdateBagContainer()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)

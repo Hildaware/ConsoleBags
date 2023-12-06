@@ -247,11 +247,12 @@
         "CALENDAR_STATUS_NOT_SIGNEDUP",
         "CALENDAR_STATUS_TENTATIVE",
         "class",
-        "Armor",
+        "ARMOR",
         "ALL",
         "CATEGORY",
         "ContainerFrameItemButtonMixin",
-        "toString"
+        "toString",
+        "GameTooltip_ShowCompareItem"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
