@@ -27,6 +27,12 @@ function Bagger.G.BuildCategoryFrame(categoryName, count, categoryType, index)
     frame:SetParent(Bagger.View.ListView)
     frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
 
+    if Bagger.G.CollapsedCategories[categoryType] then
+        frame.texture:SetVertexColor(1, 0, 0, 0.35)
+    else
+        frame.texture:SetVertexColor(1, 1, 0, 0.35)
+    end
+
     frame.type:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
     frame.name:SetText(categoryName .. " (" .. count .. ")")
 
@@ -51,6 +57,13 @@ function CreateCategoryHeaderPlaceholder()
     f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
 
     f:RegisterForClicks("LeftButtonUp")
+
+    local tex = f:CreateTexture(nil, "OVERLAY")
+    tex:SetAllPoints(f)
+    tex:SetTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
+    tex:SetVertexColor(1, 1, 0, 0.35)
+
+    f.texture = tex
 
     -- type
     local type = CreateFrame("Frame", nil, f)
