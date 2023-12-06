@@ -34,6 +34,7 @@ eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
 eventFrame:RegisterEvent("EQUIPMENT_SETS_CHANGED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     if event == "ADDON_LOADED" and param1 == "Bagger" then -- Saved Variables
         if BaggerData == nil then
@@ -60,6 +61,10 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     if event == "EQUIPMENT_SETS_CHANGED" then
         Bagger.G.UpdateView()
         Bagger.G.UpdateBagContainer()
+    end
+
+    if event == "PLAYER_MONEY" then
+        Bagger.G.UpdateCurrency()
     end
 end)
 

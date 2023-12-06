@@ -37,6 +37,13 @@ function Bagger.G.InitializeGUI()
         Bagger.G.Toggle()
     end)
 
+    local goldView = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    goldView:SetPoint("LEFT", header, "LEFT", 6, 0)
+    goldView:SetWidth(140)
+    goldView:SetText(GetCoinTextureString(GetMoney()))
+
+    header.Gold = goldView
+
     header:RegisterForDrag("LeftButton")
     header:SetScript("OnDragStart", function(self, button)
         self:GetParent():StartMoving()
@@ -52,8 +59,8 @@ function Bagger.G.InitializeGUI()
 
     -- Drag Bar
     local drag = CreateFrame("Button", nil, f)
-    drag:SetSize(40, 6)
-    drag:SetPoint("BOTTOM", f, "BOTTOM", 0, -2)
+    drag:SetSize(64, 12)
+    drag:SetPoint("BOTTOM", f, "BOTTOM", 0, -6)
     drag:SetScript("OnMouseDown", function(self)
         self:GetParent():StartSizing("BOTTOM")
     end)
@@ -63,7 +70,8 @@ function Bagger.G.InitializeGUI()
     end)
     local dragTex = drag:CreateTexture(nil, "BACKGROUND")
     dragTex:SetAllPoints(drag)
-    dragTex:SetColorTexture(0.5, 0.5, 0.5, 1)
+    dragTex:SetTexture("Interface\\Addons\\Bagger\\Media\\Handlebar")
+    -- dragTex:SetColorTexture(1, 1, 1, 0.75)
 
     -- Filters
     BuildFilteringContainer(f)
@@ -165,9 +173,15 @@ function Bagger.G.UpdateView()
     end
 end
 
+function Bagger.G.UpdateCurrency()
+    if Bagger.View and Bagger.View.Header then
+        Bagger.View.Header.Gold:SetText(GetCoinTextureString(GetMoney()))
+    end
+end
+
 function BuildFilteringContainer(parent)
     local cFrame = CreateFrame("Frame", nil, parent)
-    cFrame:SetSize(32, parent:GetHeight())
+    cFrame:SetSize(32, parent:GetHeight() - 32)
     cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
 
     local tex = cFrame:CreateTexture(nil, "BACKGROUND")
