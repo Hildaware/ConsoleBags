@@ -124,14 +124,20 @@ function Bagger.GatherItems(type)
                 local invType = Bagger.R.GetInventoryType(containerItem.hyperlink)
                 local isNew = C_NewItems.IsNewItem(bag, slot)
 
-                if containerItem.hyperlink == nil then
-                    Bagger.GatherItems(type)
-                    return
-                end
-
                 -- Create Item
                 local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
-                if (type and item.type == type) or not type then
+                if type and type > 90 then
+                    -- Filter by those sweet sweet customs
+                    if type == Bagger.E.CustomCategory.BindOnEquip and Bagger.U.IsEquipmentUnbound(item) then
+                        table.insert(filteredItems, item)
+                    elseif type == Bagger.E.CustomCategory.BindOnAccount and item.quality == Enum.ItemQuality.Heirloom then
+                        table.insert(filteredItems, item)
+                    elseif type == Bagger.E.CustomCategory.Jewelry and Bagger.U.IsJewelry(item) then
+                        table.insert(filteredItems, item)
+                    elseif type == Bagger.E.CustomCategory.Trinket and Bagger.U.IsTrinket(item) then
+                        table.insert(filteredItems, item)
+                    end
+                elseif (type and item.type == type) or not type then
                     table.insert(filteredItems, item)
                 end
                 table.insert(items, item)
