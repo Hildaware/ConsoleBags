@@ -1,5 +1,31 @@
 local _, Bagger = ...
 
+local BaggerDataDefaults = {
+    Characters = {},
+    View = {
+        Size = {
+            X = 632,
+            Y = 396,
+        },
+        Position = {
+            X = 20,
+            Y = 20
+        },
+        Columns = {
+            Icon = 32,
+            Name = 280,
+            Category = 40,
+            Ilvl = 50,
+            ReqLvl = 50,
+            Value = 110
+        },
+        SortField = {
+            Field = Bagger.E.SortFields.Name,
+            Sort = Bagger.E.SortOrder.Desc
+        }
+    },
+}
+
 local playerIdentifier = ""
 
 local eventFrame = CreateFrame("Frame")
@@ -7,7 +33,15 @@ eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
 eventFrame:RegisterEvent("EQUIPMENT_SETS_CHANGED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
+    if event == "ADDON_LOADED" and param1 == "Bagger" then -- Saved Variables
+        if BaggerData == nil then
+            BaggerData = Bagger.U.CopyTable(BaggerDataDefaults)
+            return
+        end
+    end
+
     if event == "PLAYER_LOGIN" then
         Bagger.Init()
     end
@@ -19,10 +53,12 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BAG_UPDATE_DELAYED" then
         Bagger.G.UpdateView()
+        Bagger.G.UpdateBagContainer()
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
         Bagger.G.UpdateView()
+        Bagger.G.UpdateBagContainer()
     end
 end)
 
@@ -41,7 +77,6 @@ function Bagger.Init()
     Bagger.Settings = {
         Defaults = {
             Columns = {
-                -- COUNT = 30,
                 Icon = 32,
                 Name = 280,
                 Category = 40,
@@ -96,9 +131,7 @@ function Bagger.GatherItems(type)
 
                 -- Create Item
                 local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
-                if type and type > 90 then
-
-                elseif (type and item.type == type) or not type then
+                if (type and item.type == type) or not type then
                     table.insert(filteredItems, item)
                 end
                 table.insert(items, item)
@@ -231,6 +264,7 @@ function Bagger.G.Show()
 
     if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not Bagger.View:IsShown() then
         Bagger.G.UpdateView()
+        Bagger.G.UpdateBagContainer()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
         Bagger.View:Show()

@@ -3,10 +3,11 @@ local _, Bagger = ...
 Bagger.G = {}
 
 function Bagger.G.InitializeGUI()
-    local f = CreateFrame("Frame", "Bagger", UIParent)
-    f:SetSize(632, 396)
-    f:SetPoint("CENTER", 0, 0)
+    local f = CreateFrame("Frame", "BaggerFrame", UIParent)
+    f:SetSize(632, BaggerData.View.Size.Y or 396)
+    f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BaggerData.View.Position.X or 200, BaggerData.View.Position.Y or 200)
     f:SetMovable(true)
+    f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetResizable(true)
     f:SetResizeBounds(632, 396, 632, 2000)
@@ -16,7 +17,7 @@ function Bagger.G.InitializeGUI()
     f.texture:SetColorTexture(0, 0, 0, 0.5)
 
     -- Frame Header
-    -- TODO: Bag View, Switch to "WoW mode", Gold View
+    -- TODO: Switch to "WoW mode"
     local header = CreateFrame("Frame", nil, f)
     header:SetSize(f:GetWidth() - 2, 32)
     header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
@@ -42,6 +43,9 @@ function Bagger.G.InitializeGUI()
     end)
     header:SetScript("OnDragStop", function(self)
         self:GetParent():StopMovingOrSizing()
+        local x = Bagger.View:GetLeft()
+        local y = Bagger.View:GetTop()
+        BaggerData.View.Position = { X = x, Y = y }
     end)
 
     f.Header = header
@@ -51,16 +55,15 @@ function Bagger.G.InitializeGUI()
     drag:SetSize(40, 6)
     drag:SetPoint("BOTTOM", f, "BOTTOM", 0, -2)
     drag:SetScript("OnMouseDown", function(self)
-        self:GetParent():StartSizing("BOTTOMRIGHT")
+        self:GetParent():StartSizing("BOTTOM")
     end)
     drag:SetScript("OnMouseUp", function(self)
-        self:GetParent():StopMovingOrSizing("BOTTOMRIGHT")
+        self:GetParent():StopMovingOrSizing("BOTTOM")
+        BaggerData.View.Size.Y = Bagger.View:GetHeight()
     end)
     local dragTex = drag:CreateTexture(nil, "BACKGROUND")
     dragTex:SetAllPoints(drag)
     dragTex:SetColorTexture(0.5, 0.5, 0.5, 1)
-
-    CreateBorder(f)
 
     -- Filters
     BuildFilteringContainer(f)
@@ -82,6 +85,8 @@ function Bagger.G.InitializeGUI()
 
     table.insert(UISpecialFrames, f:GetName())
 
+    CreateBorder(f)
+
     Bagger.View = f
 
     Bagger.G.CreateBagContainer()
@@ -96,17 +101,8 @@ end
 function Bagger.G.UpdateView(type)
     if Bagger.View == nil then return end
 
-    -- Update Item Counts
-    local max = 0
-    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
-        local maxSlots = C_Container.GetContainerNumSlots(bag)
-        max = max + maxSlots
-    end
-
     Bagger.GatherItems(type)
     Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
-
-    Bagger.View.ItemCountText:SetText(#Bagger.Session.Items .. "/" .. max)
 
     -- Cleanup
     Bagger.G.CleanupItemFrames()

@@ -8,6 +8,7 @@ function Bagger.G.CleanupFilterFrames()
     if type == nil then
         for i = 1, #ActiveFilterFrames do
             ActiveFilterFrames[i]:Hide()
+            ActiveFilterFrames[i].texture:SetTexture(nil)
             ActiveFilterFrames[i]:SetParent(nil)
             InsertInactiveFilterFrame(ActiveFilterFrames[i])
             ActiveFilterFrames[i] = nil

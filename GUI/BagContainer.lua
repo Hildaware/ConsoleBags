@@ -1,5 +1,17 @@
 local _, Bagger = ...
 
+function Bagger.G.UpdateBagContainer()
+    local max = 0
+    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+        local maxSlots = C_Container.GetContainerNumSlots(bag)
+        max = max + maxSlots
+    end
+
+    if Bagger.View ~= nil then
+        Bagger.View.ItemCountText:SetText(#Bagger.Session.Items .. "/" .. max)
+    end
+end
+
 function Bagger.G.CreateBagContainer()
     local f = CreateFrame("Frame", nil, Bagger.View.Header)
     f:SetSize(140, 32)
