@@ -63,6 +63,8 @@ function CreateCategoryHeaderPlaceholder()
     tex:SetTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
     tex:SetVertexColor(1, 1, 0, 0.35)
 
+    f:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
+
     f.texture = tex
 
     -- type

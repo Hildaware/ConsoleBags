@@ -13,10 +13,5 @@ TODO BEFORE PUB RELEASE
 - Switch to 'WoW' view
 - wtf is a Reagent bag?
 
-Bugs:
-- Frame strata UP
-
 Feats:
-- Tooltips (name + num items, maybe NEW items count as well)
 - Icon on 'filters' showing if new item in it
-- Cat headers need highlight tex

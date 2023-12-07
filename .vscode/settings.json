@@ -253,15 +253,7 @@
         "ContainerFrameItemButtonMixin",
         "toString",
         "GameTooltip_ShowCompareItem",
-        "ClearItemButtonOverlay",
-        "GetItemQualityColor",
-        "CreateFrame",
-        "GetCoinTextureString",
-        "GameTooltip",
-        "C_Container",
-        "Enum",
-        "C_NewItems",
-        "UIParent"
+        "ClearItemButtonOverlay"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

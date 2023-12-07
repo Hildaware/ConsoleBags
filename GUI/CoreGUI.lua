@@ -4,6 +4,7 @@ Bagger.G = {}
 
 function Bagger.G.InitializeGUI()
     local f = CreateFrame("Frame", "BaggerFrame", UIParent)
+    f:SetFrameStrata("HIGH")
     f:SetSize(632, BaggerData.View.Size.Y or 396)
     f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BaggerData.View.Position.X or 200, BaggerData.View.Position.Y or 200)
     f:SetMovable(true)
@@ -109,51 +110,25 @@ end
 function Bagger.G.UpdateView()
     if Bagger.View == nil then return end
 
-    Bagger.GatherItems(Bagger.Settings.Filter)
-    Bagger.SortItems(Bagger.Settings.SortField.Field, Bagger.Settings.SortField.Sort)
+    Bagger.SortItems()
 
     -- Cleanup
     Bagger.G.CleanupItemFrames()
     Bagger.G.CleanupCategoryHeaderFrames()
 
-    local categorizedItems = Bagger.U.BuildCategoriesTable()
-
-    -- Build
-    for _, item in ipairs(Bagger.Session.Filtered) do
-        local iCategory = item.type
-
-        if item.quality and item.quality == Enum.ItemQuality.Heirloom then -- BoA
-            tinsert(categorizedItems[Bagger.E.CustomCategory.BindOnAccount].items, item)
-            categorizedItems[Bagger.E.CustomCategory.BindOnAccount].count =
-                categorizedItems[Bagger.E.CustomCategory.BindOnAccount].count + 1
-        elseif Bagger.U.IsEquipmentUnbound(item) then -- BoE
-            tinsert(categorizedItems[Bagger.E.CustomCategory.BindOnEquip].items, item)
-            categorizedItems[Bagger.E.CustomCategory.BindOnEquip].count =
-                categorizedItems[Bagger.E.CustomCategory.BindOnEquip].count + 1
-        elseif Bagger.U.IsJewelry(item) then -- Jewelry
-            tinsert(categorizedItems[Bagger.E.CustomCategory.Jewelry].items, item)
-            categorizedItems[Bagger.E.CustomCategory.Jewelry].count =
-                categorizedItems[Bagger.E.CustomCategory.Jewelry].count + 1
-        elseif Bagger.U.IsTrinket(item) then -- Trinkets
-            tinsert(categorizedItems[Bagger.E.CustomCategory.Trinket].items, item)
-            categorizedItems[Bagger.E.CustomCategory.Trinket].count =
-                categorizedItems[Bagger.E.CustomCategory.Trinket].count + 1
-        elseif iCategory ~= nil then
-            tinsert(categorizedItems[iCategory].items, item)
-            categorizedItems[iCategory].count =
-                categorizedItems[iCategory].count + 1
-        else
-            tinsert(categorizedItems[Enum.ItemClass.Miscellaneous].items, item)
-            categorizedItems[Enum.ItemClass.Miscellaneous].count =
-                categorizedItems[Enum.ItemClass.Miscellaneous].count + 1
+    -- Filter Categories
+    local foundCategories = {}
+    for _, value in pairs(Bagger.Session.Categories) do
+        if (value.key == Bagger.Settings.Filter) or Bagger.Settings.Filter == nil then
+            tinsert(foundCategories, value)
         end
     end
 
-    -- Categorize
+    table.sort(foundCategories, function(a, b) return a.order < b.order end)
+
     local orderedCategories = {}
-    for key, value in pairs(categorizedItems) do
-        orderedCategories[value.order] = value
-        orderedCategories[value.order].key = key
+    for i = 1, #foundCategories do
+        orderedCategories[i] = foundCategories[i]
     end
 
     local offset = 1
@@ -205,7 +180,10 @@ function BuildFilteringContainer(parent)
 
     f:SetScript("OnClick", function(self)
         Bagger.Settings.Filter = nil
+        Bagger.GatherItems()
         Bagger.G.UpdateView()
+        Bagger.G.UpdateFilterButtons()
+        Bagger.G.UpdateBagContainer()
         self:GetParent().selectedTexture:SetPoint("TOP", self:GetParent(), "TOP", 0, -32)
     end)
     f:RegisterForClicks("AnyDown")
@@ -309,6 +287,8 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
         end
 
         Bagger.G.UpdateView()
+        Bagger.G.UpdateFilterButtons()
+        Bagger.G.UpdateBagContainer()
     end)
 
     parent.fields[sortField] = frame

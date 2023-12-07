@@ -68,9 +68,10 @@ end
 
 Bagger.U.BuildCategoriesTable = function()
     local t = Bagger.U.CopyTable(Bagger.E.Categories)
-    for _, value in pairs(t) do
+    for key, value in pairs(t) do
         value.items = {}
         value.count = 0
+        value.key = key
     end
     return t
 end

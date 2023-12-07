@@ -5,36 +5,19 @@ local InactiveFilterFrames = {}
 local ActiveFilterFrames = {}
 
 function Bagger.G.UpdateFilterButtons()
+    if Bagger.Session.Categories == nil then return end
+
     CleanupFilterFrames()
-    local cats = Bagger.U.CopyTable(Bagger.E.Categories)
 
-    for _, item in ipairs(Bagger.Session.Items) do
-        local iCategory = item.type
-
-        if item.quality and item.quality == Enum.ItemQuality.Heirloom then -- BoA
-            cats[Bagger.E.CustomCategory.BindOnAccount].show = true
-        elseif Bagger.U.IsEquipmentUnbound(item) then                      -- BoE
-            cats[Bagger.E.CustomCategory.BindOnEquip].show = true
-        elseif Bagger.U.IsJewelry(item) then                               -- Jewelry
-            cats[Bagger.E.CustomCategory.Jewelry].show = true
-        elseif Bagger.U.IsTrinket(item) then                               -- Trinkets
-            cats[Bagger.E.CustomCategory.Trinket].show = true
-        elseif iCategory ~= nil then
-            cats[iCategory].show = true
-        else
-            cats[Enum.ItemClass.Miscellaneous].show = true
-        end
-    end
-
+    -- Filter Categories
     local foundCategories = {}
-    for key, value in pairs(cats) do
-        if value.show == true then
-            local data = value
-            data.key = key
-            tinsert(foundCategories, data)
+    for _, value in pairs(Bagger.Session.Categories) do
+        if value.count > 0 then
+            tinsert(foundCategories, value)
         end
     end
 
+    -- Sort By Order
     table.sort(foundCategories, function(a, b) return a.order < b.order end)
 
 
@@ -45,7 +28,7 @@ function Bagger.G.UpdateFilterButtons()
 
     local filterOffset = 2
     for _, categoryData in ipairs(orderedCategories) do
-        BuildFilterButton(categoryData.key, filterOffset)
+        BuildFilterButton(categoryData, filterOffset)
         filterOffset = filterOffset + 1
     end
 end
@@ -72,32 +55,49 @@ function CreateFilterButtonPlaceholder()
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
 
+    f:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
     return f
 end
 
-function BuildFilterButton(categoryType, index)
+function BuildFilterButton(categoryData, index)
+    if Bagger.View == nil then return end
+
     local f = FetchInactiveFilterFrame()
     InsertActiveFilterFrame(f)
 
     f:SetParent(Bagger.View.FilterFrame)
     f:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
 
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
+
     f:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
     f:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
     f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
     f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
 
-    f.texture:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
-
-    f:Show()
+    f.texture:SetTexture(Bagger.U.GetCategoyIcon(categoryData.key))
 
     f:SetScript("OnClick", function(self)
-        Bagger.Settings.Filter = categoryType
-        Bagger.G.UpdateView()
         self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+
+        Bagger.Settings.Filter = categoryData.key
+        Bagger.GatherItems()
+        Bagger.G.UpdateView()
+        Bagger.G.UpdateFilterButtons()
+        Bagger.G.UpdateBagContainer()
     end)
-    f:RegisterForClicks("AnyDown")
-    f:RegisterForClicks("AnyUp")
+
+    f:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+        GameTooltip:SetText(categoryData.name .. " (" .. categoryData.count .. ")", 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+
+    f:Show()
 end
 
 function RemoveActiveFilterFrame(index)

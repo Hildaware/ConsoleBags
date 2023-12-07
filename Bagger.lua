@@ -48,18 +48,22 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
+        Bagger.GatherItems()
         Bagger.U.MakeBlizzBagsKillable()
         Bagger.U.KillBlizzBags()
     end
 
     if event == "BAG_UPDATE_DELAYED" then
+        Bagger.GatherItems()
         Bagger.G.UpdateView()
         Bagger.G.UpdateFilterButtons()
         Bagger.G.UpdateBagContainer()
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
+        Bagger.GatherItems()
         Bagger.G.UpdateView()
+        Bagger.G.UpdateFilterButtons()
         Bagger.G.UpdateBagContainer()
     end
 
@@ -75,9 +79,8 @@ function Bagger.Init()
     -- }
 
     Bagger.Session = {
-        Items = {},
-        Filtered = {},
-        InitialView = true
+        Items = {}, -- All Items
+        Categories = Bagger.U.BuildCategoriesTable()
     }
 
     Bagger.Settings = {
@@ -114,18 +117,14 @@ function Bagger.Init()
     -- }
 end
 
-function Bagger.GatherItems(type)
-    local numFreeSlots = 0
+function Bagger.GatherItems()
+    Bagger.Session.Items = {}
+    Bagger.Session.Categories = Bagger.U.BuildCategoriesTable()
 
-    local items = {}
-    local filteredItems = {}
-    -- gather items in bag
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local containerItem = Bagger.R.GetContainerItemInfo(bag, slot)
-            if containerItem == nil then
-                numFreeSlots = numFreeSlots + 1
-            else
+            if containerItem ~= nil then
                 local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
                 local itemInfo = Bagger.R.GetItemInfo(containerItem.hyperlink)
                 local ilvl = Bagger.R.GetEffectiveItemLevel(containerItem.hyperlink)
@@ -134,132 +133,113 @@ function Bagger.GatherItems(type)
 
                 -- Create Item
                 local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
-                if type and type > 90 then
-                    -- Filter by those sweet sweet customs
-                    if type == Bagger.E.CustomCategory.BindOnEquip and Bagger.U.IsEquipmentUnbound(item) then
-                        table.insert(filteredItems, item)
-                    elseif type == Bagger.E.CustomCategory.BindOnAccount and item.quality == Enum.ItemQuality.Heirloom then
-                        table.insert(filteredItems, item)
-                    elseif type == Bagger.E.CustomCategory.Jewelry and Bagger.U.IsJewelry(item) then
-                        table.insert(filteredItems, item)
-                    elseif type == Bagger.E.CustomCategory.Trinket and Bagger.U.IsTrinket(item) then
-                        table.insert(filteredItems, item)
+                table.insert(Bagger.Session.Items, item)
+
+                -- Category Data
+                if item.category ~= nil then
+                    Bagger.Session.Categories[item.category].count =
+                        Bagger.Session.Categories[item.category].count + 1
+                    tinsert(Bagger.Session.Categories[item.category].items, item)
+                else
+                    Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].count =
+                        Bagger.Session.Categories[Enum.ItemClass.Miscellaneous] + 1
+                    tinsert(Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].items, item)
+                end
+            end
+        end
+    end
+end
+
+function Bagger.SortItems()
+    local sortField = Bagger.Settings.SortField
+    local type = sortField.Field
+    local order = sortField.Sort
+
+    for _, cat in pairs(Bagger.Session.Categories) do
+        if type == Bagger.E.SortFields.COUNT then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.stackCount > b.stackCount
+                    else
+                        return a.stackCount < b.stackCount
                     end
-                elseif (type and item.type == type) or not type then
-                    table.insert(filteredItems, item)
-                end
-                table.insert(items, item)
+                end)
+        end
+
+        if type == Bagger.E.SortFields.Name then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.name < b.name
+                    else
+                        return a.name > b.name
+                    end
+                end)
+        end
+
+        if type == Bagger.E.SortFields.Icon then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.quality > b.quality
+                    else
+                        return a.quality < b.quality
+                    end
+                end)
+        end
+
+        if type == Bagger.E.SortFields.Category then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.type > b.type
+                    else
+                        return a.type < b.type
+                    end
+                end)
+        end
+
+        if type == Bagger.E.SortFields.Ilvl then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.ilvl > b.ilvl
+                    else
+                        return a.ilvl < b.ilvl
+                    end
+                end)
+        end
+
+        if type == Bagger.E.SortFields.ReqLvl then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.reqLvl > b.reqLvl
+                    else
+                        return a.reqLvl < b.reqLvl
+                    end
+                end)
+        end
+
+        if type == Bagger.E.SortFields.Value then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == Bagger.E.SortOrder.Desc then
+                        return a.value > b.value
+                    else
+                        return a.value < b.value
+                    end
+                end)
+        end
+
+        -- Always put new on top
+        for index, item in ipairs(cat.items) do
+            if item.isNew == true then
+                table.insert(table.sort(cat.items, 1, table.remove(table.sort(cat.items, index))))
             end
         end
     end
-
-    -- Bagger.Data.Characters[playerIdentifier].Items = items
-    Bagger.Session.Items = items
-    Bagger.Session.Filtered = filteredItems
-
-    return items
-end
-
-function Bagger.SortItems(type, order)
-    if type == Bagger.E.SortFields.COUNT then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.stackCount > b.stackCount
-                else
-                    return a.stackCount < b.stackCount
-                end
-            end)
-    end
-
-    if type == Bagger.E.SortFields.Name then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.name < b.name
-                else
-                    return a.name > b.name
-                end
-            end)
-    end
-
-    if type == Bagger.E.SortFields.Icon then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.quality > b.quality
-                else
-                    return a.quality < b.quality
-                end
-            end)
-    end
-
-    if type == Bagger.E.SortFields.Category then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.type > b.type
-                else
-                    return a.type < b.type
-                end
-            end)
-    end
-
-    if type == Bagger.E.SortFields.Ilvl then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.ilvl > b.ilvl
-                else
-                    return a.ilvl < b.ilvl
-                end
-            end)
-    end
-
-    if type == Bagger.E.SortFields.ReqLvl then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.reqLvl > b.reqLvl
-                else
-                    return a.reqLvl < b.reqLvl
-                end
-            end)
-    end
-
-    if type == Bagger.E.SortFields.Value then
-        table.sort(Bagger.Session.Filtered,
-            function(a, b)
-                if order == Bagger.E.SortOrder.Desc then
-                    return a.value > b.value
-                else
-                    return a.value < b.value
-                end
-            end)
-    end
-
-    -- Always put new on top
-    for index, item in ipairs(Bagger.Session.Filtered) do
-        if item.isNew == true then
-            table.insert(Bagger.Session.Filtered, 1, table.remove(Bagger.Session.Filtered, index))
-        end
-    end
-
-    Bagger.Settings.SortField.Field = type
-    Bagger.Settings.SortField.Sort = order
-end
-
-function Bagger.FilterItems(type, items)
-    local filtered = {}
-    for _, item in ipairs(items) do
-        if type == Bagger.E.FilterFields.Weapons then
-            if item.type == Enum.ItemClass.Weapon then
-                table.insert(filtered, item)
-            end
-        end
-    end
-
-    return filtered
 end
 
 -- Slashy
@@ -277,6 +257,7 @@ function Bagger.G.Show()
     if Bagger.View == nil then return end
 
     if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not Bagger.View:IsShown() then
+        Bagger.GatherItems()
         Bagger.G.UpdateView()
         Bagger.G.UpdateFilterButtons()
         Bagger.G.UpdateBagContainer()
