@@ -9,8 +9,14 @@ Data Storage (Cross character, etc.)
 
 
 TODO BEFORE PUB RELEASE
-- Ability to split stacks
 - Bag Display
-- Money Display
 - Switch to 'WoW' view
 - wtf is a Reagent bag?
+
+Bugs:
+- Frame strata UP
+
+Feats:
+- Tooltips (name + num items, maybe NEW items count as well)
+- Icon on 'filters' showing if new item in it
+- Cat headers need highlight tex

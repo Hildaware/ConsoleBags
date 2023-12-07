@@ -126,13 +126,14 @@ function Bagger.GatherItems(type)
             if containerItem == nil then
                 numFreeSlots = numFreeSlots + 1
             else
+                local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
                 local itemInfo = Bagger.R.GetItemInfo(containerItem.hyperlink)
                 local ilvl = Bagger.R.GetEffectiveItemLevel(containerItem.hyperlink)
                 local invType = Bagger.R.GetInventoryType(containerItem.hyperlink)
                 local isNew = C_NewItems.IsNewItem(bag, slot)
 
                 -- Create Item
-                local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
+                local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
                 if type and type > 90 then
                     -- Filter by those sweet sweet customs
                     if type == Bagger.E.CustomCategory.BindOnEquip and Bagger.U.IsEquipmentUnbound(item) then

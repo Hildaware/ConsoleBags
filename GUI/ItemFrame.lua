@@ -25,17 +25,29 @@ function Bagger.G.BuildItemFrame(item, offset, index)
     frame:SetParent(Bagger.View.ListView)
     frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
 
+    local tooltipOwner = GameTooltip:GetOwner()
+
+    frame.itemButton:SetID(item.slot)
+    frame:SetID(item.bag)
+
+    ClearItemButtonOverlay(frame.itemButton)
+    frame.itemButton:SetHasItem(item.texture)
+    frame.itemButton:UpdateExtended()
+    frame.itemButton:UpdateJunkItem(item.quality, item.hasNoValue)
+    frame.itemButton:UpdateItemContextMatching()
+    frame.itemButton:UpdateCooldown(item.texture)
+    frame.itemButton:SetReadable(item.isReadable)
+    frame.itemButton:CheckUpdateTooltip(tooltipOwner)
+    frame.itemButton:SetMatchesSearch(not item.isFiltered)
+    
+
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
-    frame:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
-    frame:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
-    frame:GetHighlightTexture():SetVertexColor(r, g, b, 1)
+    frame.itemButton.HighlightTexture:SetVertexColor(r, g, b, 1)
 
     if item.isNew == true then
-        frame:SetNormalTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
-        frame:GetNormalTexture():SetVertexColor(1, 1, 0, 1)
+        frame.itemButton.NewTexture:Show()
     else
-        frame:SetNormalTexture("")
-        frame:GetNormalTexture():SetVertexColor(0, 0, 0, 0)
+        frame.itemButton.NewTexture:Hide()
     end
 
     frame.icon:SetTexture(item.texture)
@@ -70,51 +82,59 @@ function Bagger.G.BuildItemFrame(item, offset, index)
         frame.value:SetText("")
     end
 
-    frame:SetScript("OnEnter", function(self)
-        -- This is pretty jank, but it fixes a specific issue with ConsolePort
-        self.GetBagID = function() return item.bag end
-        self.GetID = function() return item.slot end
-        self.GetSlotAndBagID = ContainerFrameItemButtonMixin.GetSlotAndBagID
-
-        if item.isNew == true then
-            C_NewItems.RemoveNewItem(item.bag, item.slot)
-        end
-
-        frame:SetNormalTexture("")
-        frame:GetNormalTexture():SetVertexColor(0, 0, 0, 0)
-
-        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
-        GameTooltip:SetBagItem(item.bag, item.slot)
-        GameTooltip:Show()
-    end)
-
-    frame:SetScript("OnClick", function(self, button, down)
-        if button == "LeftButton" then
-            C_Container.PickupContainerItem(item.bag, item.slot)
-        else
-            C_Container.UseContainerItem(item.bag, item.slot)
-        end
-    end)
-    frame:SetScript("OnDragStart", function(self)
-        C_Container.PickupContainerItem(item.bag, item.slot)
-    end)
-
     frame.index = offset
 
+
     frame:Show()
+    frame.itemButton:Show()
 end
 
 function CreateItemFramePlaceholder()
-    local f = CreateFrame("Button")
+    local f = CreateFrame("Frame", nil, UIParent) -- Taint Killer
     f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
+    
+    local itemButton = CreateFrame("ItemButton", nil, f, "ContainerFrameItemButtonTemplate")
+    itemButton:SetAllPoints(f)
+    itemButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    itemButton:RegisterForClicks("RightButtonUp")
 
-    f:RegisterForClicks("LeftButtonUp")
-    f:RegisterForClicks("RightButtonUp")
-    f:RegisterForDrag("LeftButton")
+    itemButton.NormalTexture:Hide()
+    itemButton.NormalTexture:SetParent(nil)
+    itemButton.NormalTexture = nil
+    itemButton.PushedTexture:Hide()
+    itemButton.PushedTexture:SetParent(nil)
+    itemButton.PushedTexture = nil
+    itemButton.NewItemTexture:Hide()
+    itemButton.BattlepayItemTexture:Hide()
+    itemButton:GetHighlightTexture():Hide()
+    itemButton:GetHighlightTexture():SetParent(nil)
+    itemButton.HighlightTexture = nil
 
-    f:HookScript("OnLeave", function()
-        GameTooltip:Hide()
+    local highlight = itemButton:CreateTexture()
+    highlight:SetDrawLayer("BACKGROUND")
+    highlight:SetBlendMode("ADD")
+    highlight:SetAllPoints()
+    highlight:SetTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
+    highlight:Hide()
+    itemButton.HighlightTexture = highlight
+    itemButton:HookScript("OnEnter", function(s)
+      s.HighlightTexture:Show()
     end)
+    itemButton:HookScript("OnLeave", function(s)
+      s.HighlightTexture:Hide()
+      s.NewTexture:Hide()
+    end)
+
+    local new = itemButton:CreateTexture()
+    new:SetDrawLayer("BACKGROUND")
+    new:SetBlendMode("ADD")
+    new:SetAllPoints()
+    new:SetTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
+    new:SetVertexColor(1, 1, 0, 1)
+    new:Hide()
+    itemButton.NewTexture = new
+
+    f.itemButton = itemButton
 
     -- Icon
     local icon = CreateFrame("Frame", nil, f)
@@ -183,6 +203,8 @@ function CreateItemFramePlaceholder()
     f.value = valueText
 
     f.isItem = true
+
+    f:Hide()
 
     return f
 end

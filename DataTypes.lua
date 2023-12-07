@@ -2,7 +2,7 @@ local _, Bagger = ...
 Bagger.T = {}
 
 local Item = {}
-Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
+Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
     local self = {}
     self.id = containerItem.itemId
     self.name = containerItem.itemName
@@ -20,6 +20,11 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType)
     self.slot = slot
     self.isNew = isNew
     self.reqLvl = itemInfo.reqLvl or 0
+    self.isLocked = containerItem.isLocked
+    self.questInfo = questInfo
+    self.isReadable = containerItem.isReadable
+    self.isFiltered = containerItem.isFiltered
+    self.hasNoValue = containerItem.hasNoValue
 
     return self
 end
