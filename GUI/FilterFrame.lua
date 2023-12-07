@@ -55,6 +55,14 @@ function CreateFilterButtonPlaceholder()
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
 
+    local newTex = f:CreateTexture(nil, "OVERLAY")
+    newTex:SetPoint("TOPRIGHT", f, "TOPRIGHT")
+    newTex:SetSize(10, 10)
+    newTex:SetTexture("Interface\\Addons\\Bagger\\Media\\Exclamation")
+    newTex:Hide()
+
+    f.newTexture = newTex
+
     f:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
@@ -80,6 +88,12 @@ function BuildFilterButton(categoryData, index)
     f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
 
     f.texture:SetTexture(Bagger.U.GetCategoyIcon(categoryData.key))
+
+    if categoryData.hasNew == true then
+        f.newTexture:Show()
+    else
+        f.newTexture:Hide()
+    end
 
     f:SetScript("OnClick", function(self)
         self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))

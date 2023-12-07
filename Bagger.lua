@@ -140,10 +140,16 @@ function Bagger.GatherItems()
                     Bagger.Session.Categories[item.category].count =
                         Bagger.Session.Categories[item.category].count + 1
                     tinsert(Bagger.Session.Categories[item.category].items, item)
+                    if isNew then
+                        Bagger.Session.Categories[item.category].hasNew = true
+                    end
                 else
                     Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].count =
                         Bagger.Session.Categories[Enum.ItemClass.Miscellaneous] + 1
                     tinsert(Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].items, item)
+                    if isNew then
+                        Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].hasNew = true
+                    end
                 end
             end
         end
@@ -236,7 +242,7 @@ function Bagger.SortItems()
         -- Always put new on top
         for index, item in ipairs(cat.items) do
             if item.isNew == true then
-                table.insert(table.sort(cat.items, 1, table.remove(table.sort(cat.items, index))))
+                table.insert(cat.items, 1, table.remove(cat.items, index))
             end
         end
     end

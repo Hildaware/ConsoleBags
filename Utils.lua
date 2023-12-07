@@ -72,6 +72,7 @@ Bagger.U.BuildCategoriesTable = function()
         value.items = {}
         value.count = 0
         value.key = key
+        value.hasNew = false
     end
     return t
 end

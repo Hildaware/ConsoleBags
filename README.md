@@ -12,6 +12,3 @@ TODO BEFORE PUB RELEASE
 - Bag Display
 - Switch to 'WoW' view
 - wtf is a Reagent bag?
-
-Feats:
-- Icon on 'filters' showing if new item in it
