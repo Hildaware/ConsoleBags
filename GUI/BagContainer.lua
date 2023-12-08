@@ -1,23 +1,23 @@
-local _, Bagger = ...
+local _, CB = ...
 
-function Bagger.G.UpdateBagContainer()
+function CB.G.UpdateBagContainer()
     local max = 0
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         local maxSlots = C_Container.GetContainerNumSlots(bag)
         max = max + maxSlots
     end
 
-    if Bagger.View ~= nil then
-        Bagger.View.ItemCountText:SetText(#Bagger.Session.Items .. "/" .. max)
+    if CB.View ~= nil then
+        CB.View.ItemCountText:SetText(#CB.Session.Items .. "/" .. max)
     end
 
     UpdateBags()
 end
 
-function Bagger.G.CreateBagContainer()
-    local f = CreateFrame("Frame", nil, Bagger.View.Header)
+function CB.G.CreateBagContainer()
+    local f = CreateFrame("Frame", nil, CB.View.Header)
     f:SetSize(140, 32)
-    f:SetPoint("RIGHT", Bagger.View.Header, "RIGHT", -40, 0)
+    f:SetPoint("RIGHT", CB.View.Header, "RIGHT", -40, 0)
 
     -- Bag Button
     local bagButton = CreateFrame("Button", nil, f)
@@ -29,11 +29,11 @@ function Bagger.G.CreateBagContainer()
     btnTex:SetTexture(133633)
 
     bagButton:SetScript("OnClick", function(self)
-        if Bagger.View.BagContainer.Bags:IsShown() then
-            Bagger.View.BagContainer.Bags:Hide()
+        if CB.View.BagContainer.Bags:IsShown() then
+            CB.View.BagContainer.Bags:Hide()
             self:GetParent().ItemCountContainer:Show()
         else
-            Bagger.View.BagContainer.Bags:Show()
+            CB.View.BagContainer.Bags:Show()
             self:GetParent().ItemCountContainer:Hide()
         end
     end)
@@ -51,8 +51,8 @@ function Bagger.G.CreateBagContainer()
 
     f.ItemCountContainer = itemCountContainer
 
-    Bagger.View.BagContainer = f
-    Bagger.View.ItemCountText = itemCountText
+    CB.View.BagContainer = f
+    CB.View.ItemCountText = itemCountText
 end
 
 function CreateBagContainer(parent, anchor)
@@ -82,7 +82,7 @@ function CreateBagContainer(parent, anchor)
 end
 
 function UpdateBags()
-    if Bagger.View == nil then return end
+    if CB.View == nil then return end
 
     for bag = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         local bagID = C_Container.ContainerIDToInventoryID(bag)
@@ -95,7 +95,7 @@ function UpdateBags()
             icon = iconID,
             link = link
         }
-        local frame = Bagger.View.BagContainer.Bags.Containers[bag]
+        local frame = CB.View.BagContainer.Bags.Containers[bag]
         if frame ~= nil then
             frame.bagID = bagData.id
             frame:SetID(bagData.id)

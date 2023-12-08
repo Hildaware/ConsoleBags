@@ -1,12 +1,12 @@
-local _, Bagger = ...
-Bagger.E = {}
+local _, CB = ...
+CB.E = {}
 
-Bagger.E.SortOrder = {
+CB.E.SortOrder = {
     Asc = 1,
     Desc = 2,
 }
 
-Bagger.E.SortFields = {
+CB.E.SortFields = {
     -- COUNT = 1,
     Icon = 2,
     Name = 3,
@@ -16,13 +16,13 @@ Bagger.E.SortFields = {
     Value = 7
 }
 
-Bagger.E.FilterFields = {
+CB.E.FilterFields = {
     All = 1,
     Weapons = 2,
     Armor = 3
 }
 
-Bagger.E.CustomCategory = {
+CB.E.CustomCategory = {
     BindOnAccount = 99,
     BindOnEquip = 98,
     Jewelry = 97,
@@ -30,13 +30,13 @@ Bagger.E.CustomCategory = {
 }
 
 -- DO NOT USE THIS DIRECTLY. Make a Copy.
-Bagger.E.Categories = {
-    [Bagger.E.CustomCategory.BindOnAccount] = { order = 1, name = "Bind On Account" },
-    [Bagger.E.CustomCategory.BindOnEquip] = { order = 2, name = "Bind On Equip" },
+CB.E.Categories = {
+    [CB.E.CustomCategory.BindOnAccount] = { order = 1, name = "Bind On Account" },
+    [CB.E.CustomCategory.BindOnEquip] = { order = 2, name = "Bind On Equip" },
     [Enum.ItemClass.Weapon] = { order = 3, name = "Weapons" },
     [Enum.ItemClass.Armor] = { order = 4, name = "Armor" },
-    [Bagger.E.CustomCategory.Jewelry] = { order = 5, name = "Jewelry" },
-    [Bagger.E.CustomCategory.Trinket] = { order = 6, name = "Trinkets" },
+    [CB.E.CustomCategory.Jewelry] = { order = 5, name = "Jewelry" },
+    [CB.E.CustomCategory.Trinket] = { order = 6, name = "Trinkets" },
     [Enum.ItemClass.ItemEnhancement] = { order = 7, name = "Item Enhancements" },
     [Enum.ItemClass.Gem] = { order = 8, name = "Gems" },
     [Enum.ItemClass.Glyph] = { order = 9, name = "Glyphs" },

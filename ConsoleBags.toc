@@ -1,14 +1,14 @@
 ## Interface: 100200
-## Title: Bagger
+## Title: ConsoleBags
 ## Notes: List Mode for Items
 ## Authors: Sel
 ## Version: 1
-## IconTexture: Interface\AddOns\Bagger\Logo
-## SavedVariables: BaggerData
+## IconTexture: Interface\AddOns\ConsoleBags\Logo
+## SavedVariables: CBData
 
 GUI/GUI.xml
 DataTypes.lua
 Resolver.lua
 Utils.lua
 Enums.lua
-Bagger.lua
+ConsoleBags.lua

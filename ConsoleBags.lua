@@ -1,6 +1,6 @@
-local _, Bagger = ...
+local _, CB = ...
 
-local BaggerDataDefaults = {
+local CBDataDefaults = {
     Characters = {},
     View = {
         Size = {
@@ -20,8 +20,8 @@ local BaggerDataDefaults = {
             Value = 110
         },
         SortField = {
-            Field = Bagger.E.SortFields.Name,
-            Sort = Bagger.E.SortOrder.Desc
+            Field = CB.E.SortFields.Name,
+            Sort = CB.E.SortOrder.Desc
         }
     },
 }
@@ -38,40 +38,40 @@ eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
 eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
-    if event == "ADDON_LOADED" and param1 == "Bagger" then -- Saved Variables
-        if BaggerData == nil then
-            BaggerData = Bagger.U.CopyTable(BaggerDataDefaults)
+    if event == "ADDON_LOADED" and param1 == "CB" then -- Saved Variables
+        if CBData == nil then
+            CBData = CB.U.CopyTable(CBDataDefaults)
             return
         end
     end
 
     if event == "PLAYER_LOGIN" then
-        Bagger.Init()
+        CB.Init()
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
-        Bagger.GatherItems()
-        Bagger.U.CreateEnableBagButtons()
-        Bagger.U.BagDestroyer()
-        Bagger.U.DestroyDefaultBags()
+        CB.GatherItems()
+        CB.U.CreateEnableBagButtons()
+        CB.U.BagDestroyer()
+        CB.U.DestroyDefaultBags()
     end
 
     if event == "BAG_UPDATE_DELAYED" then
-        Bagger.GatherItems()
-        Bagger.G.UpdateView()
-        Bagger.G.UpdateFilterButtons()
-        Bagger.G.UpdateBagContainer()
+        CB.GatherItems()
+        CB.G.UpdateView()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
-        Bagger.GatherItems()
-        Bagger.G.UpdateView()
-        Bagger.G.UpdateFilterButtons()
-        Bagger.G.UpdateBagContainer()
+        CB.GatherItems()
+        CB.G.UpdateView()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
     end
 
     if event == "PLAYER_MONEY" then
-        Bagger.G.UpdateCurrency()
+        CB.G.UpdateCurrency()
     end
 
     if event == "BANKFRAME_OPENED" then
@@ -83,18 +83,18 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     end
 end)
 
-function Bagger.Init()
-    -- Bagger.Data = {
+function CB.Init()
+    -- CB.Data = {
     --     Characters = {
     --     }
     -- }
 
-    Bagger.Session = {
+    CB.Session = {
         Items = {}, -- All Items
-        Categories = Bagger.U.BuildCategoriesTable()
+        Categories = CB.U.BuildCategoriesTable()
     }
 
-    Bagger.Settings = {
+    CB.Settings = {
         Defaults = {
             Columns = {
                 Icon = 32,
@@ -105,13 +105,13 @@ function Bagger.Init()
                 Value = 110
             },
             SortField = {
-                Field = Bagger.E.SortFields.Name,
-                Sort = Bagger.E.SortOrder.Desc
+                Field = CB.E.SortFields.Name,
+                Sort = CB.E.SortOrder.Desc
             }
         },
         SortField = { -- TODO: SavedVariables
-            Field = Bagger.E.SortFields.Name,
-            Sort = Bagger.E.SortOrder.Desc
+            Field = CB.E.SortFields.Name,
+            Sort = CB.E.SortOrder.Desc
         },
         Filter = nil,
         HideBags = false
@@ -124,43 +124,43 @@ function Bagger.Init()
     if playerId == nil or playerName == nil then return end
     playerIdentifier = playerId
 
-    -- Bagger.Data.Characters[playerId] = {
+    -- CB.Data.Characters[playerId] = {
     --     Name = playerName
     -- }
 end
 
-function Bagger.GatherItems()
-    Bagger.Session.Items = {}
-    Bagger.Session.Categories = Bagger.U.BuildCategoriesTable()
+function CB.GatherItems()
+    CB.Session.Items = {}
+    CB.Session.Categories = CB.U.BuildCategoriesTable()
 
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
-            local containerItem = Bagger.R.GetContainerItemInfo(bag, slot)
+            local containerItem = CB.R.GetContainerItemInfo(bag, slot)
             if containerItem ~= nil then
                 local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
-                local itemInfo = Bagger.R.GetItemInfo(containerItem.hyperlink)
-                local ilvl = Bagger.R.GetEffectiveItemLevel(containerItem.hyperlink)
-                local invType = Bagger.R.GetInventoryType(containerItem.hyperlink)
+                local itemInfo = CB.R.GetItemInfo(containerItem.hyperlink)
+                local ilvl = CB.R.GetEffectiveItemLevel(containerItem.hyperlink)
+                local invType = CB.R.GetInventoryType(containerItem.hyperlink)
                 local isNew = C_NewItems.IsNewItem(bag, slot)
 
                 -- Create Item
-                local item = Bagger.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
-                table.insert(Bagger.Session.Items, item)
+                local item = CB.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
+                table.insert(CB.Session.Items, item)
 
                 -- Category Data
                 if item.category ~= nil then
-                    Bagger.Session.Categories[item.category].count =
-                        Bagger.Session.Categories[item.category].count + 1
-                    tinsert(Bagger.Session.Categories[item.category].items, item)
+                    CB.Session.Categories[item.category].count =
+                        CB.Session.Categories[item.category].count + 1
+                    tinsert(CB.Session.Categories[item.category].items, item)
                     if isNew then
-                        Bagger.Session.Categories[item.category].hasNew = true
+                        CB.Session.Categories[item.category].hasNew = true
                     end
                 else
-                    Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].count =
-                        Bagger.Session.Categories[Enum.ItemClass.Miscellaneous] + 1
-                    tinsert(Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].items, item)
+                    CB.Session.Categories[Enum.ItemClass.Miscellaneous].count =
+                        CB.Session.Categories[Enum.ItemClass.Miscellaneous] + 1
+                    tinsert(CB.Session.Categories[Enum.ItemClass.Miscellaneous].items, item)
                     if isNew then
-                        Bagger.Session.Categories[Enum.ItemClass.Miscellaneous].hasNew = true
+                        CB.Session.Categories[Enum.ItemClass.Miscellaneous].hasNew = true
                     end
                 end
             end
@@ -168,16 +168,16 @@ function Bagger.GatherItems()
     end
 end
 
-function Bagger.SortItems()
-    local sortField = Bagger.Settings.SortField
+function CB.SortItems()
+    local sortField = CB.Settings.SortField
     local type = sortField.Field
     local order = sortField.Sort
 
-    for _, cat in pairs(Bagger.Session.Categories) do
-        if type == Bagger.E.SortFields.COUNT then
+    for _, cat in pairs(CB.Session.Categories) do
+        if type == CB.E.SortFields.COUNT then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.stackCount > b.stackCount
                     else
                         return a.stackCount < b.stackCount
@@ -185,10 +185,10 @@ function Bagger.SortItems()
                 end)
         end
 
-        if type == Bagger.E.SortFields.Name then
+        if type == CB.E.SortFields.Name then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.name < b.name
                     else
                         return a.name > b.name
@@ -196,10 +196,10 @@ function Bagger.SortItems()
                 end)
         end
 
-        if type == Bagger.E.SortFields.Icon then
+        if type == CB.E.SortFields.Icon then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.quality > b.quality
                     else
                         return a.quality < b.quality
@@ -207,10 +207,10 @@ function Bagger.SortItems()
                 end)
         end
 
-        if type == Bagger.E.SortFields.Category then
+        if type == CB.E.SortFields.Category then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.type > b.type
                     else
                         return a.type < b.type
@@ -218,10 +218,10 @@ function Bagger.SortItems()
                 end)
         end
 
-        if type == Bagger.E.SortFields.Ilvl then
+        if type == CB.E.SortFields.Ilvl then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.ilvl > b.ilvl
                     else
                         return a.ilvl < b.ilvl
@@ -229,10 +229,10 @@ function Bagger.SortItems()
                 end)
         end
 
-        if type == Bagger.E.SortFields.ReqLvl then
+        if type == CB.E.SortFields.ReqLvl then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.reqLvl > b.reqLvl
                     else
                         return a.reqLvl < b.reqLvl
@@ -240,10 +240,10 @@ function Bagger.SortItems()
                 end)
         end
 
-        if type == Bagger.E.SortFields.Value then
+        if type == CB.E.SortFields.Value then
             table.sort(cat.items,
                 function(a, b)
-                    if order == Bagger.E.SortOrder.Desc then
+                    if order == CB.E.SortOrder.Desc then
                         return a.value > b.value
                     else
                         return a.value < b.value
@@ -261,56 +261,56 @@ function Bagger.SortItems()
 end
 
 -- Slashy
-SLASH_BAGGER1 = '/bagger'
-SLASH_BAGGER2 = '/bg'
-function SlashCmdList.BAGGER(msg, editbox)
-    Bagger.G.Toggle()
+SLASH_CB1 = '/CB'
+SLASH_CB2 = '/bg'
+function SlashCmdList.CB(msg, editbox)
+    CB.G.Toggle()
 end
 
 -- Frame Operations
 local lastToggledTime = 0
 local TOGGLE_TIMEOUT = 0.01
 
-function Bagger.G.Show()
-    if Bagger.View == nil then return end
-    if Bagger.Settings.HideBags == true then return end
+function CB.G.Show()
+    if CB.View == nil then return end
+    if CB.Settings.HideBags == true then return end
 
-    if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not Bagger.View:IsShown() then
-        Bagger.GatherItems()
-        Bagger.G.UpdateView()
-        Bagger.G.UpdateFilterButtons()
-        Bagger.G.UpdateBagContainer()
+    if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not CB.View:IsShown() then
+        CB.GatherItems()
+        CB.G.UpdateView()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
-        Bagger.View:Show()
+        CB.View:Show()
         lastToggledTime = GetTime()
     end
 end
 
-function Bagger.G.Hide()
-    if Bagger.View == nil then return end
+function CB.G.Hide()
+    if CB.View == nil then return end
 
-    if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and Bagger.View:IsShown() then
+    if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and CB.View:IsShown() then
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-        Bagger.View:Hide()
+        CB.View:Hide()
         lastToggledTime = GetTime()
     end
 end
 
-function Bagger.G.Toggle()
-    if Bagger.View == nil then
-        Bagger.G.InitializeGUI()
+function CB.G.Toggle()
+    if CB.View == nil then
+        CB.G.InitializeGUI()
     end
 
-    if Bagger.View:IsShown() then
-        Bagger.G.Hide()
+    if CB.View:IsShown() then
+        CB.G.Hide()
     else
-        Bagger.G.Show()
+        CB.G.Show()
     end
 end
 
-hooksecurefunc('OpenBackpack', Bagger.G.Toggle)
-hooksecurefunc('CloseBackpack', Bagger.G.Hide)
-hooksecurefunc('ToggleBackpack', Bagger.G.Toggle)
-hooksecurefunc('OpenBag', Bagger.G.Toggle)
-hooksecurefunc('ToggleBag', Bagger.G.Toggle)
+hooksecurefunc('OpenBackpack', CB.G.Toggle)
+hooksecurefunc('CloseBackpack', CB.G.Hide)
+hooksecurefunc('ToggleBackpack', CB.G.Toggle)
+hooksecurefunc('OpenBag', CB.G.Toggle)
+hooksecurefunc('ToggleBag', CB.G.Toggle)

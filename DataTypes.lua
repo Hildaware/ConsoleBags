@@ -1,5 +1,5 @@
-local _, Bagger = ...
-Bagger.T = {}
+local _, CB = ...
+CB.T = {}
 
 local Item = {}
 Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
@@ -31,14 +31,14 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, qu
 end
 
 function Item.GetCategory(self)
-    if Bagger.U.IsEquipmentUnbound(self) then
-        return Bagger.E.CustomCategory.BindOnEquip
+    if CB.U.IsEquipmentUnbound(self) then
+        return CB.E.CustomCategory.BindOnEquip
     elseif self.quality == Enum.ItemQuality.Heirloom then
         return Enum.ItemQuality.Heirloom
-    elseif Bagger.U.IsJewelry(self) then
-        return Bagger.E.CustomCategory.Jewelry
-    elseif Bagger.U.IsTrinket(self) then
-        return Bagger.E.CustomCategory.Trinket
+    elseif CB.U.IsJewelry(self) then
+        return CB.E.CustomCategory.Jewelry
+    elseif CB.U.IsTrinket(self) then
+        return CB.E.CustomCategory.Trinket
     elseif self.type == nil then
         return Enum.ItemClass.Miscellaneous
     else
@@ -46,4 +46,4 @@ function Item.GetCategory(self)
     end
 end
 
-Bagger.T.Item = Item
+CB.T.Item = Item

@@ -1,17 +1,17 @@
-local _, Bagger = ...
+local _, CB = ...
 
 local LIST_ITEM_HEIGHT = 32
 local InactiveFilterFrames = {}
 local ActiveFilterFrames = {}
 
-function Bagger.G.UpdateFilterButtons()
-    if Bagger.Session.Categories == nil then return end
+function CB.G.UpdateFilterButtons()
+    if CB.Session.Categories == nil then return end
 
     CleanupFilterFrames()
 
     -- Filter Categories
     local foundCategories = {}
-    for _, value in pairs(Bagger.Session.Categories) do
+    for _, value in pairs(CB.Session.Categories) do
         if value.count > 0 then
             tinsert(foundCategories, value)
         end
@@ -58,7 +58,7 @@ function CreateFilterButtonPlaceholder()
     local newTex = f:CreateTexture(nil, "OVERLAY")
     newTex:SetPoint("TOPRIGHT", f, "TOPRIGHT")
     newTex:SetSize(10, 10)
-    newTex:SetTexture("Interface\\Addons\\Bagger\\Media\\Exclamation")
+    newTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Exclamation")
     newTex:Hide()
 
     f.newTexture = newTex
@@ -71,23 +71,23 @@ function CreateFilterButtonPlaceholder()
 end
 
 function BuildFilterButton(categoryData, index)
-    if Bagger.View == nil then return end
+    if CB.View == nil then return end
 
     local f = FetchInactiveFilterFrame()
     InsertActiveFilterFrame(f)
 
-    f:SetParent(Bagger.View.FilterFrame)
+    f:SetParent(CB.View.FilterFrame)
     f:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
 
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
 
-    f:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
-    f:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
+    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
+    f:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
     f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
     f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
 
-    f.texture:SetTexture(Bagger.U.GetCategoyIcon(categoryData.key))
+    f.texture:SetTexture(CB.U.GetCategoyIcon(categoryData.key))
 
     if categoryData.hasNew == true then
         f.newTexture:Show()
@@ -98,11 +98,11 @@ function BuildFilterButton(categoryData, index)
     f:SetScript("OnClick", function(self)
         self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
 
-        Bagger.Settings.Filter = categoryData.key
-        Bagger.GatherItems()
-        Bagger.G.UpdateView()
-        Bagger.G.UpdateFilterButtons()
-        Bagger.G.UpdateBagContainer()
+        CB.Settings.Filter = categoryData.key
+        CB.GatherItems()
+        CB.G.UpdateView()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
     end)
 
     f:SetScript("OnEnter", function(self)

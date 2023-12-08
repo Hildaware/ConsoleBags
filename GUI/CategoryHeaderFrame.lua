@@ -1,13 +1,13 @@
-local _, Bagger = ...
+local _, CB = ...
 
 local LIST_ITEM_HEIGHT = 32
-Bagger.G.CollapsedCategories = {}
+CB.G.CollapsedCategories = {}
 
 local ActiveHeaderFrames = {}
 local InactiveHeaderFrames = {}
 
 
-function Bagger.G.CleanupCategoryHeaderFrames()
+function CB.G.CleanupCategoryHeaderFrames()
     for i = 1, #ActiveHeaderFrames do
         if ActiveHeaderFrames[i] and ActiveHeaderFrames[i].isHeader then
             ActiveHeaderFrames[i]:Hide()
@@ -18,34 +18,34 @@ function Bagger.G.CleanupCategoryHeaderFrames()
     end
 end
 
-function Bagger.G.BuildCategoryFrame(categoryName, count, categoryType, index)
+function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index)
     local frame = FetchInactiveHeaderFrame()
     InsertActiveHeaderFrame(frame)
 
     if frame == nil then return end
 
-    frame:SetParent(Bagger.View.ListView)
+    frame:SetParent(CB.View.ListView)
     frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
 
-    if Bagger.G.CollapsedCategories[categoryType] then
+    if CB.G.CollapsedCategories[categoryType] then
         frame.texture:SetVertexColor(1, 0, 0, 0.35)
     else
         frame.texture:SetVertexColor(1, 1, 0, 0.35)
     end
 
-    frame.type:SetTexture(Bagger.U.GetCategoyIcon(categoryType))
+    frame.type:SetTexture(CB.U.GetCategoyIcon(categoryType))
     frame.name:SetText(categoryName .. " (" .. count .. ")")
 
     frame:SetScript("OnClick", function(self, button, down)
         if button == "LeftButton" then
-            local isCollapsed = Bagger.G.CollapsedCategories[categoryType] and
-                Bagger.G.CollapsedCategories[categoryType] == true
+            local isCollapsed = CB.G.CollapsedCategories[categoryType] and
+                CB.G.CollapsedCategories[categoryType] == true
             if isCollapsed then
-                Bagger.G.CollapsedCategories[categoryType] = false
+                CB.G.CollapsedCategories[categoryType] = false
             else
-                Bagger.G.CollapsedCategories[categoryType] = true
+                CB.G.CollapsedCategories[categoryType] = true
             end
-            Bagger.G.UpdateView()
+            CB.G.UpdateView()
         end
     end)
 
@@ -54,16 +54,16 @@ end
 
 function CreateCategoryHeaderPlaceholder()
     local f = CreateFrame("Button")
-    f:SetSize(Bagger.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
+    f:SetSize(CB.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
 
     f:RegisterForClicks("LeftButtonUp")
 
     local tex = f:CreateTexture(nil, "OVERLAY")
     tex:SetAllPoints(f)
-    tex:SetTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
+    tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
     tex:SetVertexColor(1, 1, 0, 0.35)
 
-    f:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Item_Highlight")
+    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
 
     f.texture = tex
 

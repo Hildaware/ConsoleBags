@@ -1,12 +1,12 @@
 -- WoW API Calls, etc.
-local _, Bagger = ...
-Bagger.R = {}
+local _, CB = ...
+CB.R = {}
 
-Bagger.R.GetContainerItemInfo = function(bagId, slotId)
+CB.R.GetContainerItemInfo = function(bagId, slotId)
     return C_Container.GetContainerItemInfo(bagId, slotId)
 end
 
-Bagger.R.GetItemInfo = function(link)
+CB.R.GetItemInfo = function(link)
     local _, _, rarity, _, reqLvl, _, _, stackCount, _, texture, sellPrice, classId, subClassId, _, xpacId =
         GetItemInfo(link)
     return {
@@ -21,11 +21,11 @@ Bagger.R.GetItemInfo = function(link)
     }
 end
 
-Bagger.R.GetEffectiveItemLevel = function(link)
+CB.R.GetEffectiveItemLevel = function(link)
     local ilvl = GetDetailedItemLevelInfo(link)
     return ilvl
 end
 
-Bagger.R.GetInventoryType = function(link)
+CB.R.GetInventoryType = function(link)
     return C_Item.GetItemInventoryTypeByID(link)
 end

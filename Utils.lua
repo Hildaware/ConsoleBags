@@ -1,20 +1,20 @@
-local _, Bagger = ...
-Bagger.U = {}
+local _, CB = ...
+CB.U = {}
 
-Bagger.U.GetItemClass = function(classId)
+CB.U.GetItemClass = function(classId)
     for i, v in pairs(Enum.ItemClass) do
         if classId == v then return i end
     end
     return nil
 end
 
-Bagger.U.GetCategoyIcon = function(classId)
-    local className = Bagger.U.GetItemClass(classId)
-    local path = "Interface\\Addons\\Bagger\\Media\\Categories\\"
+CB.U.GetCategoyIcon = function(classId)
+    local className = CB.U.GetItemClass(classId)
+    local path = "Interface\\Addons\\ConsoleBags\\Media\\Categories\\"
 
     -- Custom Categories
     if className == nil then
-        for key, value in pairs(Bagger.E.CustomCategory) do
+        for key, value in pairs(CB.E.CustomCategory) do
             if value == classId then
                 className = key
                 break
@@ -26,7 +26,7 @@ Bagger.U.GetCategoyIcon = function(classId)
     return path .. className
 end
 
-Bagger.U.IsEquipmentUnbound = function(item)
+CB.U.IsEquipmentUnbound = function(item)
     if item.bound == true then return false end
     if not item.type then return false end
 
@@ -36,7 +36,7 @@ Bagger.U.IsEquipmentUnbound = function(item)
     return false
 end
 
-Bagger.U.IsJewelry = function(item)
+CB.U.IsJewelry = function(item)
     if item.equipLocation == nil then return false end
     if item.equipLocation == Enum.InventoryType.IndexNeckType or item.equipLocation == Enum.InventoryType.IndexFingerType then
         return true
@@ -44,7 +44,7 @@ Bagger.U.IsJewelry = function(item)
     return false
 end
 
-Bagger.U.IsTrinket = function(item)
+CB.U.IsTrinket = function(item)
     if item.equipLocation == nil then return false end
     if item.equipLocation == Enum.InventoryType.IndexTrinketType then
         return true
@@ -52,7 +52,7 @@ Bagger.U.IsTrinket = function(item)
     return false
 end
 
-Bagger.U.CopyTable = function(table)
+CB.U.CopyTable = function(table)
     local orig_type = type(table)
     local copy
     if orig_type == 'table' then
@@ -66,8 +66,8 @@ Bagger.U.CopyTable = function(table)
     return copy
 end
 
-Bagger.U.BuildCategoriesTable = function()
-    local t = Bagger.U.CopyTable(Bagger.E.Categories)
+CB.U.BuildCategoriesTable = function()
+    local t = CB.U.CopyTable(CB.E.Categories)
     for key, value in pairs(t) do
         value.items = {}
         value.count = 0
@@ -108,7 +108,7 @@ local function CreateEnableBagButton(parent)
     button.text:SetPoint("CENTER", 4, -1)
     button.text:SetSize(20, 20)
     -- button.text:SetTexCoord(0, 0.75, 0, 1)
-    button.text:SetTexture("Interface\\Addons\\Bagger\\Media\\Logo_Normal")
+    button.text:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Logo_Normal")
     button:SetSize(24, 24)
     button:HookScript("OnMouseDown", function(self)
         self.text:SetPoint("CENTER", 3, -2)
@@ -120,40 +120,40 @@ local function CreateEnableBagButton(parent)
     end)
     button:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
-        GameTooltip:SetText("Back to Bagger inventory mode", 1, 1, 1, 1, true)
+        GameTooltip:SetText("Back to ConsoleBags", 1, 1, 1, 1, true)
         GameTooltip:Show()
     end)
     button:HookScript("OnLeave", function(self)
         GameTooltip:Hide()
     end)
     button:HookScript("OnClick", function(self)
-        Bagger.U.DestroyDefaultBags()
+        CB.U.DestroyDefaultBags()
         CloseAllBags()
         OpenAllBags()
     end)
     return button
 end
 
-function Bagger.U.CreateEnableBagButtons()
+function CB.U.CreateEnableBagButtons()
     local f = _G["ContainerFrame1"]
-    f.Bagger = CreateEnableBagButton(f)
+    f.CB = CreateEnableBagButton(f)
     if _G["ContainerFrameCombinedBags"] then
         f = _G["ContainerFrameCombinedBags"]
-        f.Bagger = CreateEnableBagButton(f)
-        f.Bagger:SetPoint("TOPRIGHT", -22, -1)
-        f.Bagger:SetHeight(20)
+        f.CB = CreateEnableBagButton(f)
+        f.CB:SetPoint("TOPRIGHT", -22, -1)
+        f.CB:SetHeight(20)
     end
 
     if _G["ElvUI_ContainerFrame"] then
         f = _G["ElvUI_ContainerFrame"]
-        f.Bagger = CreateEnableBagButton(f)
-        f.Bagger:SetPoint("TOPLEFT", 2, -2)
-        f.Bagger:SetSize(22, 22)
+        f.CB = CreateEnableBagButton(f)
+        f.CB:SetPoint("TOPLEFT", 2, -2)
+        f.CB:SetSize(22, 22)
     end
 end
 
 -- TODO: After bank frame is complete, handle this
-function Bagger.U.BagDestroyer()
+function CB.U.BagDestroyer()
     if _G["ElvUI_ContainerFrame"] then
         MakeFrameKillable(_G["ElvUI_ContainerFrame"])
         -- MakeFrameKillable(_G["ElvUI_BankContainerFrame"])
@@ -180,12 +180,12 @@ function Bagger.U.BagDestroyer()
     end
 end
 
-function Bagger.U.DestroyDefaultBags()
-    Bagger.Settings.HideBags = false
+function CB.U.DestroyDefaultBags()
+    CB.Settings.HideBags = false
     killableFramesParent:Hide()
 end
 
-function Bagger.U.RestoreDefaultBags()
+function CB.U.RestoreDefaultBags()
     killableFramesParent:Show()
-    Bagger.Settings.HideBags = true
+    CB.Settings.HideBags = true
 end

@@ -1,12 +1,12 @@
-local _, Bagger = ...
+local _, CB = ...
 
-Bagger.G = {}
+CB.G = {}
 
-function Bagger.G.InitializeGUI()
-    local f = CreateFrame("Frame", "BaggerFrame", UIParent)
+function CB.G.InitializeGUI()
+    local f = CreateFrame("Frame", "CBFrame", UIParent)
     f:SetFrameStrata("HIGH")
-    f:SetSize(632, BaggerData.View.Size.Y or 396)
-    f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BaggerData.View.Position.X or 200, BaggerData.View.Position.Y or 200)
+    f:SetSize(632, CBData.View.Size.Y or 396)
+    f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", CBData.View.Position.X or 200, CBData.View.Position.Y or 200)
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
@@ -31,18 +31,18 @@ function Bagger.G.InitializeGUI()
     local close = CreateFrame("Button", nil, header)
     close:SetSize(32, 32)
     close:SetPoint("RIGHT", header, "RIGHT", -6, 0)
-    close:SetNormalTexture("Interface\\Addons\\Bagger\\Media\\Close_Normal")
-    close:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Close_Highlight")
-    close:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Close_Pushed")
+    close:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Normal")
+    close:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight")
+    close:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed")
     close:SetScript("OnClick", function()
-        Bagger.G.Toggle()
+        CB.G.Toggle()
     end)
 
     local defaultButton = CreateFrame("Button", nil, header)
     defaultButton:SetSize(32, 32)
     defaultButton:SetPoint("LEFT", header, "LEFT", 6, 0)
-    defaultButton:SetNormalTexture("Interface\\Addons\\Bagger\\Media\\Back_Normal")
-    defaultButton:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Back_Highlight")
+    defaultButton:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Back_Normal")
+    defaultButton:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Back_Highlight")
     defaultButton:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
         GameTooltip:SetText("Show Default bags temporarily. ", 1, 1, 1, 1, true)
@@ -52,7 +52,7 @@ function Bagger.G.InitializeGUI()
         GameTooltip:Hide()
     end)
     defaultButton:SetScript("OnClick", function(self, button, down)
-        Bagger.U.RestoreDefaultBags()
+        CB.U.RestoreDefaultBags()
         CloseAllBags()
         OpenAllBags()
     end)
@@ -70,9 +70,9 @@ function Bagger.G.InitializeGUI()
     end)
     header:SetScript("OnDragStop", function(self)
         self:GetParent():StopMovingOrSizing()
-        local x = Bagger.View:GetLeft()
-        local y = Bagger.View:GetTop()
-        BaggerData.View.Position = { X = x, Y = y }
+        local x = CB.View:GetLeft()
+        local y = CB.View:GetTop()
+        CBData.View.Position = { X = x, Y = y }
     end)
 
     f.Header = header
@@ -86,11 +86,11 @@ function Bagger.G.InitializeGUI()
     end)
     drag:SetScript("OnMouseUp", function(self)
         self:GetParent():StopMovingOrSizing("BOTTOM")
-        BaggerData.View.Size.Y = Bagger.View:GetHeight()
+        CBData.View.Size.Y = CB.View:GetHeight()
     end)
     local dragTex = drag:CreateTexture(nil, "BACKGROUND")
     dragTex:SetAllPoints(drag)
-    dragTex:SetTexture("Interface\\Addons\\Bagger\\Media\\Handlebar")
+    dragTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Handlebar")
     -- dragTex:SetColorTexture(1, 1, 1, 0.75)
 
     -- Filters
@@ -99,12 +99,12 @@ function Bagger.G.InitializeGUI()
     -- 'Header'
     BuildListViewHeader(f)
 
-    local scroller = CreateFrame("ScrollFrame", "BaggerScrollView", f, "UIPanelScrollFrameTemplate")
+    local scroller = CreateFrame("ScrollFrame", "CBScrollView", f, "UIPanelScrollFrameTemplate")
     scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
     scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
     scroller:SetWidth(f:GetWidth())
 
-    local scrollChild = CreateFrame("Frame", "BaggerListView")
+    local scrollChild = CreateFrame("Frame", "CBListView")
     scroller:SetScrollChild(scrollChild)
     scrollChild:SetSize(scroller:GetWidth(), 1)
 
@@ -115,30 +115,30 @@ function Bagger.G.InitializeGUI()
 
     CreateBorder(f)
 
-    Bagger.View = f
+    CB.View = f
 
-    Bagger.G.CreateBagContainer()
+    CB.G.CreateBagContainer()
 
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
         ---@diagnostic disable-next-line: undefined-global
-        ConsolePort:AddInterfaceCursorFrame(Bagger.View)
+        ConsolePort:AddInterfaceCursorFrame(CB.View)
     end
 end
 
-function Bagger.G.UpdateView()
-    if Bagger.View == nil then return end
+function CB.G.UpdateView()
+    if CB.View == nil then return end
 
-    Bagger.SortItems()
+    CB.SortItems()
 
     -- Cleanup
-    Bagger.G.CleanupItemFrames()
-    Bagger.G.CleanupCategoryHeaderFrames()
+    CB.G.CleanupItemFrames()
+    CB.G.CleanupCategoryHeaderFrames()
 
     -- Filter Categories
     local foundCategories = {}
-    for _, value in pairs(Bagger.Session.Categories) do
-        if (value.key == Bagger.Settings.Filter) or Bagger.Settings.Filter == nil then
+    for _, value in pairs(CB.Session.Categories) do
+        if (value.key == CB.Settings.Filter) or CB.Settings.Filter == nil then
             tinsert(foundCategories, value)
         end
     end
@@ -154,11 +154,11 @@ function Bagger.G.UpdateView()
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            Bagger.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset)
+            CB.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset)
             offset = offset + 1
-            if Bagger.G.CollapsedCategories[categoryData.key] ~= true then
+            if CB.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    Bagger.G.BuildItemFrame(item, offset, itemIndex)
+                    CB.G.BuildItemFrame(item, offset, itemIndex)
                     offset = offset + 1
                     itemIndex = itemIndex + 1
                 end
@@ -167,9 +167,9 @@ function Bagger.G.UpdateView()
     end
 end
 
-function Bagger.G.UpdateCurrency()
-    if Bagger.View and Bagger.View.Header then
-        Bagger.View.Header.Gold:SetText(GetCoinTextureString(GetMoney()))
+function CB.G.UpdateCurrency()
+    if CB.View and CB.View.Header then
+        CB.View.Header.Gold:SetText(GetCoinTextureString(GetMoney()))
     end
 end
 
@@ -187,22 +187,22 @@ function BuildFilteringContainer(parent)
     f:SetSize(28, 28)
     f:SetPoint("TOP", cFrame, "TOP", 0, -32)
 
-    f:SetHighlightTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
-    f:SetPushedTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
+    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
+    f:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
     f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
     f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
 
     local aTex = f:CreateTexture(nil, "OVERLAY")
     aTex:SetPoint("CENTER", 0, "CENTER")
     aTex:SetSize(24, 24)
-    aTex:SetTexture(Bagger.U.GetCategoyIcon(1))
+    aTex:SetTexture(CB.U.GetCategoyIcon(1))
 
     f:SetScript("OnClick", function(self)
-        Bagger.Settings.Filter = nil
-        Bagger.GatherItems()
-        Bagger.G.UpdateView()
-        Bagger.G.UpdateFilterButtons()
-        Bagger.G.UpdateBagContainer()
+        CB.Settings.Filter = nil
+        CB.GatherItems()
+        CB.G.UpdateView()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
         self:GetParent().selectedTexture:SetPoint("TOP", self:GetParent(), "TOP", 0, -32)
     end)
     f:RegisterForClicks("AnyDown")
@@ -212,7 +212,7 @@ function BuildFilteringContainer(parent)
     local selectedTex = cFrame:CreateTexture(nil, "ARTWORK")
     selectedTex:SetPoint("TOP", cFrame, "TOP", 0, -32)
     selectedTex:SetSize(28, 28)
-    selectedTex:SetTexture("Interface\\Addons\\Bagger\\Media\\Rounded_BG")
+    selectedTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
     selectedTex:SetVertexColor(1, 1, 0, 0.25)
 
     cFrame.selectedTexture = selectedTex
@@ -230,23 +230,23 @@ function BuildListViewHeader(parent)
     tex:SetAllPoints(hFrame)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
-    local icon = BuildSortButton(hFrame, hFrame, "•", Bagger.Settings.Defaults.Columns.Icon,
-        Bagger.E.SortFields.Icon, true)
+    local icon = BuildSortButton(hFrame, hFrame, "•", CB.Settings.Defaults.Columns.Icon,
+        CB.E.SortFields.Icon, true)
 
-    local name = BuildSortButton(hFrame, icon, "NAME", Bagger.Settings.Defaults.Columns.Name,
-        Bagger.E.SortFields.Name, false)
+    local name = BuildSortButton(hFrame, icon, "NAME", CB.Settings.Defaults.Columns.Name,
+        CB.E.SortFields.Name, false)
 
-    local category = BuildSortButton(hFrame, name, "CAT", Bagger.Settings.Defaults.Columns.Category,
-        Bagger.E.SortFields.Category, false)
+    local category = BuildSortButton(hFrame, name, "CAT", CB.Settings.Defaults.Columns.Category,
+        CB.E.SortFields.Category, false)
 
-    local ilvl = BuildSortButton(hFrame, category, "ILVL", Bagger.Settings.Defaults.Columns.Ilvl,
-        Bagger.E.SortFields.Ilvl, false)
+    local ilvl = BuildSortButton(hFrame, category, "ILVL", CB.Settings.Defaults.Columns.Ilvl,
+        CB.E.SortFields.Ilvl, false)
 
-    local reqlvl = BuildSortButton(hFrame, ilvl, "REQ", Bagger.Settings.Defaults.Columns.ReqLvl,
-        Bagger.E.SortFields.ReqLvl, false)
+    local reqlvl = BuildSortButton(hFrame, ilvl, "REQ", CB.Settings.Defaults.Columns.ReqLvl,
+        CB.E.SortFields.ReqLvl, false)
 
-    local value = BuildSortButton(hFrame, reqlvl, "VALUE", Bagger.Settings.Defaults.Columns.Value,
-        Bagger.E.SortFields.Value, false)
+    local value = BuildSortButton(hFrame, reqlvl, "VALUE", CB.Settings.Defaults.Columns.Value,
+        CB.E.SortFields.Value, false)
 end
 
 function BuildSortButton(parent, anchor, name, width, sortField, initial)
@@ -262,52 +262,52 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
 
     local arrow = frame:CreateTexture("ARTWORK")
     arrow:SetPoint("LEFT", text, "RIGHT", 2, 0)
-    arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
+    arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
     arrow:SetSize(8, 14)
 
-    if Bagger.Settings.SortField.Sort == Bagger.E.SortOrder.Desc then
-        arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
+    if CB.Settings.SortField.Sort == CB.E.SortOrder.Desc then
+        arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
     else
-        arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Down")
+        arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down")
     end
 
-    if Bagger.Settings.SortField.Field ~= sortField then
+    if CB.Settings.SortField.Field ~= sortField then
         arrow:Hide()
     end
 
     frame:SetScript("OnClick", function()
-        local sortOrder = Bagger.Settings.SortField.Sort
-        if Bagger.Settings.SortField.Field == sortField then
-            if sortOrder == Bagger.E.SortOrder.Asc then
-                sortOrder = Bagger.E.SortOrder.Desc
+        local sortOrder = CB.Settings.SortField.Sort
+        if CB.Settings.SortField.Field == sortField then
+            if sortOrder == CB.E.SortOrder.Asc then
+                sortOrder = CB.E.SortOrder.Desc
             else
-                sortOrder = Bagger.E.SortOrder.Asc
+                sortOrder = CB.E.SortOrder.Asc
             end
         end
 
-        Bagger.Settings.SortField.Field = sortField
-        Bagger.Settings.SortField.Sort = sortOrder
+        CB.Settings.SortField.Field = sortField
+        CB.Settings.SortField.Sort = sortOrder
 
-        if Bagger.Settings.SortField.Sort ~= Bagger.E.SortOrder.Desc then
-            arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Up")
+        if CB.Settings.SortField.Sort ~= CB.E.SortOrder.Desc then
+            arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
         else
-            arrow:SetTexture("Interface\\Addons\\Bagger\\Media\\Arrow_Down")
+            arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down")
         end
 
         arrow:Show()
         text:SetTextColor(1, 1, 0)
 
         -- Remove other arrows
-        for _, k in pairs(Bagger.E.SortFields) do
+        for _, k in pairs(CB.E.SortFields) do
             if k ~= sortField then
                 parent.fields[k].arrow:Hide()
                 parent.fields[k].text:SetTextColor(1, 1, 1)
             end
         end
 
-        Bagger.G.UpdateView()
-        Bagger.G.UpdateFilterButtons()
-        Bagger.G.UpdateBagContainer()
+        CB.G.UpdateView()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
     end)
 
     parent.fields[sortField] = frame
