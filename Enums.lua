@@ -1,13 +1,18 @@
 local _, CB = ...
 CB.E = {}
 
+CB.E.InventoryType = {
+    Inventory = 1,
+    Bank = 2,
+    GuildBank = 3
+}
+
 CB.E.SortOrder = {
     Asc = 1,
     Desc = 2,
 }
 
 CB.E.SortFields = {
-    -- COUNT = 1,
     Icon = 2,
     Name = 3,
     Category = 4,

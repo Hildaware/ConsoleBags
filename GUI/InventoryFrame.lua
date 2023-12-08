@@ -96,12 +96,12 @@ function CB.G.InitializeInventoryGUI()
     -- 'Header'
     CB.G.BuildListViewHeader(f)
 
-    local scroller = CreateFrame("ScrollFrame", "CBScrollView", f, "UIPanelScrollFrameTemplate")
+    local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
     scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
     scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
     scroller:SetWidth(f:GetWidth())
 
-    local scrollChild = CreateFrame("Frame", "CBListView")
+    local scrollChild = CreateFrame("Frame")
     scroller:SetScrollChild(scrollChild)
     scrollChild:SetSize(scroller:GetWidth(), 1)
 
@@ -126,11 +126,13 @@ end
 function CB.G.UpdateInventory()
     if CB.View == nil then return end
 
-    CB.SortItems()
+    local inventoryType = CB.E.InventoryType.Inventory
+    CB.SortItems(inventoryType, CB.Session.Categories)
 
     -- Cleanup
-    CB.G.CleanupItemFrames()
-    CB.G.CleanupCategoryHeaderFrames()
+    -- Hey, lets clean up only the Inventory Frames
+    CB.G.CleanupItemFrames(inventoryType)
+    CB.G.CleanupCategoryHeaderFrames(inventoryType)
 
     -- Filter Categories
     local foundCategories = {}
@@ -151,11 +153,11 @@ function CB.G.UpdateInventory()
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            CB.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset)
+            CB.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset, inventoryType)
             offset = offset + 1
             if CB.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    CB.G.BuildItemFrame(item, offset, itemIndex)
+                    CB.G.BuildItemFrame(item, offset, itemIndex, inventoryType)
                     offset = offset + 1
                     itemIndex = itemIndex + 1
                 end

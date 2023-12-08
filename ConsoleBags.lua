@@ -59,6 +59,7 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
+eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
 eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     if event == "ADDON_LOADED" and param1 == "ConsoleBags" then -- Saved Variables
         if CBData == nil then
@@ -97,8 +98,19 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     end
 
     if event == "BANKFRAME_OPENED" then
+        if CB.View == nil then
+            CB.G.InitializeInventoryGUI()
+        end
+        if CB.BankView == nil then
+            CB.G.InitializeBankGUI()
+        end
+
+        -- Gather Items
         CB.GatherItems()
+        CB.GatherBankItems()
+
         CB.G.UpdateInventory()
+        CB.G.UpdateBank()
         CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
 
@@ -108,6 +120,11 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BANKFRAME_CLOSED" then
         CB.G.HideBank()
+    end
+
+    if event == "PLAYERBANKSLOTS_CHANGED" then
+        CB.GatherBankItems()
+        CB.G.UpdateBank()
     end
 end)
 
@@ -119,10 +136,14 @@ function CB.Init()
 
     CB.Session = {
         Items = {}, -- All Items
-        Categories = CB.U.BuildCategoriesTable()
+        Categories = CB.U.BuildCategoriesTable(),
+        Bank = {
+            Items = {},
+            Categories = CB.U.BuildBankCategoriesTable()
+        }
     }
 
-    CB.Settings = {
+    CB.Settings = { -- This is technically Session data as well
         Defaults = {
             Columns = {
                 Icon = 32,
@@ -131,15 +152,7 @@ function CB.Init()
                 Ilvl = 50,
                 ReqLvl = 50,
                 Value = 110
-            },
-            SortField = {
-                Field = CB.E.SortFields.Name,
-                Sort = CB.E.SortOrder.Desc
             }
-        },
-        SortField = { -- TODO: SavedVariables
-            Field = CB.E.SortFields.Name,
-            Sort = CB.E.SortOrder.Desc
         },
         Filter = nil,
         HideBags = false
@@ -161,6 +174,43 @@ function CB.Init()
     hooksecurefunc('ToggleBag', CB.G.Toggle)
     hooksecurefunc('ToggleAllBags', CB.G.Toggle)
     hooksecurefunc('ToggleBackpack', CB.G.Toggle)
+end
+
+local function GetItemData(bag, slot)
+    local containerItem = CB.R.GetContainerItemInfo(bag, slot)
+    if containerItem ~= nil then
+        local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
+        local itemInfo = CB.R.GetItemInfo(containerItem.hyperlink)
+        local ilvl = CB.R.GetEffectiveItemLevel(containerItem.hyperlink)
+        local invType = CB.R.GetInventoryType(containerItem.hyperlink)
+        local isNew = C_NewItems.IsNewItem(bag, slot)
+
+        -- Create Item
+        local item = CB.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
+        return item
+    end
+    return nil
+end
+
+local function CategorizeItem(item, SessionInventory)
+    table.insert(SessionInventory.Items, item)
+
+    -- Category Data
+    if item.category ~= nil then
+        SessionInventory.Categories[item.category].count =
+            SessionInventory.Categories[item.category].count + 1
+        tinsert(SessionInventory.Categories[item.category].items, item)
+        if item.isNew then
+            SessionInventory.Categories[item.category].hasNew = true
+        end
+    else
+        SessionInventory.Categories[Enum.ItemClass.Miscellaneous].count =
+            SessionInventory.Categories[Enum.ItemClass.Miscellaneous] + 1
+        tinsert(SessionInventory.Categories[Enum.ItemClass.Miscellaneous].items, item)
+        if item.isNew then
+            SessionInventory.Categories[Enum.ItemClass.Miscellaneous].hasNew = true
+        end
+    end
 end
 
 -- TODO: Move this. It's specific to Inventory
@@ -203,13 +253,53 @@ function CB.GatherItems()
     end
 end
 
+function CB.GatherBankItems()
+    CB.Session.Bank.Items = {}
+    CB.Session.Bank.Categories = CB.U.BuildBankCategoriesTable()
+
+    -- Bank Bag = BANK_CONTAINER
+    -- Bank Bags = NUM_BAG_SLOTS+1 > NUM_BAG_SLOTS + NUM_BANKBAGSLOTS
+    -- Reagent Bank = REAGENTBANK_CONTAINER
+
+    -- Bank Container
+    for slot = 1, C_Container.GetContainerNumSlots(BANK_CONTAINER) do
+        local item = GetItemData(BANK_CONTAINER, slot)
+        if item then
+            CategorizeItem(item, CB.Session.Bank)
+        end
+    end
+
+    -- Bank Bags
+    for bag = ITEM_INVENTORY_BANK_BAG_OFFSET, ITEM_INVENTORY_BANK_BAG_OFFSET + NUM_BANKBAGSLOTS do
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            local item = GetItemData(bag, slot)
+            if item then
+                CategorizeItem(item, CB.Session.Bank)
+            end
+        end
+    end
+
+    -- Reagent Bank
+    for slot = 1, C_Container.GetContainerNumSlots(REAGENTBANK_CONTAINER) do
+        local item = GetItemData(REAGENTBANK_CONTAINER, slot)
+        if item then
+            CategorizeItem(item, CB.Session.Bank)
+        end
+    end
+end
+
 -- TODO: Make this more generic so we can use it in the bank
-function CB.SortItems()
-    local sortField = CB.Settings.SortField
+function CB.SortItems(inventoryType, categories)
+    local sortField
+    if inventoryType == CB.E.InventoryType.Inventory then
+        sortField = CBData.View.SortField
+    elseif inventoryType == CB.E.InventoryType.Bank then
+        sortField = CBData.BankView.SortField
+    end
     local type = sortField.Field
     local order = sortField.Sort
 
-    for _, cat in pairs(CB.Session.Categories) do
+    for _, cat in pairs(categories) do
         if type == CB.E.SortFields.COUNT then
             table.sort(cat.items,
                 function(a, b)

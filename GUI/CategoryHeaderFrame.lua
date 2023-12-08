@@ -1,15 +1,15 @@
 local _, CB = ...
 
 local LIST_ITEM_HEIGHT = 32
-CB.G.CollapsedCategories = {}
+CB.G.CollapsedCategories = {} -- TODO: Generic
 
 local ActiveHeaderFrames = {}
 local InactiveHeaderFrames = {}
 
 
-function CB.G.CleanupCategoryHeaderFrames()
+function CB.G.CleanupCategoryHeaderFrames(inventoryType)
     for i = 1, #ActiveHeaderFrames do
-        if ActiveHeaderFrames[i] and ActiveHeaderFrames[i].isHeader then
+        if ActiveHeaderFrames[i] and ActiveHeaderFrames[i].inventory == inventoryType then
             ActiveHeaderFrames[i]:Hide()
             ActiveHeaderFrames[i]:SetParent(nil)
             tinsert(InactiveHeaderFrames, ActiveHeaderFrames[i])
@@ -18,13 +18,22 @@ function CB.G.CleanupCategoryHeaderFrames()
     end
 end
 
-function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index)
-    local frame = FetchInactiveHeaderFrame()
+function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index, inventoryType)
+    local frame = FetchInactiveHeaderFrame(inventoryType)
+    frame.inventory = inventoryType
+
     InsertActiveHeaderFrame(frame)
 
     if frame == nil then return end
 
-    frame:SetParent(CB.View.ListView)
+    local parent
+    if inventoryType == CB.E.InventoryType.Inventory then
+        parent = CB.View.ListView
+    elseif inventoryType == CB.E.InventoryType.Bank then
+        parent = CB.BankView.ListView
+    end
+
+    frame:SetParent(parent)
     frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
 
     if CB.G.CollapsedCategories[categoryType] then
@@ -52,6 +61,7 @@ function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index)
     frame:Show()
 end
 
+-- TODO: SetSize will eventually need to be set based on the View
 function CreateCategoryHeaderPlaceholder()
     local f = CreateFrame("Button")
     f:SetSize(CB.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
@@ -107,9 +117,9 @@ function InsertInactiveHeaderFrame(frame)
     tinsert(InactiveHeaderFrames, frame)
 end
 
-function FetchInactiveHeaderFrame()
+function FetchInactiveHeaderFrame(type)
     local frame = nil
-    if InactiveHeaderFrames[1] then
+    if InactiveHeaderFrames[1] and InactiveHeaderFrames[1].inventory == type then
         frame = InactiveHeaderFrames[1]
         tremove(InactiveHeaderFrames, 1)
     else

@@ -77,6 +77,17 @@ CB.U.BuildCategoriesTable = function()
     return t
 end
 
+CB.U.BuildBankCategoriesTable = function()
+    local t = CB.U.CopyTable(CB.E.Categories)
+    for key, value in pairs(t) do
+        value.items = {}
+        value.count = 0
+        value.key = key
+        value.hasNew = false
+    end
+    return t
+end
+
 -- Bag Killing
 local killableFramesParent = CreateFrame("FRAME", nil, UIParent)
 killableFramesParent:SetAllPoints()

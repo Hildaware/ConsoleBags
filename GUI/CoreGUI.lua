@@ -87,6 +87,7 @@ function CB.G.BuildListViewHeader(parent)
         CB.E.SortFields.Value, false)
 end
 
+-- TODO: Make more generic (bank)
 function BuildSortButton(parent, anchor, name, width, sortField, initial)
     local frame = CreateFrame("Button", nil, parent)
     frame:SetSize(width, parent:GetHeight())
@@ -103,19 +104,19 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
     arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
     arrow:SetSize(8, 14)
 
-    if CB.Settings.SortField.Sort == CB.E.SortOrder.Desc then
+    if CBData.View.SortField.Sort == CB.E.SortOrder.Desc then
         arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
     else
         arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down")
     end
 
-    if CB.Settings.SortField.Field ~= sortField then
+    if CBData.View.SortField.Field ~= sortField then
         arrow:Hide()
     end
 
     frame:SetScript("OnClick", function()
-        local sortOrder = CB.Settings.SortField.Sort
-        if CB.Settings.SortField.Field == sortField then
+        local sortOrder = CBData.View.SortField.Sort
+        if CBData.View.SortField.Field == sortField then
             if sortOrder == CB.E.SortOrder.Asc then
                 sortOrder = CB.E.SortOrder.Desc
             else
@@ -123,10 +124,10 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
             end
         end
 
-        CB.Settings.SortField.Field = sortField
-        CB.Settings.SortField.Sort = sortOrder
+        CBData.View.SortField.Field = sortField
+        CBData.View.SortField.Sort = sortOrder
 
-        if CB.Settings.SortField.Sort ~= CB.E.SortOrder.Desc then
+        if CBData.View.SortField.Sort ~= CB.E.SortOrder.Desc then
             arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
         else
             arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down")
@@ -151,37 +152,6 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
     parent.fields[sortField] = frame
     frame.arrow = arrow
     frame.text = text
-
-    return frame
-end
-
--- TODO: Eventually get this working for adjustable columns
-function BuildHeaderAdjuster(parent, anchor)
-    local frame = CreateFrame("Button", nil, parent)
-    frame:SetMovable(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetSize(2, parent:GetHeight())
-    frame:SetPoint("LEFT", anchor, "RIGHT")
-    frame:SetScript("OnMouseDown", function(self)
-        self.x, self.y = GetCursorPosition()
-        self.x = self.x / self:GetEffectiveScale()
-        self.y = self.y / self:GetEffectiveScale()
-
-        self:SetScript("OnUpdate", function(self)
-            local x, y = GetCursorPosition()
-            x = x / self:GetEffectiveScale()
-            y = y / self:GetEffectiveScale()
-            print(x)
-            -- TODO: Adjust columns
-        end)
-    end)
-    frame:SetScript("onMouseUp", function(self)
-        self:SetScript("OnUpdate", nil)
-    end)
-
-    local tex = frame:CreateTexture()
-    tex:SetAllPoints(frame)
-    tex:SetTexture(1, 1, 1, 0.75)
 
     return frame
 end

@@ -2,12 +2,15 @@ local _, CB = ...
 
 local LIST_ITEM_HEIGHT = 32
 
+-- Because we're treating these indexed Pools this way,
+-- I think they need to be split up between Inventory, Bank, etc.
+-- TODO: Generic Pools
 local InactiveItemFrames = {}
 local ActiveItemFrames = {}
 
-function CB.G.CleanupItemFrames()
+function CB.G.CleanupItemFrames(inventoryType)
     for i = 1, #ActiveItemFrames do
-        if ActiveItemFrames[i] and ActiveItemFrames[i].isItem then
+        if ActiveItemFrames[i] and ActiveItemFrames[i].inventory == inventoryType then
             ActiveItemFrames[i]:SetParent(nil)
             ActiveItemFrames[i]:Hide()
             InsertInactiveItemFrame(ActiveItemFrames[i], i)
@@ -16,13 +19,21 @@ function CB.G.CleanupItemFrames()
     end
 end
 
-function CB.G.BuildItemFrame(item, offset, index)
-    local frame = FetchInactiveItemFrame(index)
+function CB.G.BuildItemFrame(item, offset, index, inventoryType)
+    local frame = FetchInactiveItemFrame(index, inventoryType)
+
     InsertActiveItemFrame(frame, index)
 
     if frame == nil then return end
 
-    frame:SetParent(CB.View.ListView)
+    local parent
+    if inventoryType == CB.E.InventoryType.Inventory then
+        parent = CB.View.ListView
+    elseif inventoryType == CB.E.InventoryType.Bank then
+        parent = CB.BankView.ListView
+    end
+
+    frame:SetParent(parent)
     frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
 
     local tooltipOwner = GameTooltip:GetOwner()
@@ -89,8 +100,10 @@ function CB.G.BuildItemFrame(item, offset, index)
     frame.itemButton:Show()
 end
 
-function CreateItemFramePlaceholder()
+-- TODO: SetSize will eventually need to be set based on the View
+function CreateItemFramePlaceholder(type)
     local f = CreateFrame("Frame", nil, UIParent) -- Taint Killer
+    f.inventory = type
     f:SetSize(CB.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
 
     local itemButton = CreateFrame("ItemButton", nil, f, "ContainerFrameItemButtonTemplate")
@@ -223,13 +236,14 @@ function InsertInactiveItemFrame(frame, index)
     InactiveItemFrames[index] = frame
 end
 
-function FetchInactiveItemFrame(index)
+function FetchInactiveItemFrame(index, type)
     local frame = nil
-    if InactiveItemFrames[index] then
+    if InactiveItemFrames[index] and InactiveItemFrames[index].inventory == type then
+        print("Fetching unused for " .. type)
         frame = InactiveItemFrames[index]
         InactiveItemFrames[index] = nil
     else
-        frame = CreateItemFramePlaceholder()
+        frame = CreateItemFramePlaceholder(type)
     end
     return frame
 end
