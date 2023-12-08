@@ -8,4 +8,4 @@ Data Storage (Cross character, etc.)
 - 
 
 TODO BEFORE PUB RELEASE
-- Switch to 'WoW' view
+- Bank

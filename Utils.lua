@@ -81,18 +81,79 @@ end
 local killableFramesParent = CreateFrame("FRAME", nil, UIParent)
 killableFramesParent:SetAllPoints()
 killableFramesParent:Hide()
+
 local function MakeFrameKillable(frame)
     frame:SetParent(killableFramesParent)
 end
+
 local killedFramesParent = CreateFrame("FRAME", nil, UIParent)
 killedFramesParent:SetAllPoints()
 killedFramesParent:Hide()
+
 local function KillFramePermanently(frame)
     frame:SetParent(killedFramesParent)
 end
 
+local function CreateEnableBagButton(parent)
+    if parent.ClickableTitleFrame then
+        parent.ClickableTitleFrame:Hide()
+    end
+    if parent.TitleContainer then
+        parent.TitleContainer:Hide()
+    end
+
+    local button = CreateFrame("Button", nil, parent)
+    button:SetFrameLevel(parent:GetFrameLevel() + 420)
+    button.text = button:CreateTexture()
+    button.text:SetPoint("CENTER", 4, -1)
+    button.text:SetSize(20, 20)
+    -- button.text:SetTexCoord(0, 0.75, 0, 1)
+    button.text:SetTexture("Interface\\Addons\\Bagger\\Media\\Logo_Normal")
+    button:SetSize(24, 24)
+    button:HookScript("OnMouseDown", function(self)
+        self.text:SetPoint("CENTER", 3, -2)
+        self.text:SetAlpha(0.75)
+    end)
+    button:HookScript("OnMouseUp", function(self)
+        self.text:SetPoint("CENTER", 4, -1)
+        self.text:SetAlpha(1)
+    end)
+    button:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+        GameTooltip:SetText("Back to Bagger inventory mode", 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    button:HookScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+    button:HookScript("OnClick", function(self)
+        Bagger.U.DestroyDefaultBags()
+        CloseAllBags()
+        OpenAllBags()
+    end)
+    return button
+end
+
+function Bagger.U.CreateEnableBagButtons()
+    local f = _G["ContainerFrame1"]
+    f.Bagger = CreateEnableBagButton(f)
+    if _G["ContainerFrameCombinedBags"] then
+        f = _G["ContainerFrameCombinedBags"]
+        f.Bagger = CreateEnableBagButton(f)
+        f.Bagger:SetPoint("TOPRIGHT", -22, -1)
+        f.Bagger:SetHeight(20)
+    end
+
+    if _G["ElvUI_ContainerFrame"] then
+        f = _G["ElvUI_ContainerFrame"]
+        f.Bagger = CreateEnableBagButton(f)
+        f.Bagger:SetPoint("TOPLEFT", 2, -2)
+        f.Bagger:SetSize(22, 22)
+    end
+end
+
 -- TODO: After bank frame is complete, handle this
-function Bagger.U.MakeBlizzBagsKillable()
+function Bagger.U.BagDestroyer()
     if _G["ElvUI_ContainerFrame"] then
         MakeFrameKillable(_G["ElvUI_ContainerFrame"])
         -- MakeFrameKillable(_G["ElvUI_BankContainerFrame"])
@@ -119,6 +180,12 @@ function Bagger.U.MakeBlizzBagsKillable()
     end
 end
 
-function Bagger.U.KillBlizzBags()
+function Bagger.U.DestroyDefaultBags()
+    Bagger.Settings.HideBags = false
     killableFramesParent:Hide()
+end
+
+function Bagger.U.RestoreDefaultBags()
+    killableFramesParent:Show()
+    Bagger.Settings.HideBags = true
 end

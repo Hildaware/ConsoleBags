@@ -49,8 +49,9 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "PLAYER_ENTERING_WORLD" then
         Bagger.GatherItems()
-        Bagger.U.MakeBlizzBagsKillable()
-        Bagger.U.KillBlizzBags()
+        Bagger.U.CreateEnableBagButtons()
+        Bagger.U.BagDestroyer()
+        Bagger.U.DestroyDefaultBags()
     end
 
     if event == "BAG_UPDATE_DELAYED" then
@@ -102,7 +103,8 @@ function Bagger.Init()
             Field = Bagger.E.SortFields.Name,
             Sort = Bagger.E.SortOrder.Desc
         },
-        Filter = nil
+        Filter = nil,
+        HideBags = false
     }
 
     -- Build player data
@@ -261,6 +263,7 @@ local TOGGLE_TIMEOUT = 0.01
 
 function Bagger.G.Show()
     if Bagger.View == nil then return end
+    if Bagger.Settings.HideBags == true then return end
 
     if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not Bagger.View:IsShown() then
         Bagger.GatherItems()
