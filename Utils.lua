@@ -156,7 +156,7 @@ end
 function CB.U.BagDestroyer()
     if _G["ElvUI_ContainerFrame"] then
         MakeFrameKillable(_G["ElvUI_ContainerFrame"])
-        -- MakeFrameKillable(_G["ElvUI_BankContainerFrame"])
+        MakeFrameKillable(_G["ElvUI_BankContainerFrame"])
         -- Get rid of blizz bags permanently, since they are replaced by ElvUI
         if _G["ContainerFrameCombinedBags"] then
             KillFramePermanently(_G["ContainerFrameCombinedBags"])
@@ -164,7 +164,7 @@ function CB.U.BagDestroyer()
         for i = 1, NUM_CONTAINER_FRAMES do
             KillFramePermanently(_G["ContainerFrame" .. i])
         end
-        -- KillFramePermanently(_G["BankFrame"])
+        KillFramePermanently(_G["BankFrame"])
     else
         if _G["ContainerFrameCombinedBags"] then
             MakeFrameKillable(_G["ContainerFrameCombinedBags"])
@@ -172,7 +172,7 @@ function CB.U.BagDestroyer()
         for i = 1, NUM_CONTAINER_FRAMES do
             MakeFrameKillable(_G["ContainerFrame" .. i])
         end
-        -- MakeFrameKillable(_G["BankFrame"])
+        MakeFrameKillable(_G["BankFrame"])
     end
     if _G["GwBagFrame"] then
         -- MakeFrameKillable(_G["GwBagFrame"])

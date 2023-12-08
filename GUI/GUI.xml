@@ -1,5 +1,7 @@
 <UI xmlns="http://www.blizzard.com/wow/ui/"   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
     <Include file = "CoreGUI.lua" />
+    <Include file = "InventoryFrame.lua" />
+    <Include file = "BankFrame.lua" />
     <Include file = "ItemFrame.lua" />
     <Include file = "CategoryHeaderFrame.lua" />
     <Include file = "FilterFrame.lua" />

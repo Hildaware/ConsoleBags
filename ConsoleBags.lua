@@ -24,6 +24,28 @@ local CBDataDefaults = {
             Sort = CB.E.SortOrder.Desc
         }
     },
+    BankView = {
+        Size = {
+            X = 632,
+            Y = 396,
+        },
+        Position = {
+            X = 20,
+            Y = 20
+        },
+        Columns = {
+            Icon = 32,
+            Name = 280,
+            Category = 40,
+            Ilvl = 50,
+            ReqLvl = 50,
+            Value = 110
+        },
+        SortField = {
+            Field = CB.E.SortFields.Name,
+            Sort = CB.E.SortOrder.Desc
+        }
+    }
 }
 
 local playerIdentifier = ""
@@ -38,7 +60,7 @@ eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
 eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
-    if event == "ADDON_LOADED" and param1 == "CB" then -- Saved Variables
+    if event == "ADDON_LOADED" and param1 == "ConsoleBags" then -- Saved Variables
         if CBData == nil then
             CBData = CB.U.CopyTable(CBDataDefaults)
             return
@@ -58,14 +80,14 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BAG_UPDATE_DELAYED" then
         CB.GatherItems()
-        CB.G.UpdateView()
+        CB.G.UpdateInventory()
         CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
         CB.GatherItems()
-        CB.G.UpdateView()
+        CB.G.UpdateInventory()
         CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
     end
@@ -75,11 +97,17 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     end
 
     if event == "BANKFRAME_OPENED" then
+        CB.GatherItems()
+        CB.G.UpdateInventory()
+        CB.G.UpdateFilterButtons()
+        CB.G.UpdateBagContainer()
 
+        CB.G.ShowBank()
+        CB.G.ShowInventory()
     end
 
     if event == "BANKFRAME_CLOSED" then
-
+        CB.G.HideBank()
     end
 end)
 
@@ -127,8 +155,15 @@ function CB.Init()
     -- CB.Data.Characters[playerId] = {
     --     Name = playerName
     -- }
+
+    hooksecurefunc('OpenAllBags', CB.G.Toggle)
+    hooksecurefunc('CloseAllBags', CB.G.Hide)
+    hooksecurefunc('ToggleBag', CB.G.Toggle)
+    hooksecurefunc('ToggleAllBags', CB.G.Toggle)
+    hooksecurefunc('ToggleBackpack', CB.G.Toggle)
 end
 
+-- TODO: Move this. It's specific to Inventory
 function CB.GatherItems()
     CB.Session.Items = {}
     CB.Session.Categories = CB.U.BuildCategoriesTable()
@@ -168,6 +203,7 @@ function CB.GatherItems()
     end
 end
 
+-- TODO: Make this more generic so we can use it in the bank
 function CB.SortItems()
     local sortField = CB.Settings.SortField
     local type = sortField.Field
@@ -261,56 +297,52 @@ function CB.SortItems()
 end
 
 -- Slashy
-SLASH_CB1 = '/CB'
-SLASH_CB2 = '/bg'
-function SlashCmdList.CB(msg, editbox)
-    CB.G.Toggle()
-end
+-- SLASH_CB1 = '/CB'
+-- SLASH_CB2 = '/bg'
+-- function SlashCmdList.CB(msg, editbox)
+--     CB.G.Toggle()
+-- end
 
--- Frame Operations
-local lastToggledTime = 0
-local TOGGLE_TIMEOUT = 0.01
-
-function CB.G.Show()
+function CB.G.ShowInventory()
     if CB.View == nil then return end
     if CB.Settings.HideBags == true then return end
 
-    if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and not CB.View:IsShown() then
+    if not CB.View:IsShown() then
         CB.GatherItems()
-        CB.G.UpdateView()
+        CB.G.UpdateInventory()
         CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
         CB.View:Show()
-        lastToggledTime = GetTime()
     end
 end
 
 function CB.G.Hide()
     if CB.View == nil then return end
 
-    if (lastToggledTime < GetTime() - TOGGLE_TIMEOUT) and CB.View:IsShown() then
-        PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-        CB.View:Hide()
-        lastToggledTime = GetTime()
+    local inventory = CB.View:IsShown()
+    local bank = CB.BankView and CB.BankView:IsShown()
+    if inventory or bank then
+        if inventory then
+            CB.View:Hide()
+            PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
+        end
+
+        if bank then
+            CB.BankView:Hide()
+        end
     end
 end
 
 function CB.G.Toggle()
     if CB.View == nil then
-        CB.G.InitializeGUI()
+        CB.G.InitializeInventoryGUI()
     end
 
     if CB.View:IsShown() then
         CB.G.Hide()
     else
-        CB.G.Show()
+        CB.G.ShowInventory()
     end
 end
-
-hooksecurefunc('OpenBackpack', CB.G.Toggle)
-hooksecurefunc('CloseBackpack', CB.G.Hide)
-hooksecurefunc('ToggleBackpack', CB.G.Toggle)
-hooksecurefunc('OpenBag', CB.G.Toggle)
-hooksecurefunc('ToggleBag', CB.G.Toggle)

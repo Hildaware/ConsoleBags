@@ -100,7 +100,7 @@ function BuildFilterButton(categoryData, index)
 
         CB.Settings.Filter = categoryData.key
         CB.GatherItems()
-        CB.G.UpdateView()
+        CB.G.UpdateInventory()
         CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
     end)

@@ -45,7 +45,7 @@ function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index)
             else
                 CB.G.CollapsedCategories[categoryType] = true
             end
-            CB.G.UpdateView()
+            CB.G.UpdateInventory()
         end
     end)
 
