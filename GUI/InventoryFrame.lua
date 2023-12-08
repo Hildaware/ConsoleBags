@@ -1,5 +1,10 @@
 local _, CB = ...
 
+-- Frame Pools
+local ItemPool = CB.U.Pool.New()
+local CategoryPool = CB.U.Pool.New()
+local FilterPool = CB.U.Pool.New()
+
 function CB.G.InitializeInventoryGUI()
     local f = CreateFrame("Frame", "ConsoleBagsInventory", UIParent)
     f:SetFrameStrata("HIGH")
@@ -91,10 +96,10 @@ function CB.G.InitializeInventoryGUI()
     -- dragTex:SetColorTexture(1, 1, 1, 0.75)
 
     -- Filters
-    CB.G.BuildFilteringContainer(f)
+    CB.G.BuildFilteringContainer(f, CB.E.InventoryType.Inventory)
 
     -- 'Header'
-    CB.G.BuildListViewHeader(f)
+    CB.G.BuildSortingContainer(f, CB.E.InventoryType.Inventory)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
     scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
@@ -129,15 +134,14 @@ function CB.G.UpdateInventory()
     local inventoryType = CB.E.InventoryType.Inventory
     CB.SortItems(inventoryType, CB.Session.Categories)
 
-    -- Cleanup
-    -- Hey, lets clean up only the Inventory Frames
-    CB.G.CleanupItemFrames(inventoryType)
-    CB.G.CleanupCategoryHeaderFrames(inventoryType)
+    Pool.Cleanup(ItemPool)
+    Pool.Cleanup(CategoryPool)
+    Pool.Cleanup(FilterPool)
 
     -- Filter Categories
     local foundCategories = {}
     for _, value in pairs(CB.Session.Categories) do
-        if (value.key == CB.Settings.Filter) or CB.Settings.Filter == nil then
+        if (value.key == CB.Session.Filter) or CB.Session.Filter == nil then
             tinsert(foundCategories, value)
         end
     end
@@ -150,18 +154,28 @@ function CB.G.UpdateInventory()
     end
 
     local offset = 1
+    local catIndex = 1
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            CB.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset, inventoryType)
+            local catFrame = Pool.FetchInactive(CategoryPool, catIndex, CB.G.CreateCategoryHeaderPlaceholder)
+            Pool.InsertActive(CategoryPool, catFrame, catIndex)
+            CB.G.BuildCategoryFrame(categoryData, offset, catFrame, CB.View.ListView)
+
             offset = offset + 1
+            catIndex = catIndex + 1
             if CB.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    CB.G.BuildItemFrame(item, offset, itemIndex, inventoryType)
+                    local frame = Pool.FetchInactive(ItemPool, itemIndex, CB.G.CreateItemFramePlaceholder)
+                    Pool.InsertActive(ItemPool, frame, itemIndex)
+                    CB.G.BuildItemFrame(item, offset, frame, CB.View.ListView)
+
                     offset = offset + 1
                     itemIndex = itemIndex + 1
                 end
             end
         end
     end
+
+    CB.G.UpdateFilterButtons(inventoryType, FilterPool)
 end

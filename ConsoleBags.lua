@@ -82,14 +82,13 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     if event == "BAG_UPDATE_DELAYED" then
         CB.GatherItems()
         CB.G.UpdateInventory()
-        CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
         CB.GatherItems()
         CB.G.UpdateInventory()
-        CB.G.UpdateFilterButtons()
+
         CB.G.UpdateBagContainer()
     end
 
@@ -111,7 +110,6 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
         CB.G.UpdateInventory()
         CB.G.UpdateBank()
-        CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
 
         CB.G.ShowBank()
@@ -137,9 +135,11 @@ function CB.Init()
     CB.Session = {
         Items = {}, -- All Items
         Categories = CB.U.BuildCategoriesTable(),
+        Filter = nil,
         Bank = {
             Items = {},
-            Categories = CB.U.BuildBankCategoriesTable()
+            Categories = CB.U.BuildBankCategoriesTable(),
+            Filter = nil
         }
     }
 
@@ -154,7 +154,6 @@ function CB.Init()
                 Value = 110
             }
         },
-        Filter = nil,
         HideBags = false
     }
 
@@ -400,7 +399,6 @@ function CB.G.ShowInventory()
     if not CB.View:IsShown() then
         CB.GatherItems()
         CB.G.UpdateInventory()
-        CB.G.UpdateFilterButtons()
         CB.G.UpdateBagContainer()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)

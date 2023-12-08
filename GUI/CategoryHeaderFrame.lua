@@ -3,56 +3,29 @@ local _, CB = ...
 local LIST_ITEM_HEIGHT = 32
 CB.G.CollapsedCategories = {} -- TODO: Generic
 
-local ActiveHeaderFrames = {}
-local InactiveHeaderFrames = {}
-
-
-function CB.G.CleanupCategoryHeaderFrames(inventoryType)
-    for i = 1, #ActiveHeaderFrames do
-        if ActiveHeaderFrames[i] and ActiveHeaderFrames[i].inventory == inventoryType then
-            ActiveHeaderFrames[i]:Hide()
-            ActiveHeaderFrames[i]:SetParent(nil)
-            tinsert(InactiveHeaderFrames, ActiveHeaderFrames[i])
-            ActiveHeaderFrames[i] = nil
-        end
-    end
-end
-
-function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index, inventoryType)
-    local frame = FetchInactiveHeaderFrame(inventoryType)
-    frame.inventory = inventoryType
-
-    InsertActiveHeaderFrame(frame)
-
+function CB.G.BuildCategoryFrame(data, offset, frame, parent)
     if frame == nil then return end
 
-    local parent
-    if inventoryType == CB.E.InventoryType.Inventory then
-        parent = CB.View.ListView
-    elseif inventoryType == CB.E.InventoryType.Bank then
-        parent = CB.BankView.ListView
-    end
-
     frame:SetParent(parent)
-    frame:SetPoint("TOP", 0, -((index - 1) * LIST_ITEM_HEIGHT))
+    frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
 
-    if CB.G.CollapsedCategories[categoryType] then
+    if CB.G.CollapsedCategories[data.key] then
         frame.texture:SetVertexColor(1, 0, 0, 0.35)
     else
         frame.texture:SetVertexColor(1, 1, 0, 0.35)
     end
 
-    frame.type:SetTexture(CB.U.GetCategoyIcon(categoryType))
-    frame.name:SetText(categoryName .. " (" .. count .. ")")
+    frame.type:SetTexture(CB.U.GetCategoyIcon(data.key))
+    frame.name:SetText(data.name .. " (" .. data.count .. ")")
 
     frame:SetScript("OnClick", function(self, button, down)
         if button == "LeftButton" then
-            local isCollapsed = CB.G.CollapsedCategories[categoryType] and
-                CB.G.CollapsedCategories[categoryType] == true
+            local isCollapsed = CB.G.CollapsedCategories[data.key] and
+                CB.G.CollapsedCategories[data.key] == true
             if isCollapsed then
-                CB.G.CollapsedCategories[categoryType] = false
+                CB.G.CollapsedCategories[data.key] = false
             else
-                CB.G.CollapsedCategories[categoryType] = true
+                CB.G.CollapsedCategories[data.key] = true
             end
             CB.G.UpdateInventory()
         end
@@ -62,7 +35,7 @@ function CB.G.BuildCategoryFrame(categoryName, count, categoryType, index, inven
 end
 
 -- TODO: SetSize will eventually need to be set based on the View
-function CreateCategoryHeaderPlaceholder()
+function CB.G.CreateCategoryHeaderPlaceholder()
     local f = CreateFrame("Button")
     f:SetSize(CB.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
 
@@ -103,27 +76,4 @@ function CreateCategoryHeaderPlaceholder()
     f.isHeader = true
 
     return f
-end
-
-function RemoveActiveHeaderFrame(index)
-    ActiveHeaderFrames[index] = nil
-end
-
-function InsertActiveHeaderFrame(frame)
-    tinsert(ActiveHeaderFrames, frame)
-end
-
-function InsertInactiveHeaderFrame(frame)
-    tinsert(InactiveHeaderFrames, frame)
-end
-
-function FetchInactiveHeaderFrame(type)
-    local frame = nil
-    if InactiveHeaderFrames[1] and InactiveHeaderFrames[1].inventory == type then
-        frame = InactiveHeaderFrames[1]
-        tremove(InactiveHeaderFrames, 1)
-    else
-        frame = CreateCategoryHeaderPlaceholder()
-    end
-    return frame
 end

@@ -1,5 +1,9 @@
 local _, CB = ...
 
+local ItemPool = CB.U.Pool.New()
+local CategoryPool = CB.U.Pool.New()
+local FilterPool = CB.U.Pool.New()
+
 function CB.G.InitializeBankGUI()
     local f = CreateFrame("Frame", "ConsoleBagsBanking", UIParent)
     f:SetFrameStrata("HIGH")
@@ -64,10 +68,10 @@ function CB.G.InitializeBankGUI()
     dragTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Handlebar")
 
     -- Filters
-    CB.G.BuildFilteringContainer(f)
+    CB.G.BuildFilteringContainer(f, CB.E.InventoryType.Bank)
 
     -- 'Header'
-    CB.G.BuildListViewHeader(f)
+    CB.G.BuildSortingContainer(f, CB.E.InventoryType.Bank)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
     scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
@@ -102,14 +106,14 @@ function CB.G.UpdateBank()
     local inventoryType = CB.E.InventoryType.Bank
     CB.SortItems(inventoryType, CB.Session.Bank.Categories)
 
-    -- Cleanup
-    CB.G.CleanupItemFrames(inventoryType)
-    CB.G.CleanupCategoryHeaderFrames(inventoryType)
+    Pool.Cleanup(ItemPool)
+    Pool.Cleanup(CategoryPool)
+    Pool.Cleanup(FilterPool)
 
     -- Filter Categories
     local foundCategories = {}
     for _, value in pairs(CB.Session.Bank.Categories) do
-        if (value.key == CB.Settings.Filter) or CB.Settings.Filter == nil then
+        if (value.key == CB.Session.Bank.Filter) or CB.Session.Bank.Filter == nil then
             tinsert(foundCategories, value)
         end
     end
@@ -122,20 +126,30 @@ function CB.G.UpdateBank()
     end
 
     local offset = 1
+    local catIndex = 1
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            CB.G.BuildCategoryFrame(categoryData.name, categoryData.count, categoryData.key, offset, inventoryType)
+            local catFrame = Pool.FetchInactive(CategoryPool, catIndex, CB.G.CreateCategoryHeaderPlaceholder)
+            Pool.InsertActive(CategoryPool, catFrame, catIndex)
+            CB.G.BuildCategoryFrame(categoryData, offset, catFrame, CB.BankView.ListView)
+
             offset = offset + 1
+            catIndex = catIndex + 1
             if CB.G.CollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    CB.G.BuildItemFrame(item, offset, itemIndex, inventoryType)
+                    local frame = Pool.FetchInactive(ItemPool, itemIndex, CB.G.CreateItemFramePlaceholder)
+                    Pool.InsertActive(ItemPool, frame, itemIndex)
+                    CB.G.BuildItemFrame(item, offset, frame, CB.BankView.ListView)
+
                     offset = offset + 1
                     itemIndex = itemIndex + 1
                 end
             end
         end
     end
+
+    CB.G.UpdateFilterButtons(inventoryType, FilterPool)
 end
 
 function CB.G.ShowBank()

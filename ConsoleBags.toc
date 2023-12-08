@@ -6,9 +6,9 @@
 ## IconTexture: Interface\AddOns\ConsoleBags\Logo
 ## SavedVariables: CBData
 
+Utils.lua
 GUI/GUI.xml
 DataTypes.lua
 Resolver.lua
-Utils.lua
 Enums.lua
 ConsoleBags.lua

@@ -3,14 +3,16 @@ local _, CB = ...
 CB.G = {}
 CB.G.U = {}
 
+local LIST_ITEM_HEIGHT = 32
+
 function CB.G.UpdateCurrency()
     if CB.View and CB.View.Header then
         CB.View.Header.Gold:SetText(GetCoinTextureString(GetMoney()))
     end
 end
 
--- TODO: Make more generic (bank)
-function CB.G.BuildFilteringContainer(parent)
+-- Filtering
+function CB.G.BuildFilteringContainer(parent, type)
     local cFrame = CreateFrame("Frame", nil, parent)
     cFrame:SetSize(32, parent:GetHeight() - 32)
     cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
@@ -35,11 +37,17 @@ function CB.G.BuildFilteringContainer(parent)
     aTex:SetTexture(CB.U.GetCategoyIcon(1))
 
     f:SetScript("OnClick", function(self)
-        CB.Settings.Filter = nil
-        CB.GatherItems()
-        CB.G.UpdateInventory()
-        CB.G.UpdateFilterButtons()
-        CB.G.UpdateBagContainer()
+        if type == CB.E.InventoryType.Inventory then
+            CB.Session.Filter = nil
+            CB.GatherItems()
+            CB.G.UpdateInventory()
+            CB.G.UpdateBagContainer()
+        elseif type == CB.E.InventoryType.Bank then
+            CB.Session.Bank.Filter = nil
+            CB.GatherBankItems()
+            CB.G.UpdateBank()
+        end
+
         self:GetParent().selectedTexture:SetPoint("TOP", self:GetParent(), "TOP", 0, -32)
     end)
     f:RegisterForClicks("AnyDown")
@@ -56,8 +64,127 @@ function CB.G.BuildFilteringContainer(parent)
     parent.FilterFrame = cFrame
 end
 
--- TODO: Make more generic (bank)
-function CB.G.BuildListViewHeader(parent)
+function CB.G.CreateFilterButtonPlaceholder()
+    local f = CreateFrame("Button")
+    f:SetSize(28, 28)
+
+    local tex = f:CreateTexture(nil, "OVERLAY")
+    tex:SetPoint("CENTER", 0, "CENTER")
+    tex:SetSize(24, 24)
+
+    f.texture = tex
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
+
+    local newTex = f:CreateTexture(nil, "OVERLAY")
+    newTex:SetPoint("TOPRIGHT", f, "TOPRIGHT")
+    newTex:SetSize(10, 10)
+    newTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Exclamation")
+    newTex:Hide()
+
+    f.newTexture = newTex
+
+    f:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    return f
+end
+
+function CB.G.UpdateFilterButtons(type, pool)
+    local cats = nil
+    if type == CB.E.InventoryType.Inventory then
+        cats = CB.Session.Categories
+    elseif type == CB.E.InventoryType.Bank then
+        cats = CB.Session.Bank.Categories
+    end
+
+    if cats == nil then return end
+
+    -- Filter Categories
+    local foundCategories = {}
+    for _, value in pairs(cats) do
+        if value.count > 0 then
+            tinsert(foundCategories, value)
+        end
+    end
+
+    -- Sort By Order
+    table.sort(foundCategories, function(a, b) return a.order < b.order end)
+
+
+    local orderedCategories = {}
+    for i = 1, #foundCategories do
+        orderedCategories[i] = foundCategories[i]
+    end
+
+    local filterOffset = 2
+    for _, categoryData in ipairs(orderedCategories) do
+        local frame = Pool.FetchInactive(pool, filterOffset, CB.G.CreateFilterButtonPlaceholder)
+        Pool.InsertActive(pool, frame, filterOffset)
+        BuildFilterButton(frame, type, categoryData, filterOffset)
+        filterOffset = filterOffset + 1
+    end
+end
+
+function BuildFilterButton(f, type, categoryData, index)
+    if f == nil then return end
+
+    local parent = nil
+    if type == CB.E.InventoryType.Inventory then
+        parent = CB.View
+    elseif type == CB.E.InventoryType.Bank then
+        parent = CB.BankView
+    end
+
+    if parent == nil then return end
+
+
+    f:SetParent(parent.FilterFrame)
+    f:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
+
+    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
+    f:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
+    f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
+    f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
+
+    f.texture:SetTexture(CB.U.GetCategoyIcon(categoryData.key))
+
+    if categoryData.hasNew == true then
+        f.newTexture:Show()
+    else
+        f.newTexture:Hide()
+    end
+
+    f:SetScript("OnClick", function(self)
+        self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+
+        if type == CB.E.InventoryType.Inventory then
+            CB.Session.Filter = categoryData.key
+            CB.GatherItems()
+            CB.G.UpdateInventory()
+            CB.G.UpdateBagContainer()
+        elseif type == CB.E.InventoryType.Bank then
+            CB.Session.Bank.Filter = categoryData.key
+            CB.GatherBankItems()
+            CB.G.UpdateBank()
+        end
+    end)
+
+    f:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+        GameTooltip:SetText(categoryData.name .. " (" .. categoryData.count .. ")", 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+
+    f:Show()
+end
+
+-- Sorting
+function CB.G.BuildSortingContainer(parent, type)
     local hFrame = CreateFrame("Frame", nil, parent)
     hFrame:SetSize(parent:GetWidth() - 32, 32)
     hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 32, -32)
@@ -69,26 +196,25 @@ function CB.G.BuildListViewHeader(parent)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
     local icon = BuildSortButton(hFrame, hFrame, "•", CB.Settings.Defaults.Columns.Icon,
-        CB.E.SortFields.Icon, true)
+        CB.E.SortFields.Icon, true, type)
 
     local name = BuildSortButton(hFrame, icon, "NAME", CB.Settings.Defaults.Columns.Name,
-        CB.E.SortFields.Name, false)
+        CB.E.SortFields.Name, false, type)
 
     local category = BuildSortButton(hFrame, name, "CAT", CB.Settings.Defaults.Columns.Category,
-        CB.E.SortFields.Category, false)
+        CB.E.SortFields.Category, false, type)
 
     local ilvl = BuildSortButton(hFrame, category, "ILVL", CB.Settings.Defaults.Columns.Ilvl,
-        CB.E.SortFields.Ilvl, false)
+        CB.E.SortFields.Ilvl, false, type)
 
     local reqlvl = BuildSortButton(hFrame, ilvl, "REQ", CB.Settings.Defaults.Columns.ReqLvl,
-        CB.E.SortFields.ReqLvl, false)
+        CB.E.SortFields.ReqLvl, false, type)
 
     local value = BuildSortButton(hFrame, reqlvl, "VALUE", CB.Settings.Defaults.Columns.Value,
-        CB.E.SortFields.Value, false)
+        CB.E.SortFields.Value, false, type)
 end
 
--- TODO: Make more generic (bank)
-function BuildSortButton(parent, anchor, name, width, sortField, initial)
+function BuildSortButton(parent, anchor, name, width, sortField, initial, type)
     local frame = CreateFrame("Button", nil, parent)
     frame:SetSize(width, parent:GetHeight())
     frame:SetPoint("LEFT", anchor, initial and "LEFT" or "RIGHT", initial and 10 or 0, 0)
@@ -104,19 +230,26 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
     arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
     arrow:SetSize(8, 14)
 
-    if CBData.View.SortField.Sort == CB.E.SortOrder.Desc then
+    local sortData
+    if type == CB.E.InventoryType.Inventory then
+        sortData = CBData.View.SortField
+    elseif type == CB.E.InventoryType.Bank then
+        sortData = CBData.BankView.SortField
+    end
+
+    if sortData.Sort == CB.E.SortOrder.Desc then
         arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
     else
         arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down")
     end
 
-    if CBData.View.SortField.Field ~= sortField then
+    if sortData.Field ~= sortField then
         arrow:Hide()
     end
 
     frame:SetScript("OnClick", function()
-        local sortOrder = CBData.View.SortField.Sort
-        if CBData.View.SortField.Field == sortField then
+        local sortOrder = sortData.Sort
+        if sortData.Field == sortField then
             if sortOrder == CB.E.SortOrder.Asc then
                 sortOrder = CB.E.SortOrder.Desc
             else
@@ -124,10 +257,10 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
             end
         end
 
-        CBData.View.SortField.Field = sortField
-        CBData.View.SortField.Sort = sortOrder
+        sortData.Field = sortField
+        sortData.Sort = sortOrder
 
-        if CBData.View.SortField.Sort ~= CB.E.SortOrder.Desc then
+        if sortData.Sort ~= CB.E.SortOrder.Desc then
             arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Up")
         else
             arrow:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down")
@@ -144,9 +277,12 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial)
             end
         end
 
-        CB.G.UpdateInventory()
-        CB.G.UpdateFilterButtons()
-        CB.G.UpdateBagContainer()
+        if type == CB.E.InventoryType.Inventory then
+            CB.G.UpdateInventory()
+            CB.G.UpdateBagContainer()
+        elseif type == CB.E.InventoryType.Bank then
+            CB.G.UpdateBank()
+        end
     end)
 
     parent.fields[sortField] = frame

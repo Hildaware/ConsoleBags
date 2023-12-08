@@ -163,7 +163,7 @@ function CB.U.CreateEnableBagButtons()
     end
 end
 
--- TODO: After bank frame is complete, handle this
+-- TODO: After Guild Bank frame is complete, handle this
 function CB.U.BagDestroyer()
     if _G["ElvUI_ContainerFrame"] then
         MakeFrameKillable(_G["ElvUI_ContainerFrame"])
