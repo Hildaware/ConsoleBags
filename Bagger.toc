@@ -3,6 +3,7 @@
 ## Notes: List Mode for Items
 ## Authors: Sel
 ## Version: 1
+## IconTexture: Interface\AddOns\Bagger\Logo
 ## SavedVariables: BaggerData
 
 GUI/GUI.xml

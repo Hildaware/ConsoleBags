@@ -9,3 +9,8 @@ Data Storage (Cross character, etc.)
 
 TODO BEFORE PUB RELEASE
 - Bank
+
+BUGS:
+- Equipping bag update?
+- Pets in cages have no icon
+- Cooldowns are not cool
