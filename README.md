@@ -7,8 +7,5 @@ Data Storage (Cross character, etc.)
     ```
 - 
 
-
 TODO BEFORE PUB RELEASE
-- Bag Display
 - Switch to 'WoW' view
-- wtf is a Reagent bag?

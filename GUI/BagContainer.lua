@@ -1,6 +1,5 @@
 local _, Bagger = ...
 
--- TODO: Make bags interactable (switching out bags, tooltips, etc.)
 function Bagger.G.UpdateBagContainer()
     local max = 0
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
@@ -11,6 +10,8 @@ function Bagger.G.UpdateBagContainer()
     if Bagger.View ~= nil then
         Bagger.View.ItemCountText:SetText(#Bagger.Session.Items .. "/" .. max)
     end
+
+    UpdateBags()
 end
 
 function Bagger.G.CreateBagContainer()
@@ -28,28 +29,16 @@ function Bagger.G.CreateBagContainer()
     btnTex:SetTexture(133633)
 
     bagButton:SetScript("OnClick", function(self)
-        if self:GetParent().BagsContainer:IsShown() then
-            self:GetParent().BagsContainer:Hide()
+        if Bagger.View.BagContainer.Bags:IsShown() then
+            Bagger.View.BagContainer.Bags:Hide()
             self:GetParent().ItemCountContainer:Show()
         else
-            self:GetParent().BagsContainer:Show()
+            Bagger.View.BagContainer.Bags:Show()
             self:GetParent().ItemCountContainer:Hide()
         end
     end)
 
-    local bagsContainer = CreateFrame("Frame", nil, f)
-    bagsContainer:SetPoint("RIGHT", bagButton, "LEFT", -4, 0)
-    bagsContainer:SetSize(120, 24)
-
-    for bag = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
-        local bagID = C_Container.ContainerIDToInventoryID(bag)
-        local iconID = GetInventoryItemTexture("player", bagID)
-        CreateBagSlot(bagsContainer, bag, iconID)
-    end
-
-    bagsContainer:Hide()
-
-    f.BagsContainer = bagsContainer
+    CreateBagContainer(f, bagButton)
 
     local itemCountContainer = CreateFrame("Frame", nil, f)
     itemCountContainer:SetPoint("RIGHT", bagButton, "LEFT", -4, 0)
@@ -62,20 +51,127 @@ function Bagger.G.CreateBagContainer()
 
     f.ItemCountContainer = itemCountContainer
 
+    Bagger.View.BagContainer = f
     Bagger.View.ItemCountText = itemCountText
 end
 
-function CreateBagSlot(parent, index, icon)
+function CreateBagContainer(parent, anchor)
+    local bagsContainer = CreateFrame("Frame", nil, parent)
+    bagsContainer:SetPoint("RIGHT", anchor, "LEFT", -4, 0)
+    bagsContainer:SetSize(120, 24)
+
+    bagsContainer.Containers = {}
+
+    for bag = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+        local bagID = C_Container.ContainerIDToInventoryID(bag)
+        local iconID = GetInventoryItemTexture("player", bagID)
+        local link = GetInventoryItemLink("player", bag)
+
+        local bagData = {
+            bagIndex = bag,
+            id = bagID,
+            icon = iconID,
+            link = link
+        }
+        local f = CreateBagSlot(bagsContainer, bagData)
+        bagsContainer.Containers[bag] = f
+    end
+
+    parent.Bags = bagsContainer
+    bagsContainer:Hide()
+end
+
+function UpdateBags()
+    if Bagger.View == nil then return end
+
+    for bag = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+        local bagID = C_Container.ContainerIDToInventoryID(bag)
+        local iconID = GetInventoryItemTexture("player", bagID)
+        local link = GetInventoryItemLink("player", bag)
+
+        local bagData = {
+            bagIndex = bag,
+            id = bagID,
+            icon = iconID,
+            link = link
+        }
+        local frame = Bagger.View.BagContainer.Bags.Containers[bag]
+        if frame ~= nil then
+            frame.bagID = bagData.id
+            frame:SetID(bagData.id)
+
+            if bagData.icon ~= nil then
+                frame.texture:SetTexture(bagData.icon)
+            else
+                frame.texture:SetTexture("Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag")
+            end
+
+            frame:SetScript("OnClick", function(self, button, down)
+                if button == "LeftButton" then
+                    PickupInventoryItem(self.bagID)
+                end
+            end)
+
+            frame:SetScript("OnDragStart", function(self)
+                PickupInventoryItem(self.bagID)
+            end)
+
+            frame:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_NONE")
+                ContainerFrameItemButton_CalculateItemTooltipAnchors(self, GameTooltip)
+                GameTooltip:SetInventoryItem("player", self.bagID)
+                GameTooltip:Show()
+            end)
+
+            frame:SetScript("OnLeave", function(self)
+                GameTooltip:Hide()
+            end)
+        end
+    end
+end
+
+function CreateBagSlot(parent, bagData)
     local f = CreateFrame("Button", nil, parent)
-    f:SetPoint("RIGHT", parent, "LEFT", (index * 24), 0)
+    f:SetPoint("RIGHT", parent, "LEFT", (bagData.bagIndex * 24), 0)
     f:SetSize(20, 20)
+
+    f.bagID = bagData.id
+
+    f:SetID(bagData.id)
+    f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    f:RegisterForDrag("LeftButton")
 
     local btnTex = f:CreateTexture(nil, "ARTWORK")
     btnTex:SetAllPoints(f)
 
-    if icon then
-        btnTex:SetTexture(icon)
+    if bagData.icon ~= nil then
+        btnTex:SetTexture(bagData.icon)
     else
         btnTex:SetTexture("Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag")
     end
+
+    f.texture = btnTex
+
+    f:SetScript("OnClick", function(self, button, down)
+        if button == "LeftButton" then
+            PickupInventoryItem(self.bagID)
+        end
+    end)
+
+    f:SetScript("OnDragStart", function(self)
+        PickupInventoryItem(self.bagID)
+    end)
+
+    f:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_NONE")
+        ContainerFrameItemButton_CalculateItemTooltipAnchors(self, GameTooltip)
+        GameTooltip:SetInventoryItem("player", self.bagID)
+        GameTooltip:Show()
+    end)
+
+    f:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+
+    return f
 end
