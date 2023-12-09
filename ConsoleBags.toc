@@ -3,7 +3,7 @@
 ## Notes: List Mode for Items
 ## Authors: Sel
 ## Version: 1
-## IconTexture: Interface\AddOns\ConsoleBags\Logo
+## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
 ## SavedVariables: CBData
 
 Utils.lua
