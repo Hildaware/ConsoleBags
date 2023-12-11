@@ -14,12 +14,15 @@ end
 -- Filtering
 function CB.G.BuildFilteringContainer(parent, type)
     local cFrame = CreateFrame("Frame", nil, parent)
-    cFrame:SetSize(32, parent:GetHeight() - 32)
+    cFrame:SetSize(parent:GetWidth(), 32)
+    -- cFrame:SetSize(32, parent:GetHeight() - 32)
     cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
 
     local tex = cFrame:CreateTexture(nil, "BACKGROUND")
     tex:SetAllPoints(cFrame)
-    tex:SetColorTexture(0, 0, 0, 0.25)
+    tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Highlight_T_B")
+    tex:SetVertexColor(1, 1, 1, 0.75)
+    -- tex:SetColorTexture(0.5, 0.5, 0.5, 0.15)
 
     cFrame.Buttons = {}
     cFrame.SelectedIndex = 1
@@ -27,7 +30,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     -- All
     local f = CreateFrame("Button", nil, cFrame)
     f:SetSize(28, 28)
-    f:SetPoint("TOP", cFrame, "TOP", 0, -32)
+    f:SetPoint("LEFT", cFrame, "LEFT", 32, 0)
 
     f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
     f:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
@@ -50,10 +53,24 @@ function CB.G.BuildFilteringContainer(parent, type)
 
     -- IsSelected
     local selectedTex = cFrame:CreateTexture(nil, "ARTWORK")
-    selectedTex:SetPoint("TOP", cFrame, "TOP", 0, -32)
-    selectedTex:SetSize(28, 28)
+    selectedTex:SetPoint("LEFT", cFrame, "LEFT", 34, 0)
+    selectedTex:SetSize(24, 24)
     selectedTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
     selectedTex:SetVertexColor(1, 1, 0, 0.25)
+
+    -- LEFT / RIGHT Buttons
+    ---@diagnostic disable-next-line: undefined-global
+    if ConsolePort then
+        local rTexture = cFrame:CreateTexture(nil, "ARTWORK")
+        rTexture:SetPoint("LEFT", cFrame, "LEFT", 6, 0)
+        rTexture:SetSize(24, 24)
+        rTexture:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\lb")
+
+        local rTexture = cFrame:CreateTexture(nil, "ARTWORK")
+        rTexture:SetPoint("RIGHT", cFrame, "RIGHT", -6, 0)
+        rTexture:SetSize(24, 24)
+        rTexture:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\rb")
+    end
 
     cFrame.selectedTexture = selectedTex
     parent.FilterFrame = cFrame
@@ -71,7 +88,7 @@ function CB.G.CreateFilterButtonPlaceholder()
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
 
-    local newTex = f:CreateTexture(nil, "OVERLAY")
+    local newTex = f:CreateTexture(nil, "HIGHLIGHT")
     newTex:SetPoint("TOPRIGHT", f, "TOPRIGHT")
     newTex:SetSize(10, 10)
     newTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Exclamation")
@@ -137,7 +154,7 @@ function BuildFilterButton(f, type, categoryData, index)
 
 
     f:SetParent(parent.FilterFrame)
-    f:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+    f:SetPoint("LEFT", index * LIST_ITEM_HEIGHT, 0)
 
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
@@ -174,7 +191,7 @@ end
 
 -- temp
 function Filter_OnClick(self, type, categoryKey, index)
-    self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+    self:GetParent().selectedTexture:SetPoint("LEFT", (index * LIST_ITEM_HEIGHT) + 2, 0)
 
     if type == CB.E.InventoryType.Inventory then
         CB.Session.Filter = categoryKey
@@ -191,14 +208,15 @@ end
 -- Sorting
 function CB.G.BuildSortingContainer(parent, type)
     local hFrame = CreateFrame("Frame", nil, parent)
-    hFrame:SetSize(parent:GetWidth() - 32, 32)
-    hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 32, -32)
+    hFrame:SetSize(parent:GetWidth(), 24)
+    hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -64)
 
     hFrame.fields = {}
 
     local tex = hFrame:CreateTexture(nil, "BACKGROUND")
     tex:SetAllPoints(hFrame)
-    tex:SetColorTexture(0, 0, 0, 0.25)
+    -- tex:SetColorTexture(0, 0, 0, 0.25)
+    tex:SetColorTexture(0, 0, 0, 1)
 
     local icon = BuildSortButton(hFrame, hFrame, "•", CB.Settings.Defaults.Columns.Icon,
         CB.E.SortFields.Icon, true, type)

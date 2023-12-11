@@ -7,17 +7,17 @@ local FilterPool = CB.U.Pool.New()
 function CB.G.InitializeBankGUI()
     local f = CreateFrame("Frame", "ConsoleBagsBanking", UIParent)
     f:SetFrameStrata("HIGH")
-    f:SetSize(632, CBData.View.Size.Y or 396)
+    f:SetSize(600, CBData.BankView.Size.Y or 396)
     f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", CBData.BankView.Position.X or 500, CBData.BankView.Position.Y or 800)
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetResizable(true)
-    f:SetResizeBounds(632, 396, 632, 2000)
+    f:SetResizeBounds(600, 396, 600, 2000)
 
     f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetAllPoints(f)
-    f.texture:SetColorTexture(0, 0, 0, 0.5)
+    f.texture:SetColorTexture(0, 0, 0, 0.65)
 
     -- Frame Header
     local header = CreateFrame("Frame", nil, f)
@@ -27,7 +27,7 @@ function CB.G.InitializeBankGUI()
 
     header.texture = header:CreateTexture(nil, "BACKGROUND")
     header.texture:SetAllPoints(header)
-    header.texture:SetColorTexture(0, 0, 0, 0.5)
+    header.texture:SetColorTexture(0.5, 0.5, 0.5, 0.15)
 
     local close = CreateFrame("Button", nil, header)
     close:SetSize(32, 32)
@@ -74,7 +74,7 @@ function CB.G.InitializeBankGUI()
     CB.G.BuildSortingContainer(f, CB.E.InventoryType.Bank)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
+    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 6, -90)
     scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
     scroller:SetWidth(f:GetWidth())
 

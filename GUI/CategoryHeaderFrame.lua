@@ -10,9 +10,9 @@ function CB.G.BuildCategoryFrame(data, offset, frame, parent)
     frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
 
     if CB.G.CollapsedCategories[data.key] then
-        frame.texture:SetVertexColor(1, 0, 0, 0.35)
+        frame:GetNormalTexture():SetVertexColor(1, 0, 0, 0.35)
     else
-        frame.texture:SetVertexColor(1, 1, 0, 0.35)
+        frame:GetNormalTexture():SetVertexColor(1, 1, 0, 0.35)
     end
 
     frame.type:SetTexture(CB.U.GetCategoyIcon(data.key))
@@ -41,14 +41,9 @@ function CB.G.CreateCategoryHeaderPlaceholder()
 
     f:RegisterForClicks("LeftButtonUp")
 
-    local tex = f:CreateTexture(nil, "OVERLAY")
-    tex:SetAllPoints(f)
-    tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
-    tex:SetVertexColor(1, 1, 0, 0.35)
-
+    f:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
+    f:GetNormalTexture():SetVertexColor(1, 1, 0, 0.35)
     f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
-
-    f.texture = tex
 
     -- type
     local type = CreateFrame("Frame", nil, f)

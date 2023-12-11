@@ -8,13 +8,13 @@ local FilterPool = CB.U.Pool.New()
 function CB.G.InitializeInventoryGUI()
     local f = CreateFrame("Frame", "ConsoleBagsInventory", UIParent)
     f:SetFrameStrata("HIGH")
-    f:SetSize(632, CBData.View.Size.Y or 396)
+    f:SetSize(600, CBData.View.Size.Y or 396)
     f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", CBData.View.Position.X or 200, CBData.View.Position.Y or 200)
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetResizable(true)
-    f:SetResizeBounds(632, 396, 632, 2000)
+    f:SetResizeBounds(600, 396, 600, 2000)
 
     -- TODO: How do we stop input to ConsolePort binds specific to this situation?
     f:SetPropagateKeyboardInput(true)
@@ -24,8 +24,6 @@ function CB.G.InitializeInventoryGUI()
         local index = self.FilterFrame.SelectedIndex
 
         if key == "PADRSHOULDER" then -- Right
-            print(index)
-            print(filterCount)
             if index == filterCount then
                 self.FilterFrame.SelectedIndex = 1
             else
@@ -44,7 +42,7 @@ function CB.G.InitializeInventoryGUI()
 
     f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetAllPoints(f)
-    f.texture:SetColorTexture(0, 0, 0, 0.5)
+    f.texture:SetColorTexture(0, 0, 0, 0.65)
 
     -- Frame Header
     local header = CreateFrame("Frame", nil, f)
@@ -54,7 +52,8 @@ function CB.G.InitializeInventoryGUI()
 
     header.texture = header:CreateTexture(nil, "BACKGROUND")
     header.texture:SetAllPoints(header)
-    header.texture:SetColorTexture(0, 0, 0, 0.5)
+    -- header.texture:SetColorTexture(0, 0, 0, 0.5)
+    header.texture:SetColorTexture(0.5, 0.5, 0.5, 0.15)
 
     local close = CreateFrame("Button", nil, header)
     close:SetSize(32, 32)
@@ -128,7 +127,7 @@ function CB.G.InitializeInventoryGUI()
     CB.G.BuildSortingContainer(f, CB.E.InventoryType.Inventory)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 36, -66)
+    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 6, -90)
     scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
     scroller:SetWidth(f:GetWidth())
 
