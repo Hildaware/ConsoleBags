@@ -253,7 +253,18 @@
         "ContainerFrameItemButtonMixin",
         "toString",
         "GameTooltip_ShowCompareItem",
-        "ClearItemButtonOverlay"
+        "ClearItemButtonOverlay",
+        "UIDropDownMenu_SetText",
+        "UIDropDownMenu_AddSeparator",
+        "HIGHLIGHT_FONT_COLOR_CODE",
+        "table",
+        "CreateFrame",
+        "pairs",
+        "ipairs",
+        "tinsert",
+        "GetCoinTextureString",
+        "GameTooltip",
+        "GetMoney"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

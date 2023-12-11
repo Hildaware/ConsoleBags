@@ -16,6 +16,32 @@ function CB.G.InitializeInventoryGUI()
     f:SetResizable(true)
     f:SetResizeBounds(632, 396, 632, 2000)
 
+    -- TODO: How do we stop input to ConsolePort binds specific to this situation?
+    f:SetPropagateKeyboardInput(true)
+    f:SetScript("OnGamePadButtonDown", function(self, key)
+        if key ~= "PADRSHOULDER" and key ~= "PADLSHOULDER" then return end
+        local filterCount = #self.FilterFrame.Buttons
+        local index = self.FilterFrame.SelectedIndex
+
+        if key == "PADRSHOULDER" then -- Right
+            print(index)
+            print(filterCount)
+            if index == filterCount then
+                self.FilterFrame.SelectedIndex = 1
+            else
+                self.FilterFrame.SelectedIndex = self.FilterFrame.SelectedIndex + 1
+            end
+            self.FilterFrame.Buttons[self.FilterFrame.SelectedIndex].OnSelect()
+        elseif key == "PADLSHOULDER" then -- Left
+            if index == 1 then
+                self.FilterFrame.SelectedIndex = filterCount
+            else
+                self.FilterFrame.SelectedIndex = self.FilterFrame.SelectedIndex - 1
+            end
+            self.FilterFrame.Buttons[self.FilterFrame.SelectedIndex].OnSelect()
+        end
+    end)
+
     f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.5)

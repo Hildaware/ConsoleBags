@@ -21,6 +21,9 @@ function CB.G.BuildFilteringContainer(parent, type)
     tex:SetAllPoints(cFrame)
     tex:SetColorTexture(0, 0, 0, 0.25)
 
+    cFrame.Buttons = {}
+    cFrame.SelectedIndex = 1
+
     -- All
     local f = CreateFrame("Button", nil, cFrame)
     f:SetSize(28, 28)
@@ -37,21 +40,13 @@ function CB.G.BuildFilteringContainer(parent, type)
     aTex:SetTexture(CB.U.GetCategoyIcon(1))
 
     f:SetScript("OnClick", function(self)
-        if type == CB.E.InventoryType.Inventory then
-            CB.Session.Filter = nil
-            CB.GatherItems()
-            CB.G.UpdateInventory()
-            CB.G.UpdateBagContainer()
-        elseif type == CB.E.InventoryType.Bank then
-            CB.Session.Bank.Filter = nil
-            CB.GatherBankItems()
-            CB.G.UpdateBank()
-        end
-
-        self:GetParent().selectedTexture:SetPoint("TOP", self:GetParent(), "TOP", 0, -32)
+        Filter_OnClick(f, type, nil, 1)
     end)
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
+    f.OnSelect = function() Filter_OnClick(f, type, nil, 1) end
+
+    cFrame.Buttons[1] = f
 
     -- IsSelected
     local selectedTex = cFrame:CreateTexture(nil, "ARTWORK")
@@ -123,6 +118,7 @@ function CB.G.UpdateFilterButtons(type, pool)
         local frame = Pool.FetchInactive(pool, filterOffset, CB.G.CreateFilterButtonPlaceholder)
         Pool.InsertActive(pool, frame, filterOffset)
         BuildFilterButton(frame, type, categoryData, filterOffset)
+        CB.View.FilterFrame.Buttons[filterOffset] = frame -- Add the button to the index
         filterOffset = filterOffset + 1
     end
 end
@@ -159,19 +155,10 @@ function BuildFilterButton(f, type, categoryData, index)
         f.newTexture:Hide()
     end
 
-    f:SetScript("OnClick", function(self)
-        self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+    f.OnSelect = function() Filter_OnClick(f, type, categoryData.key, index) end
 
-        if type == CB.E.InventoryType.Inventory then
-            CB.Session.Filter = categoryData.key
-            CB.GatherItems()
-            CB.G.UpdateInventory()
-            CB.G.UpdateBagContainer()
-        elseif type == CB.E.InventoryType.Bank then
-            CB.Session.Bank.Filter = categoryData.key
-            CB.GatherBankItems()
-            CB.G.UpdateBank()
-        end
+    f:SetScript("OnClick", function(self)
+        Filter_OnClick(f, type, categoryData.key, index)
     end)
 
     f:SetScript("OnEnter", function(self)
@@ -181,6 +168,24 @@ function BuildFilterButton(f, type, categoryData, index)
     end)
 
     f:Show()
+
+    return f
+end
+
+-- temp
+function Filter_OnClick(self, type, categoryKey, index)
+    self:GetParent().selectedTexture:SetPoint("TOP", 0, -(index * (LIST_ITEM_HEIGHT + 4)))
+
+    if type == CB.E.InventoryType.Inventory then
+        CB.Session.Filter = categoryKey
+        CB.GatherItems()
+        CB.G.UpdateInventory()
+        CB.G.UpdateBagContainer()
+    elseif type == CB.E.InventoryType.Bank then
+        CB.Session.Bank.Filter = categoryKey
+        CB.GatherBankItems()
+        CB.G.UpdateBank()
+    end
 end
 
 -- Sorting
