@@ -1,5 +1,7 @@
 local _, CB = ...
 
+local Masque = LibStub("Masque", true)
+
 function CB.G.BuildItemFrame(item, offset, frame, parent)
     if frame == nil then return end
 
@@ -41,6 +43,11 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
     frame.icon:CheckUpdateTooltip(tooltipOwner)
     frame.icon:SetMatchesSearch(not item.isFiltered)
     frame.icon:Show()
+
+    if Masque then
+        local cBags = Masque:Group("ConsoleBags")
+        cBags:AddButton(frame.icon)
+    end
 
     if item.isNew == true then
         frame.itemButton.NewTexture:Show()

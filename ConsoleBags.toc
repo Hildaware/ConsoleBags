@@ -6,6 +6,7 @@
 ## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
 ## SavedVariables: CBData
 
+Libs/Libs.xml
 Utils.lua
 GUI/GUI.xml
 DataTypes.lua
