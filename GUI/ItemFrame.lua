@@ -53,6 +53,18 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
         end
     end
 
+    -- Can I Mog It? Support
+    if _G["CanIMogIt"] then
+        local iconText = _G["CanIMogIt"]:GetIconText(item.link, item.bag, item.slot)
+        if iconText and iconText ~= "" then
+            frame.icon.canI.text:SetText(iconText)
+            frame.icon.canI:Show()
+        else
+            frame.icon.canI.text:SetText("")
+            frame.icon.canI:Hide()
+        end
+    end
+
     -- Masque Support
     if Masque then
         local cBags = Masque:Group("ConsoleBags")
@@ -171,12 +183,28 @@ function CB.G.CreateItemFramePlaceholder()
     iconTexture.frame = icon
 
     local upgradeIcon = iconTexture:CreateTexture(nil, "ARTWORK")
-    upgradeIcon:SetPoint("TOPRIGHT", iconTexture, "TOPRIGHT", -2, -2)
-    upgradeIcon:SetSize(14, 14)
+    upgradeIcon:SetPoint("TOPLEFT", iconTexture, "TOPLEFT", 2, -2)
+    upgradeIcon:SetSize(12, 12)
     upgradeIcon:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Upgrade")
     upgradeIcon:Hide()
 
     iconTexture.upgrade = upgradeIcon
+
+    local canIFrame = CreateFrame("Frame", nil, iconTexture)
+    canIFrame:SetPoint("TOPRIGHT", iconTexture, "TOPRIGHT", -2, -2)
+    canIFrame:SetSize(14, 14)
+    canIFrame.tex = canIFrame:CreateTexture(nil, "BACKGROUND")
+    canIFrame.tex:SetAllPoints(canIFrame)
+    canIFrame.tex:SetColorTexture(0, 0, 0, 1)
+
+    local canIMogIt = canIFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalTiny")
+    canIMogIt:SetAllPoints(canIFrame)
+    canIMogIt:SetJustifyH("RIGHT")
+
+    canIFrame:Hide()
+
+    canIFrame.text = canIMogIt
+    iconTexture.canI = canIFrame
 
     f.icon = iconTexture
 

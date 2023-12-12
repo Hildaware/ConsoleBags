@@ -31,7 +31,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     local aTex = f:CreateTexture(nil, "OVERLAY")
     aTex:SetPoint("CENTER", 0, "CENTER")
     aTex:SetSize(24, 24)
-    aTex:SetTexture(CB.U.GetCategoyIcon(1))
+    aTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Logo_Normal")
 
     f:SetScript("OnClick", function(self)
         Filter_OnClick(f, type, nil, 1)
