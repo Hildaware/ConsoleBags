@@ -4,7 +4,7 @@ CB.T = {}
 local Item = {}
 Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
     local self = {}
-    self.id = containerItem.itemId
+    self.id = containerItem.itemID
     self.name = containerItem.itemName
     self.link = containerItem.hyperlink
     self.stackCount = containerItem.stackCount
@@ -13,7 +13,7 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, qu
     self.type = itemInfo.type
     self.subType = itemInfo.subType
     self.equipLocation = invType
-    self.texture = itemInfo.texture
+    self.texture = itemInfo.texture or containerItem.iconFileID
     self.value = itemInfo.sellPrice or 0
     self.ilvl = ilvl or 0
     self.bag = bag
@@ -39,6 +39,8 @@ function Item.GetCategory(self)
         return CB.E.CustomCategory.Jewelry
     elseif CB.U.IsTrinket(self) then
         return CB.E.CustomCategory.Trinket
+    elseif self.id == 82800 then
+        return Enum.ItemClass.Battlepet
     elseif self.type == nil then
         return Enum.ItemClass.Miscellaneous
     else

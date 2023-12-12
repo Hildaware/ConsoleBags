@@ -77,7 +77,8 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
 
     frame.type:SetTexture(CB.U.GetCategoyIcon(item.type))
 
-    if item.type == Enum.ItemClass.Armor or item.type == Enum.ItemClass.Weapon then
+    if item.type == Enum.ItemClass.Armor or item.type == Enum.ItemClass.Weapon
+        or item.category == Enum.ItemClass.Battlepet then
         frame.ilvl:SetText(item.ilvl)
     else
         frame.ilvl:SetText("")

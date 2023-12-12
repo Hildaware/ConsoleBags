@@ -254,7 +254,6 @@ end
 
 -- TODO: Move this. It's specific to Inventory
 function CB.GatherItems()
-    print("Gather Items")
     CB.Session.Items = {}
     CB.Session.Categories = CB.U.BuildCategoriesTable()
 
@@ -267,6 +266,12 @@ function CB.GatherItems()
                 local ilvl = CB.R.GetEffectiveItemLevel(containerItem.hyperlink)
                 local invType = CB.R.GetInventoryType(containerItem.hyperlink)
                 local isNew = C_NewItems.IsNewItem(bag, slot)
+
+                -- Pet Cage
+                if containerItem.itemID == 82800 then
+                    local _, petLevel = BattlePetToolTip_UnpackBattlePetLink(containerItem.hyperlink)
+                    ilvl = petLevel
+                end
 
                 -- Create Item
                 local item = CB.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)

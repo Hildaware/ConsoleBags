@@ -266,7 +266,8 @@
         "GameTooltip",
         "GetMoney",
         "GenerateClosure",
-        "show"
+        "show",
+        "BattlePetToolTip_UnpackBattlePetLink"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

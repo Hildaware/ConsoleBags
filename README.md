@@ -7,9 +7,17 @@ Data Storage (Cross character, etc.)
     ```
 - 
 
+Post-MVP:
+- Customization
+    - Hiding Columns
+    - Resizing Columns
+    - Resizing Bag Width
+- Account-Wide Inventories
+    - Save items on logout to db
+    - Ability to view all items on account
+
 BUGS:
 - Equipping bag update?
-- Pets in cages have no icon
 - Add missing category icons (keys, etc?)
 - Can't use scrolls?
 - Randomly we have empty rows after a Gather
