@@ -265,7 +265,8 @@
         "GetCoinTextureString",
         "GameTooltip",
         "GetMoney",
-        "GenerateClosure"
+        "GenerateClosure",
+        "show"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

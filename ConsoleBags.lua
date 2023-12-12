@@ -48,6 +48,9 @@ local CBDataDefaults = {
     }
 }
 
+local backpackShouldOpen = false
+local backpackShouldClose = false
+
 local playerIdentifier = ""
 
 local eventFrame = CreateFrame("Frame")
@@ -73,7 +76,6 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
-        CB.GatherItems()
         CB.U.CreateEnableBagButtons()
         CB.U.BagDestroyer()
         CB.U.DestroyDefaultBags()
@@ -126,6 +128,36 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     end
 end)
 
+eventFrame:SetScript("OnUpdate", function()
+    if CB.View == nil then
+        CB.G.InitializeInventoryGUI()
+    end
+
+    if backpackShouldOpen then
+        if CB.Settings.HideBags == true then return end
+
+        backpackShouldOpen = false
+        backpackShouldClose = false
+
+        CB.GatherItems()
+        CB.G.UpdateInventory()
+        CB.G.UpdateBagContainer()
+
+        PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
+        CB.View:Show()
+    elseif backpackShouldClose then
+        backpackShouldClose = false
+
+        PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
+        CB.View:Hide()
+
+        local bank = CB.BankView and CB.BankView:IsShown()
+        if bank then
+            CB.BankView:Hide()
+        end
+    end
+end)
+
 function CB.Init()
     -- CB.Data = {
     --     Characters = {
@@ -174,11 +206,13 @@ function CB.Init()
     --     Name = playerName
     -- }
 
-    hooksecurefunc('OpenAllBags', CB.G.Toggle)
-    hooksecurefunc('CloseAllBags', CB.G.Hide)
-    hooksecurefunc('ToggleBag', CB.G.Toggle)
-    hooksecurefunc('ToggleAllBags', CB.G.Toggle)
-    hooksecurefunc('ToggleBackpack', CB.G.Toggle)
+    hooksecurefunc('OpenBackpack', CB.OpenBackpack)
+    hooksecurefunc('OpenAllBags', CB.OpenAllBags)
+    hooksecurefunc('CloseBackpack', CB.CloseBackpack)
+    hooksecurefunc('CloseAllBags', CB.CloseAllBags)
+    hooksecurefunc('ToggleBackpack', CB.ToggleBackpack)
+    hooksecurefunc('ToggleAllBags', CB.ToggleAllBags)
+    hooksecurefunc('ToggleBag', CB.ToggleBag)
 end
 
 local function GetItemData(bag, slot)
@@ -220,6 +254,7 @@ end
 
 -- TODO: Move this. It's specific to Inventory
 function CB.GatherItems()
+    print("Gather Items")
     CB.Session.Items = {}
     CB.Session.Categories = CB.U.BuildCategoriesTable()
 
@@ -397,45 +432,46 @@ end
 --     CB.G.Toggle()
 -- end
 
-function CB.G.ShowInventory()
-    if CB.View == nil then return end
-    if CB.Settings.HideBags == true then return end
-
-    if not CB.View:IsShown() then
-        CB.GatherItems()
-        CB.G.UpdateInventory()
-        CB.G.UpdateBagContainer()
-
-        PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
-        CB.View:Show()
-    end
+function CB.OpenAllBags()
+    backpackShouldOpen = true
 end
 
-function CB.G.Hide()
-    if CB.View == nil then return end
-
-    local inventory = CB.View:IsShown()
-    local bank = CB.BankView and CB.BankView:IsShown()
-    if inventory or bank then
-        if inventory then
-            CB.View:Hide()
-            PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-        end
-
-        if bank then
-            CB.BankView:Hide()
-        end
-    end
+function CB.CloseAllBags()
+    backpackShouldClose = true
 end
 
-function CB.G.Toggle()
-    if CB.View == nil then
-        CB.G.InitializeInventoryGUI()
-    end
+function CB.CloseBackpack()
+    backpackShouldClose = true
+end
 
+function CB.OpenBackpack()
+    backpackShouldOpen = true
+end
+
+function CB.ToggleBag()
     if CB.View:IsShown() then
-        CB.G.Hide()
+        backpackShouldClose = true
     else
-        CB.G.ShowInventory()
+        backpackShouldOpen = true
+    end
+end
+
+function CB.CloseBag()
+    backpackShouldClose = true
+end
+
+function CB.ToggleAllBags()
+    if CB.View:IsShown() then
+        backpackShouldClose = true
+    else
+        backpackShouldOpen = true
+    end
+end
+
+function CB.ToggleBackpack()
+    if CB.View:IsShown() then
+        backpackShouldClose = true
+    else
+        backpackShouldOpen = true
     end
 end
