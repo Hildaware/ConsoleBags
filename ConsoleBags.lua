@@ -152,6 +152,12 @@ function CB.Init()
                 Ilvl = 50,
                 ReqLvl = 50,
                 Value = 110
+            },
+            Sections = {
+                Header = 40,
+                Filters = 40,
+                ListViewHeader = 40,
+                ListItemHeight = 40
             }
         },
         HideBags = false
@@ -287,7 +293,6 @@ function CB.GatherBankItems()
     end
 end
 
--- TODO: Make this more generic so we can use it in the bank
 function CB.SortItems(inventoryType, categories)
     local sortField
     if inventoryType == CB.E.InventoryType.Inventory then

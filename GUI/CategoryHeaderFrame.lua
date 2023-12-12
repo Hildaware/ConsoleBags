@@ -1,18 +1,17 @@
 local _, CB = ...
 
-local LIST_ITEM_HEIGHT = 32
-CB.G.CollapsedCategories = {} -- TODO: Generic
+CB.G.CollapsedCategories = {}
 
 function CB.G.BuildCategoryFrame(data, offset, frame, parent)
     if frame == nil then return end
 
     frame:SetParent(parent)
-    frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
+    frame:SetPoint("TOP", 0, -((offset - 1) * CB.Settings.Defaults.Sections.ListItemHeight))
 
     if CB.G.CollapsedCategories[data.key] then
-        frame:GetNormalTexture():SetVertexColor(1, 0, 0, 0.35)
+        frame:GetNormalTexture():SetVertexColor(1, 0, 0, 1)
     else
-        frame:GetNormalTexture():SetVertexColor(1, 1, 0, 0.35)
+        frame:GetNormalTexture():SetVertexColor(1, 1, 1, 0.35)
     end
 
     frame.type:SetTexture(CB.U.GetCategoyIcon(data.key))
@@ -37,18 +36,18 @@ end
 -- TODO: SetSize will eventually need to be set based on the View
 function CB.G.CreateCategoryHeaderPlaceholder()
     local f = CreateFrame("Button")
-    f:SetSize(CB.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
+    f:SetSize(CB.View.ListView:GetWidth(), CB.Settings.Defaults.Sections.ListItemHeight)
 
     f:RegisterForClicks("LeftButtonUp")
 
-    f:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
-    f:GetNormalTexture():SetVertexColor(1, 1, 0, 0.35)
-    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight")
+    f:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid")
+    f:GetNormalTexture():SetVertexColor(1, 1, 0, 0.5)
+    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid")
 
     -- type
     local type = CreateFrame("Frame", nil, f)
     type:SetPoint("LEFT", f, "LEFT", 8, 0)
-    type:SetHeight(LIST_ITEM_HEIGHT)
+    type:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     type:SetWidth(32)
 
     local typeTex = type:CreateTexture(nil, "ARTWORK")
@@ -60,7 +59,7 @@ function CB.G.CreateCategoryHeaderPlaceholder()
     -- Name
     local name = CreateFrame("Frame", nil, f)
     name:SetPoint("LEFT", type, "RIGHT", 8, 0)
-    name:SetHeight(LIST_ITEM_HEIGHT)
+    name:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     name:SetWidth(300)
     local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     nameText:SetAllPoints(name)

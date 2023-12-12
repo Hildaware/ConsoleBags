@@ -16,6 +16,11 @@ function CB.G.InitializeInventoryGUI()
     f:SetResizable(true)
     f:SetResizeBounds(600, 396, 600, 2000)
 
+    f.texture = f:CreateTexture(nil, "BACKGROUND")
+    f.texture:SetAllPoints(f)
+    f.texture:SetColorTexture(0, 0, 0, 0.75)
+
+    -- Stop ConsolePort from reading shoulder buttons
     f:SetScript("OnShow", function(self)
         if _G["ConsolePortInputHandler"] then
             _G["ConsolePortInputHandler"]:SetCommand("PADRSHOULDER", self, true, 'LeftButton', 'UIControl', nil)
@@ -23,6 +28,7 @@ function CB.G.InitializeInventoryGUI()
         end
     end)
 
+    -- Re-allow ConsolePort Input handling
     f:SetScript("OnHide", function(self)
         _G["ConsolePortInputHandler"]:Release(self)
     end)
@@ -50,13 +56,9 @@ function CB.G.InitializeInventoryGUI()
         end
     end)
 
-    f.texture = f:CreateTexture(nil, "BACKGROUND")
-    f.texture:SetAllPoints(f)
-    f.texture:SetColorTexture(0, 0, 0, 0.65)
-
     -- Frame Header
     local header = CreateFrame("Frame", nil, f)
-    header:SetSize(f:GetWidth() - 2, 32)
+    header:SetSize(f:GetWidth(), CB.Settings.Defaults.Sections.Header)
     header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     header:EnableMouse(true)
 
@@ -127,7 +129,6 @@ function CB.G.InitializeInventoryGUI()
     local dragTex = drag:CreateTexture(nil, "BACKGROUND")
     dragTex:SetAllPoints(drag)
     dragTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Handlebar")
-    -- dragTex:SetColorTexture(1, 1, 1, 0.75)
 
     -- Filters
     CB.G.BuildFilteringContainer(f, CB.E.InventoryType.Inventory)
@@ -136,8 +137,10 @@ function CB.G.InitializeInventoryGUI()
     CB.G.BuildSortingContainer(f, CB.E.InventoryType.Inventory)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 6, -90)
-    scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
+    local offset = CB.Settings.Defaults.Sections.Header + CB.Settings.Defaults.Sections.Filters
+        + CB.Settings.Defaults.Sections.ListViewHeader
+    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -offset)
+    scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 2)
     scroller:SetWidth(f:GetWidth())
 
     local scrollChild = CreateFrame("Frame")

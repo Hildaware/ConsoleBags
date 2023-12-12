@@ -1,12 +1,10 @@
 local _, CB = ...
 
-local LIST_ITEM_HEIGHT = 32
-
 function CB.G.BuildItemFrame(item, offset, frame, parent)
     if frame == nil then return end
 
     frame:SetParent(parent)
-    frame:SetPoint("TOP", 0, -((offset - 1) * LIST_ITEM_HEIGHT))
+    frame:SetPoint("TOP", 0, -((offset - 1) * CB.Settings.Defaults.Sections.ListItemHeight))
 
     local tooltipOwner = GameTooltip:GetOwner()
 
@@ -75,7 +73,7 @@ end
 -- TODO: SetSize will eventually need to be set based on the View
 function CB.G.CreateItemFramePlaceholder()
     local f = CreateFrame("Frame", nil, UIParent) -- Taint Killer
-    f:SetSize(CB.View.ListView:GetWidth(), LIST_ITEM_HEIGHT)
+    f:SetSize(CB.View.ListView:GetWidth(), CB.Settings.Defaults.Sections.ListItemHeight)
 
     local itemButton = CreateFrame("ItemButton", nil, f, "ContainerFrameItemButtonTemplate")
     itemButton:SetAllPoints(f)
@@ -93,6 +91,13 @@ function CB.G.CreateItemFramePlaceholder()
     itemButton:GetHighlightTexture():Hide()
     itemButton:GetHighlightTexture():SetParent(nil)
     itemButton.HighlightTexture = nil
+
+    local undermark = itemButton:CreateTexture()
+    undermark:SetDrawLayer("BACKGROUND")
+    undermark:SetBlendMode("ADD")
+    undermark:SetPoint("TOPLEFT", itemButton, "BOTTOMLEFT", 0, 1)
+    undermark:SetPoint("BOTTOMRIGHT", itemButton, "BOTTOMRIGHT")
+    undermark:SetColorTexture(1, 1, 1, 0.2)
 
     local highlight = itemButton:CreateTexture()
     highlight:SetDrawLayer("BACKGROUND")
@@ -122,10 +127,10 @@ function CB.G.CreateItemFramePlaceholder()
 
     -- Icon
     local icon = CreateFrame("Frame", nil, f)
-    icon:SetPoint("LEFT", f, "LEFT")
-    icon:SetSize(CB.Settings.Defaults.Columns.Icon, LIST_ITEM_HEIGHT)
+    icon:SetPoint("LEFT", f, "LEFT", 2, 0)
+    icon:SetSize(CB.Settings.Defaults.Columns.Icon, CB.Settings.Defaults.Sections.ListItemHeight)
     local iconTexture = icon:CreateTexture(nil, "ARTWORK")
-    iconTexture:SetSize(24, 24)
+    iconTexture:SetSize(32, 32)
     iconTexture:SetPoint("CENTER", icon, "CENTER")
 
     f.icon = iconTexture
@@ -133,7 +138,7 @@ function CB.G.CreateItemFramePlaceholder()
     -- Name
     local name = CreateFrame("Frame", nil, f)
     name:SetPoint("LEFT", icon, "RIGHT", 8, 0)
-    name:SetHeight(LIST_ITEM_HEIGHT)
+    name:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     name:SetWidth(CB.Settings.Defaults.Columns.Name)
     local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     nameText:SetAllPoints(name)
@@ -144,7 +149,7 @@ function CB.G.CreateItemFramePlaceholder()
     -- type
     local type = CreateFrame("Frame", nil, f)
     type:SetPoint("LEFT", name, "RIGHT")
-    type:SetHeight(LIST_ITEM_HEIGHT)
+    type:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     type:SetWidth(CB.Settings.Defaults.Columns.Category)
 
     local typeTex = type:CreateTexture(nil, "ARTWORK")
@@ -156,7 +161,7 @@ function CB.G.CreateItemFramePlaceholder()
     -- ilvl
     local ilvl = CreateFrame("Frame", nil, f)
     ilvl:SetPoint("LEFT", type, "RIGHT")
-    ilvl:SetHeight(LIST_ITEM_HEIGHT)
+    ilvl:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     ilvl:SetWidth(CB.Settings.Defaults.Columns.Ilvl)
     local ilvlText = ilvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     ilvlText:SetAllPoints(ilvl)
@@ -167,7 +172,7 @@ function CB.G.CreateItemFramePlaceholder()
     -- reqlvl
     local reqlvl = CreateFrame("Frame", nil, f)
     reqlvl:SetPoint("LEFT", ilvl, "RIGHT")
-    reqlvl:SetHeight(LIST_ITEM_HEIGHT)
+    reqlvl:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     reqlvl:SetWidth(CB.Settings.Defaults.Columns.ReqLvl)
     local reqlvlText = reqlvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     reqlvlText:SetAllPoints(reqlvl)
@@ -178,7 +183,7 @@ function CB.G.CreateItemFramePlaceholder()
     -- value
     local value = CreateFrame("Frame", nil, f)
     value:SetPoint("LEFT", reqlvl, "RIGHT")
-    value:SetHeight(LIST_ITEM_HEIGHT)
+    value:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     value:SetWidth(CB.Settings.Defaults.Columns.Value)
     local valueText = value:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     valueText:SetAllPoints(value)

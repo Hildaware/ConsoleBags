@@ -17,11 +17,15 @@ function CB.G.InitializeBankGUI()
 
     f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetAllPoints(f)
+    f.texture:SetColorTexture(0, 0, 0, 0.75)
+
+    f.texture = f:CreateTexture(nil, "BACKGROUND")
+    f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.65)
 
     -- Frame Header
     local header = CreateFrame("Frame", nil, f)
-    header:SetSize(f:GetWidth() - 2, 32)
+    header:SetSize(f:GetWidth(), CB.Settings.Defaults.Sections.Header)
     header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     header:EnableMouse(true)
 
@@ -74,8 +78,10 @@ function CB.G.InitializeBankGUI()
     CB.G.BuildSortingContainer(f, CB.E.InventoryType.Bank)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 6, -90)
-    scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 8)
+    local offset = CB.Settings.Defaults.Sections.Header + CB.Settings.Defaults.Sections.Filters
+        + CB.Settings.Defaults.Sections.ListViewHeader
+    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -offset)
+    scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 2)
     scroller:SetWidth(f:GetWidth())
 
     local scrollChild = CreateFrame("Frame")

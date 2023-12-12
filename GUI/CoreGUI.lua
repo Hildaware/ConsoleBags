@@ -3,8 +3,6 @@ local _, CB = ...
 CB.G = {}
 CB.G.U = {}
 
-local LIST_ITEM_HEIGHT = 32
-
 function CB.G.UpdateCurrency()
     if CB.View and CB.View.Header then
         CB.View.Header.Gold:SetText(GetCoinTextureString(GetMoney()))
@@ -14,14 +12,13 @@ end
 -- Filtering
 function CB.G.BuildFilteringContainer(parent, type)
     local cFrame = CreateFrame("Frame", nil, parent)
-    cFrame:SetSize(parent:GetWidth(), 32)
-    -- cFrame:SetSize(32, parent:GetHeight() - 32)
-    cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -32)
+    cFrame:SetSize(parent:GetWidth(), CB.Settings.Defaults.Sections.Filters)
+    cFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -CB.Settings.Defaults.Sections.Header)
 
     local tex = cFrame:CreateTexture(nil, "BACKGROUND")
     tex:SetAllPoints(cFrame)
-    tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Highlight_T_B")
-    tex:SetVertexColor(1, 1, 0, 0.5)
+    tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Underline")
+    tex:SetVertexColor(1, 1, 1, 0.5)
 
     cFrame.Buttons = {}
     cFrame.SelectedIndex = 1
@@ -29,12 +26,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     -- All
     local f = CreateFrame("Button", nil, cFrame)
     f:SetSize(28, 28)
-    f:SetPoint("LEFT", cFrame, "LEFT", 32, 0)
-
-    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
-    f:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
-    f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
-    f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
+    f:SetPoint("LEFT", cFrame, "LEFT", 30, 0)
 
     local aTex = f:CreateTexture(nil, "OVERLAY")
     aTex:SetPoint("CENTER", 0, "CENTER")
@@ -52,18 +44,18 @@ function CB.G.BuildFilteringContainer(parent, type)
 
     -- IsSelected
     local selectedTex = cFrame:CreateTexture(nil, "ARTWORK")
-    selectedTex:SetPoint("LEFT", cFrame, "LEFT", 34, 0)
-    selectedTex:SetSize(24, 24)
-    selectedTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
-    selectedTex:SetVertexColor(1, 1, 0, 0.25)
+    selectedTex:SetPoint("BOTTOMLEFT", cFrame, "BOTTOMLEFT", 30, 3)
+    selectedTex:SetSize(28, CB.Settings.Defaults.Sections.Filters - 6)
+    selectedTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Filter_Highlight")
+    selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
     -- LEFT / RIGHT Buttons
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
-        local rTexture = cFrame:CreateTexture(nil, "ARTWORK")
-        rTexture:SetPoint("LEFT", cFrame, "LEFT", 6, 0)
-        rTexture:SetSize(24, 24)
-        rTexture:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\lb")
+        local lTexture = cFrame:CreateTexture(nil, "ARTWORK")
+        lTexture:SetPoint("LEFT", cFrame, "LEFT", 6, 0)
+        lTexture:SetSize(24, 24)
+        lTexture:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\lb")
 
         local rTexture = cFrame:CreateTexture(nil, "ARTWORK")
         rTexture:SetPoint("RIGHT", cFrame, "RIGHT", -6, 0)
@@ -73,33 +65,6 @@ function CB.G.BuildFilteringContainer(parent, type)
 
     cFrame.selectedTexture = selectedTex
     parent.FilterFrame = cFrame
-end
-
-function CB.G.CreateFilterButtonPlaceholder()
-    local f = CreateFrame("Button")
-    f:SetSize(28, 28)
-
-    local tex = f:CreateTexture(nil, "OVERLAY")
-    tex:SetPoint("CENTER", 0, "CENTER")
-    tex:SetSize(24, 24)
-
-    f.texture = tex
-    f:RegisterForClicks("AnyDown")
-    f:RegisterForClicks("AnyUp")
-
-    local newTex = f:CreateTexture(nil, "HIGHLIGHT")
-    newTex:SetPoint("TOPRIGHT", f, "TOPRIGHT")
-    newTex:SetSize(10, 10)
-    newTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Exclamation")
-    newTex:Hide()
-
-    f.newTexture = newTex
-
-    f:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-
-    return f
 end
 
 function CB.G.UpdateFilterButtons(type, pool)
@@ -139,6 +104,33 @@ function CB.G.UpdateFilterButtons(type, pool)
     end
 end
 
+function CB.G.CreateFilterButtonPlaceholder()
+    local f = CreateFrame("Button")
+    f:SetSize(28, CB.Settings.Defaults.Sections.Filters)
+
+    local tex = f:CreateTexture(nil, "ARTWORK")
+    tex:SetPoint("CENTER", 0, "CENTER")
+    tex:SetSize(24, 24)
+
+    f.texture = tex
+    f:RegisterForClicks("AnyDown")
+    f:RegisterForClicks("AnyUp")
+
+    local newTex = f:CreateTexture(nil, "OVERLAY")
+    newTex:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, -4)
+    newTex:SetSize(12, 12)
+    newTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Exclamation")
+    newTex:Hide()
+
+    f.newTexture = newTex
+
+    f:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    return f
+end
+
 function BuildFilterButton(f, type, categoryData, index)
     if f == nil then return end
 
@@ -153,15 +145,10 @@ function BuildFilterButton(f, type, categoryData, index)
 
 
     f:SetParent(parent.FilterFrame)
-    f:SetPoint("LEFT", index * LIST_ITEM_HEIGHT, 0)
+    f:SetPoint("LEFT", index * 30, 0)
 
     f:RegisterForClicks("AnyDown")
     f:RegisterForClicks("AnyUp")
-
-    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
-    f:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Rounded_BG")
-    f:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.25)
-    f:GetPushedTexture():SetVertexColor(1, 1, 1, 0.25)
 
     f.texture:SetTexture(CB.U.GetCategoyIcon(categoryData.key))
 
@@ -188,9 +175,8 @@ function BuildFilterButton(f, type, categoryData, index)
     return f
 end
 
--- temp
 function Filter_OnClick(self, type, categoryKey, index)
-    self:GetParent().selectedTexture:SetPoint("LEFT", (index * LIST_ITEM_HEIGHT) + 2, 0)
+    self:GetParent().selectedTexture:SetPoint("LEFT", (index * 30), 0)
 
     if type == CB.E.InventoryType.Inventory then
         CB.Session.Filter = categoryKey
@@ -207,42 +193,44 @@ end
 -- Sorting
 function CB.G.BuildSortingContainer(parent, type)
     local hFrame = CreateFrame("Frame", nil, parent)
-    hFrame:SetSize(parent:GetWidth(), 24)
-    hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -64)
+    hFrame:SetSize(parent:GetWidth(), CB.Settings.Defaults.Sections.ListViewHeader)
+    local offset = CB.Settings.Defaults.Sections.Header + CB.Settings.Defaults.Sections.Filters
+    hFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -offset)
 
     hFrame.fields = {}
 
     local tex = hFrame:CreateTexture(nil, "BACKGROUND")
-    tex:SetAllPoints(hFrame)
-    -- tex:SetColorTexture(0, 0, 0, 0.25)
-    tex:SetColorTexture(0, 0, 0, 1)
+    tex:SetPoint("TOPLEFT", hFrame, "TOPLEFT", 0, -4)
+    tex:SetPoint("BOTTOMRIGHT", hFrame, "BOTTOMRIGHT")
+    tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Doubleline")
+    tex:SetVertexColor(1, 1, 1, 0.5)
 
     local icon = BuildSortButton(hFrame, hFrame, "•", CB.Settings.Defaults.Columns.Icon,
         CB.E.SortFields.Icon, true, type)
 
-    local name = BuildSortButton(hFrame, icon, "NAME", CB.Settings.Defaults.Columns.Name,
+    local name = BuildSortButton(hFrame, icon, "name", CB.Settings.Defaults.Columns.Name,
         CB.E.SortFields.Name, false, type)
 
-    local category = BuildSortButton(hFrame, name, "CAT", CB.Settings.Defaults.Columns.Category,
+    local category = BuildSortButton(hFrame, name, "cat", CB.Settings.Defaults.Columns.Category,
         CB.E.SortFields.Category, false, type)
 
-    local ilvl = BuildSortButton(hFrame, category, "ILVL", CB.Settings.Defaults.Columns.Ilvl,
+    local ilvl = BuildSortButton(hFrame, category, "ilvl", CB.Settings.Defaults.Columns.Ilvl,
         CB.E.SortFields.Ilvl, false, type)
 
-    local reqlvl = BuildSortButton(hFrame, ilvl, "REQ", CB.Settings.Defaults.Columns.ReqLvl,
+    local reqlvl = BuildSortButton(hFrame, ilvl, "req", CB.Settings.Defaults.Columns.ReqLvl,
         CB.E.SortFields.ReqLvl, false, type)
 
-    local value = BuildSortButton(hFrame, reqlvl, "VALUE", CB.Settings.Defaults.Columns.Value,
+    local value = BuildSortButton(hFrame, reqlvl, "value", CB.Settings.Defaults.Columns.Value,
         CB.E.SortFields.Value, false, type)
 end
 
 function BuildSortButton(parent, anchor, name, width, sortField, initial, type)
     local frame = CreateFrame("Button", nil, parent)
     frame:SetSize(width, parent:GetHeight())
-    frame:SetPoint("LEFT", anchor, initial and "LEFT" or "RIGHT", initial and 10 or 0, 0)
+    frame:SetPoint("LEFT", anchor, initial and "LEFT" or "RIGHT", initial and 3 or 0, 0)
 
     local text = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    text:SetPoint("CENTER", frame, "CENTER")
+    text:SetPoint("BOTTOM", frame, "BOTTOM", 0, 12)
     text:SetJustifyH("CENTER")
     text:SetText(name)
     text:SetTextColor(1, 1, 1)
