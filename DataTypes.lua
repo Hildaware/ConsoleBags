@@ -34,7 +34,7 @@ function Item.GetCategory(self)
     if CB.U.IsEquipmentUnbound(self) then
         return CB.E.CustomCategory.BindOnEquip
     elseif self.quality == Enum.ItemQuality.Heirloom then
-        return Enum.ItemQuality.Heirloom
+        return CB.E.CustomCategory.BindOnAccount
     elseif CB.U.IsJewelry(self) then
         return CB.E.CustomCategory.Jewelry
     elseif CB.U.IsTrinket(self) then

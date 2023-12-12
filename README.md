@@ -12,6 +12,7 @@ BUGS:
 - Pets in cages have no icon
 - Add missing category icons (keys, etc?)
 - Can't use scrolls?
+- Randomly we have empty rows after a Gather
 
 Tech Debt TODOS:
 - InventoryFrame & BankFrame are almost identical
