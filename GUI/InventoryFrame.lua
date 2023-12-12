@@ -62,8 +62,7 @@ function CB.G.InitializeInventoryGUI()
 
     header.texture = header:CreateTexture(nil, "BACKGROUND")
     header.texture:SetAllPoints(header)
-    -- header.texture:SetColorTexture(0, 0, 0, 0.5)
-    header.texture:SetColorTexture(0.5, 0.5, 0.5, 0.15)
+    header.texture:SetColorTexture(0, 0, 0, 0.5)
 
     local close = CreateFrame("Button", nil, header)
     close:SetSize(32, 32)

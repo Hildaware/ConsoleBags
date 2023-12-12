@@ -21,8 +21,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     local tex = cFrame:CreateTexture(nil, "BACKGROUND")
     tex:SetAllPoints(cFrame)
     tex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Highlight_T_B")
-    tex:SetVertexColor(1, 1, 1, 0.75)
-    -- tex:SetColorTexture(0.5, 0.5, 0.5, 0.15)
+    tex:SetVertexColor(1, 1, 0, 0.5)
 
     cFrame.Buttons = {}
     cFrame.SelectedIndex = 1
