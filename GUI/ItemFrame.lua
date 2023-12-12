@@ -11,27 +11,42 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
     frame.itemButton:SetID(item.slot)
     frame:SetID(item.bag)
 
-    ClearItemButtonOverlay(frame.itemButton)
     frame.itemButton:SetHasItem(item.texture)
-    frame.itemButton:UpdateExtended()
-    frame.itemButton:UpdateJunkItem(item.quality, item.hasNoValue)
-    frame.itemButton:UpdateItemContextMatching()
-    frame.itemButton:UpdateCooldown(item.texture)
-    frame.itemButton:SetReadable(item.isReadable)
-    frame.itemButton:CheckUpdateTooltip(tooltipOwner)
-    frame.itemButton:SetMatchesSearch(not item.isFiltered)
-
 
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     frame.itemButton.HighlightTexture:SetVertexColor(r, g, b, 1)
+
+    local questInfo = item.questInfo
+    local isQuestItem = questInfo.isQuestItem;
+    local questID = questInfo.questID;
+    local isActive = questInfo.isActive
+
+    -- Utilize the Icon as an ItemButton
+    frame.icon:SetID(item.slot)
+    frame.icon.frame:SetID(item.bag)
+
+    ClearItemButtonOverlay(frame.icon)
+    frame.icon:SetHasItem(item.texture)
+    frame.icon:SetItemButtonTexture(item.texture)
+    SetItemButtonQuality(frame.icon, item.quality, item.link, false, item.bound)
+    SetItemButtonCount(frame.icon, item.stackCount)
+    SetItemButtonDesaturated(frame.icon, item.isLocked)
+    frame.icon:UpdateExtended()
+    frame.icon:UpdateQuestItem(isQuestItem, questID, isActive)
+    frame.icon:UpdateNewItem(item.quality)
+    frame.icon:UpdateJunkItem(item.quality, item.hasNoValue)
+    frame.icon:UpdateItemContextMatching()
+    frame.icon:UpdateCooldown(item.texture)
+    frame.icon:SetReadable(item.isReadable)
+    frame.icon:CheckUpdateTooltip(tooltipOwner)
+    frame.icon:SetMatchesSearch(not item.isFiltered)
+    frame.icon:Show()
 
     if item.isNew == true then
         frame.itemButton.NewTexture:Show()
     else
         frame.itemButton.NewTexture:Hide()
     end
-
-    frame.icon:SetTexture(item.texture)
 
     local stackString = (item.stackCount and item.stackCount > 1) and "(" .. item.stackCount .. ")" or nil
     local nameString = item.name
@@ -126,18 +141,22 @@ function CB.G.CreateItemFramePlaceholder()
     f.itemButton = itemButton
 
     -- Icon
-    local icon = CreateFrame("Frame", nil, f)
-    icon:SetPoint("LEFT", f, "LEFT", 2, 0)
-    icon:SetSize(CB.Settings.Defaults.Columns.Icon, CB.Settings.Defaults.Sections.ListItemHeight)
-    local iconTexture = icon:CreateTexture(nil, "ARTWORK")
-    iconTexture:SetSize(32, 32)
-    iconTexture:SetPoint("CENTER", icon, "CENTER")
+    local iconSpace = CreateFrame("Frame", nil, f)
+    iconSpace:SetPoint("LEFT", f, "LEFT", 4, 0)
+    iconSpace:SetSize(CB.Settings.Defaults.Columns.Icon, CB.Settings.Defaults.Sections.ListItemHeight)
+    local icon = CreateFrame("Frame", nil, iconSpace)
+    icon:SetPoint("CENTER", iconSpace, "CENTER")
+    icon:SetSize(32, 32)
+    local iconTexture = CreateFrame("ItemButton", nil, icon, "ContainerFrameItemButtonTemplate")
+    iconTexture:SetAllPoints(icon)
+
+    iconTexture.frame = icon
 
     f.icon = iconTexture
 
     -- Name
     local name = CreateFrame("Frame", nil, f)
-    name:SetPoint("LEFT", icon, "RIGHT", 8, 0)
+    name:SetPoint("LEFT", iconSpace, "RIGHT", 8, 0)
     name:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     name:SetWidth(CB.Settings.Defaults.Columns.Name)
     local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
