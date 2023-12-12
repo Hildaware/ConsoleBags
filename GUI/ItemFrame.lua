@@ -44,6 +44,16 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
     frame.icon:SetMatchesSearch(not item.isFiltered)
     frame.icon:Show()
 
+    -- Pawn Support
+    if _G["PawnIsContainerItemAnUpgrade"] then
+        if _G.PawnIsContainerItemAnUpgrade(item.bag, item.slot) then
+            frame.icon.upgrade:Show()
+        else
+            frame.icon.upgrade:Hide()
+        end
+    end
+
+    -- Masque Support
     if Masque then
         local cBags = Masque:Group("ConsoleBags")
         cBags:AddButton(frame.icon)
@@ -158,6 +168,14 @@ function CB.G.CreateItemFramePlaceholder()
     iconTexture:SetAllPoints(icon)
 
     iconTexture.frame = icon
+
+    local upgradeIcon = iconTexture:CreateTexture(nil, "ARTWORK")
+    upgradeIcon:SetPoint("TOPRIGHT", iconTexture, "TOPRIGHT", -2, -2)
+    upgradeIcon:SetSize(14, 14)
+    upgradeIcon:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Upgrade")
+    upgradeIcon:Hide()
+
+    iconTexture.upgrade = upgradeIcon
 
     f.icon = iconTexture
 

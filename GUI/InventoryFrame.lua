@@ -73,7 +73,7 @@ function CB.G.InitializeInventoryGUI()
     close:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight")
     close:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed")
     close:SetScript("OnClick", function()
-        CB.G.Toggle()
+        CB.CloseAllBags()
     end)
 
     local defaultButton = CreateFrame("Button", nil, header)
