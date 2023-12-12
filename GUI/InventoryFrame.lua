@@ -16,7 +16,17 @@ function CB.G.InitializeInventoryGUI()
     f:SetResizable(true)
     f:SetResizeBounds(600, 396, 600, 2000)
 
-    -- TODO: How do we stop input to ConsolePort binds specific to this situation?
+    f:SetScript("OnShow", function(self)
+        if _G["ConsolePortInputHandler"] then
+            _G["ConsolePortInputHandler"]:SetCommand("PADRSHOULDER", self, true, 'LeftButton', 'UIControl', nil)
+            _G["ConsolePortInputHandler"]:SetCommand("PADLSHOULDER", self, true, 'LeftButton', 'UIControl', nil)
+        end
+    end)
+
+    f:SetScript("OnHide", function(self)
+        _G["ConsolePortInputHandler"]:Release(self)
+    end)
+
     f:SetPropagateKeyboardInput(true)
     f:SetScript("OnGamePadButtonDown", function(self, key)
         if key ~= "PADRSHOULDER" and key ~= "PADLSHOULDER" then return end
