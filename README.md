@@ -15,16 +15,15 @@ Post-MVP:
 - Account-Wide Inventories
     - Save items on logout to db
     - Ability to view all items on account
-
-MVP TODOS:
 - Search
+    - NBD at the moment, as this is aimed at controllers
 
 BUGS:
 - Equipping bag update?
-- Add missing category icons (keys, etc?)
 - Can't use scrolls?
 - Randomly we have empty rows after a Gather
 - Tooltip (backgrounds?) stick around when switching tabs
+    - Not sure how to fix this issue
 
 Tech Debt TODOS:
 - InventoryFrame & BankFrame are almost identical

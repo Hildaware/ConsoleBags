@@ -43,6 +43,9 @@ function CB.G.InitializeInventoryGUI()
         local filterCount = #self.FilterFrame.Buttons
         local index = self.FilterFrame.SelectedIndex
 
+        -- This doesn't work, as the OnEnter doesn't trigger on changing tabs
+        -- GameTooltip:Hide()
+
         if key == "PADRSHOULDER" then -- Right
             if index == filterCount then
                 self.FilterFrame.SelectedIndex = 1
