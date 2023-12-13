@@ -5,6 +5,8 @@ local CategoryPool = CB.U.Pool.New()
 local FilterPool = CB.U.Pool.New()
 
 function CB.G.InitializeBankGUI()
+    local inventoryType = CB.E.InventoryType.Bank
+
     local f = CreateFrame("Frame", "ConsoleBagsBanking", UIParent)
     f:SetFrameStrata("HIGH")
     f:SetSize(600, CBData.BankView.Size.Y or 396)
@@ -72,10 +74,10 @@ function CB.G.InitializeBankGUI()
     dragTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Handlebar")
 
     -- Filters
-    CB.G.BuildFilteringContainer(f, CB.E.InventoryType.Bank)
+    CB.G.BuildFilteringContainer(f, inventoryType)
 
     -- 'Header'
-    CB.G.BuildSortingContainer(f, CB.E.InventoryType.Bank)
+    CB.G.BuildSortingContainer(f, inventoryType)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
     local offset = CB.Settings.Defaults.Sections.Header + CB.Settings.Defaults.Sections.Filters
@@ -91,13 +93,13 @@ function CB.G.InitializeBankGUI()
     f.ListView = scrollChild
     f:Hide()
 
-    -- TODO: Bank bag view (purchasing, etc.)
-
     table.insert(UISpecialFrames, f:GetName())
 
     CB.G.U.CreateBorder(f)
 
     CB.BankView = f
+
+    CB.G.CreateBags(inventoryType, CB.BankView)
 
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
@@ -156,6 +158,7 @@ function CB.G.UpdateBank()
     end
 
     CB.G.UpdateFilterButtons(inventoryType, FilterPool)
+    CB.G.UpdateBags(CB.BankView.Bags.Container, inventoryType)
 end
 
 function CB.G.ShowBank()

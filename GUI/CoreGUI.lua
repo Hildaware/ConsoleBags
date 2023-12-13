@@ -182,7 +182,6 @@ function Filter_OnClick(self, type, categoryKey, index)
         CB.Session.Filter = categoryKey
         CB.GatherItems()
         CB.G.UpdateInventory()
-        CB.G.UpdateBagContainer()
     elseif type == CB.E.InventoryType.Bank then
         CB.Session.Bank.Filter = categoryKey
         CB.GatherBankItems()
@@ -289,7 +288,6 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial, type)
 
         if type == CB.E.InventoryType.Inventory then
             CB.G.UpdateInventory()
-            CB.G.UpdateBagContainer()
         elseif type == CB.E.InventoryType.Bank then
             CB.G.UpdateBank()
         end

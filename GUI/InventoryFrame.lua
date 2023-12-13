@@ -6,6 +6,8 @@ local CategoryPool = CB.U.Pool.New()
 local FilterPool = CB.U.Pool.New()
 
 function CB.G.InitializeInventoryGUI()
+    local inventoryType = CB.E.InventoryType.Inventory
+
     local f = CreateFrame("Frame", "ConsoleBagsInventory", UIParent)
     f:SetFrameStrata("HIGH")
     f:SetSize(600, CBData.View.Size.Y or 396)
@@ -30,7 +32,9 @@ function CB.G.InitializeInventoryGUI()
 
     -- Re-allow ConsolePort Input handling
     f:SetScript("OnHide", function(self)
-        _G["ConsolePortInputHandler"]:Release(self)
+        if _G["ConsolePortInputHandler"] then
+            _G["ConsolePortInputHandler"]:Release(self)
+        end
     end)
 
     f:SetPropagateKeyboardInput(true)
@@ -131,10 +135,10 @@ function CB.G.InitializeInventoryGUI()
     dragTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Handlebar")
 
     -- Filters
-    CB.G.BuildFilteringContainer(f, CB.E.InventoryType.Inventory)
+    CB.G.BuildFilteringContainer(f, inventoryType)
 
     -- 'Header'
-    CB.G.BuildSortingContainer(f, CB.E.InventoryType.Inventory)
+    CB.G.BuildSortingContainer(f, inventoryType)
 
     local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
     local offset = CB.Settings.Defaults.Sections.Header + CB.Settings.Defaults.Sections.Filters
@@ -156,7 +160,7 @@ function CB.G.InitializeInventoryGUI()
 
     CB.View = f
 
-    CB.G.CreateBagContainer()
+    CB.G.CreateBags(inventoryType, CB.View)
 
     ---@diagnostic disable-next-line: undefined-global
     if ConsolePort then
@@ -215,4 +219,5 @@ function CB.G.UpdateInventory()
     end
 
     CB.G.UpdateFilterButtons(inventoryType, FilterPool)
+    CB.G.UpdateBags(CB.View.Bags.Container, inventoryType)
 end

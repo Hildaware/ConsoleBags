@@ -84,14 +84,11 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
     if event == "BAG_UPDATE_DELAYED" then
         CB.GatherItems()
         CB.G.UpdateInventory()
-        CB.G.UpdateBagContainer()
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
         CB.GatherItems()
         CB.G.UpdateInventory()
-
-        CB.G.UpdateBagContainer()
     end
 
     if event == "PLAYER_MONEY" then
@@ -106,16 +103,12 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
             CB.G.InitializeBankGUI()
         end
 
-        -- Gather Items
-        CB.GatherItems()
+        -- TODO: Treat like inv? Gather Items
         CB.GatherBankItems()
-
-        CB.G.UpdateInventory()
         CB.G.UpdateBank()
-        CB.G.UpdateBagContainer()
-
         CB.G.ShowBank()
-        CB.G.ShowInventory()
+
+        CB.OpenBackpack()
     end
 
     if event == "BANKFRAME_CLOSED" then
@@ -141,7 +134,6 @@ eventFrame:SetScript("OnUpdate", function()
 
         CB.GatherItems()
         CB.G.UpdateInventory()
-        CB.G.UpdateBagContainer()
 
         PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
         CB.View:Show()

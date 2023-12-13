@@ -16,11 +16,15 @@ Post-MVP:
     - Save items on logout to db
     - Ability to view all items on account
 
+MVP TODOS:
+- Search
+
 BUGS:
 - Equipping bag update?
 - Add missing category icons (keys, etc?)
 - Can't use scrolls?
 - Randomly we have empty rows after a Gather
+- Tooltip (backgrounds?) stick around when switching tabs
 
 Tech Debt TODOS:
 - InventoryFrame & BankFrame are almost identical
