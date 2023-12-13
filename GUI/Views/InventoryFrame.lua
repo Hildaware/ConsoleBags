@@ -60,6 +60,7 @@ function CB.G.InitializeInventoryGUI()
         end
     end)
 
+    -- TODO: Split header
     -- Frame Header
     local header = CreateFrame("Frame", nil, f)
     header:SetSize(f:GetWidth(), CB.Settings.Defaults.Sections.Header)
@@ -105,6 +106,17 @@ function CB.G.InitializeInventoryGUI()
     goldView:SetText(GetCoinTextureString(GetMoney()))
 
     header.Gold = goldView
+
+    -- TODO: Eventually add Search
+    -- local search = CreateFrame("EditBox", nil, header, "BagSearchBoxTemplate")
+    -- search:SetPoint("LEFT", goldView, "RIGHT", 6, 0)
+    -- search:SetSize(200, 28)
+    -- search:SetScript("OnTextChanged", function(self, changed)
+    --     if changed then
+    --         local text = self:GetText()
+    --         CB.G.SearchFilter(inventoryType, text)
+    --     end
+    -- end)
 
     header:RegisterForDrag("LeftButton")
     header:SetScript("OnDragStart", function(self, button)

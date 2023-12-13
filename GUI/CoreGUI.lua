@@ -189,6 +189,20 @@ function Filter_OnClick(self, type, categoryKey, index)
     end
 end
 
+-- TODO: Eventually get search working. Not priority
+function CB.G.SearchFilter(inventoryType, searchText)
+    if inventoryType == CB.E.InventoryType.Inventory then
+        local found = {}
+        for _, item in pairs(CB.Session.Items) do
+            if item.name and item.name ~= "" and string.find(item.name, searchText) then
+                tinsert(found, item)
+            end
+        end
+
+        CB.Session.Items = found
+    end
+end
+
 -- Sorting
 function CB.G.BuildSortingContainer(parent, type)
     local hFrame = CreateFrame("Frame", nil, parent)

@@ -157,6 +157,7 @@ function CB.G.CreateItemFramePlaceholder()
     itemButton:HookScript("OnLeave", function(s)
         s.HighlightTexture:Hide()
         s.NewTexture:Hide()
+        GameTooltip:Hide()
     end)
 
     local new = itemButton:CreateTexture()
