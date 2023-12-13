@@ -218,25 +218,25 @@ function CB.G.BuildSortingContainer(parent, type)
     tex:SetVertexColor(1, 1, 1, 0.5)
 
     local icon = BuildSortButton(hFrame, hFrame, "•", CB.Settings.Defaults.Columns.Icon,
-        CB.E.SortFields.Icon, true, type)
+        CB.E.SortFields.Icon, true, type, "Rarity")
 
     local name = BuildSortButton(hFrame, icon, "name", CB.Settings.Defaults.Columns.Name,
-        CB.E.SortFields.Name, false, type)
+        CB.E.SortFields.Name, false, type, "Item Name")
 
     -- local category = BuildSortButton(hFrame, name, "cat", CB.Settings.Defaults.Columns.Category,
     --     CB.E.SortFields.Category, false, type)
 
     local ilvl = BuildSortButton(hFrame, name, "ilvl", CB.Settings.Defaults.Columns.Ilvl,
-        CB.E.SortFields.Ilvl, false, type)
+        CB.E.SortFields.Ilvl, false, type, "Item Level")
 
     local reqlvl = BuildSortButton(hFrame, ilvl, "req", CB.Settings.Defaults.Columns.ReqLvl,
-        CB.E.SortFields.ReqLvl, false, type)
+        CB.E.SortFields.ReqLvl, false, type, "Required Level")
 
     local value = BuildSortButton(hFrame, reqlvl, "value", CB.Settings.Defaults.Columns.Value,
-        CB.E.SortFields.Value, false, type)
+        CB.E.SortFields.Value, false, type, "Gold Value")
 end
 
-function BuildSortButton(parent, anchor, name, width, sortField, initial, type)
+function BuildSortButton(parent, anchor, name, width, sortField, initial, type, friendlyName)
     local frame = CreateFrame("Button", nil, parent)
     frame:SetSize(width, parent:GetHeight())
     frame:SetPoint("LEFT", anchor, initial and "LEFT" or "RIGHT", initial and 3 or 0, 0)
@@ -304,6 +304,16 @@ function BuildSortButton(parent, anchor, name, width, sortField, initial, type)
         elseif type == CB.E.InventoryType.Bank then
             CB.G.UpdateBank()
         end
+    end)
+
+    frame:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+        GameTooltip:SetText("Sort By: " .. friendlyName, 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+
+    frame:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
     end)
 
     parent.fields[sortField] = frame
