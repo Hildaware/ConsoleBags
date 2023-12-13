@@ -223,10 +223,10 @@ function CB.G.BuildSortingContainer(parent, type)
     local name = BuildSortButton(hFrame, icon, "name", CB.Settings.Defaults.Columns.Name,
         CB.E.SortFields.Name, false, type)
 
-    local category = BuildSortButton(hFrame, name, "cat", CB.Settings.Defaults.Columns.Category,
-        CB.E.SortFields.Category, false, type)
+    -- local category = BuildSortButton(hFrame, name, "cat", CB.Settings.Defaults.Columns.Category,
+    --     CB.E.SortFields.Category, false, type)
 
-    local ilvl = BuildSortButton(hFrame, category, "ilvl", CB.Settings.Defaults.Columns.Ilvl,
+    local ilvl = BuildSortButton(hFrame, name, "ilvl", CB.Settings.Defaults.Columns.Ilvl,
         CB.E.SortFields.Ilvl, false, type)
 
     local reqlvl = BuildSortButton(hFrame, ilvl, "req", CB.Settings.Defaults.Columns.ReqLvl,

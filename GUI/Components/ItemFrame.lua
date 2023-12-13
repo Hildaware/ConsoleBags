@@ -87,7 +87,7 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
     -- Color
     frame.name:SetTextColor(r, g, b)
 
-    frame.type:SetTexture(CB.U.GetCategoyIcon(item.type))
+    -- frame.type:SetTexture(CB.U.GetCategoyIcon(item.type))
 
     if item.type == Enum.ItemClass.Armor or item.type == Enum.ItemClass.Weapon
         or item.category == Enum.ItemClass.Battlepet then
@@ -220,20 +220,20 @@ function CB.G.CreateItemFramePlaceholder()
     f.name = nameText
 
     -- type
-    local type = CreateFrame("Frame", nil, f)
-    type:SetPoint("LEFT", name, "RIGHT")
-    type:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
-    type:SetWidth(CB.Settings.Defaults.Columns.Category)
+    -- local type = CreateFrame("Frame", nil, f)
+    -- type:SetPoint("LEFT", name, "RIGHT")
+    -- type:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
+    -- type:SetWidth(CB.Settings.Defaults.Columns.Category)
 
-    local typeTex = type:CreateTexture(nil, "ARTWORK")
-    typeTex:SetPoint("CENTER", type, "CENTER")
-    typeTex:SetSize(24, 24)
+    -- local typeTex = type:CreateTexture(nil, "ARTWORK")
+    -- typeTex:SetPoint("CENTER", type, "CENTER")
+    -- typeTex:SetSize(24, 24)
 
-    f.type = typeTex
+    -- f.type = typeTex
 
     -- ilvl
     local ilvl = CreateFrame("Frame", nil, f)
-    ilvl:SetPoint("LEFT", type, "RIGHT")
+    ilvl:SetPoint("LEFT", name, "RIGHT")
     ilvl:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
     ilvl:SetWidth(CB.Settings.Defaults.Columns.Ilvl)
     local ilvlText = ilvl:CreateFontString(nil, "ARTWORK", "GameFontNormal")

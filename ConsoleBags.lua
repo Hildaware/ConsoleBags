@@ -171,7 +171,7 @@ function CB.Init()
         Defaults = {
             Columns = {
                 Icon = 32,
-                Name = 280,
+                Name = 320, -- was 280 before removing cats
                 Category = 40,
                 Ilvl = 50,
                 ReqLvl = 50,
