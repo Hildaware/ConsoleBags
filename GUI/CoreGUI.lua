@@ -50,8 +50,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
     -- LEFT / RIGHT Buttons
-    ---@diagnostic disable-next-line: undefined-global
-    if ConsolePort then
+    if _G["ConsolePort"] then
         local lTexture = cFrame:CreateTexture(nil, "ARTWORK")
         lTexture:SetPoint("LEFT", cFrame, "LEFT", 6, 0)
         lTexture:SetSize(24, 24)

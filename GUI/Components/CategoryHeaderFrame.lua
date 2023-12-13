@@ -43,6 +43,7 @@ function CB.G.CreateCategoryHeaderPlaceholder()
     f:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid")
     f:GetNormalTexture():SetVertexColor(1, 1, 0, 0.5)
     f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid")
+    f:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.25)
 
     -- type
     local type = CreateFrame("Frame", nil, f)

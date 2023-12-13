@@ -177,10 +177,8 @@ function CB.G.InitializeInventoryGUI()
 
     CB.G.CreateBags(inventoryType, CB.View)
 
-    ---@diagnostic disable-next-line: undefined-global
-    if ConsolePort then
-        ---@diagnostic disable-next-line: undefined-global
-        ConsolePort:AddInterfaceCursorFrame(CB.View)
+    if _G["ConsolePort"] then
+        _G["ConsolePort"]:AddInterfaceCursorFrame(CB.View)
     end
 end
 
