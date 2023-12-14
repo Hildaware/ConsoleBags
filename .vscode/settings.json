@@ -273,7 +273,9 @@
         "BAG_CLEANUP_BANK",
         "LE_ITEM_BIND_QUEST",
         "tostringall",
-        "ITEM_CONJURED"
+        "ITEM_CONJURED",
+        "Add",
+        "CallErrorHandler"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

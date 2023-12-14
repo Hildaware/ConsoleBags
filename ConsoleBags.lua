@@ -97,7 +97,9 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BAG_UPDATE_DELAYED" then
         CB.BuildItemCache()
-        CB.G.UpdateInventory()
+        if CB.View:IsShown() then
+            CB.G.UpdateInventory()
+        end
     end
 
     if event == "EQUIPMENT_SETS_CHANGED" then
@@ -124,6 +126,7 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BANKFRAME_CLOSED" then
         CB.G.HideBank()
+        CB.CloseBackpack()
     end
 
     if event == "PLAYERBANKSLOTS_CHANGED" then

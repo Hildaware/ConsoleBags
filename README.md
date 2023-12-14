@@ -21,7 +21,6 @@ Post-MVP:
 BUGS:
 - Equipping bag update?
 - Can't use scrolls?
-- Randomly we have empty rows after a Gather
 - Tooltip (backgrounds?) stick around when switching tabs
     - Not sure how to fix this issue
 

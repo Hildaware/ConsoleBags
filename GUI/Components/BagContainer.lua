@@ -84,13 +84,10 @@ function CB.G.UpdateBags(container, type)
         container.Bags[bagIndex] = UpdateBagSlotG(container.Bags[bagIndex], bagData)
     end
 
-    local itemCount = 0
     if type == CB.E.InventoryType.Inventory then
-        itemCount = #CB.Session.Items
-        CB.View.ItemCountText:SetText(itemCount .. "/" .. max)
+        CB.View.ItemCountText:SetText(CB.Session.InventoryCount .. "/" .. max)
     elseif type == CB.E.InventoryType.Bank then
-        itemCount = #CB.Session.Bank.Items
-        CB.BankView.ItemCountText:SetText(itemCount .. "/" .. max)
+        CB.BankView.ItemCountText:SetText(CB.Session.BankCount .. "/" .. max)
     end
 end
 

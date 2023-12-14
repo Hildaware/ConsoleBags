@@ -33,6 +33,19 @@ function CB.G.BuildFilteringContainer(parent, type)
     aTex:SetSize(24, 24)
     aTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Logo_Normal")
 
+    f:SetScript("OnEnter", function(self)
+        local itemCount = 0
+        if type == CB.E.InventoryType.Inventory then
+            itemCount = CB.Session.InventoryCount
+        elseif type == CB.E.InventoryType.Bank then
+            itemCount = CB.Session.BankCount
+        end
+
+        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+        GameTooltip:SetText("All (" .. itemCount .. ")", 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+
     f:SetScript("OnClick", function(self)
         Filter_OnClick(f, type, nil, 1)
     end)
@@ -50,7 +63,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
     -- LEFT / RIGHT Buttons
-    if _G["ConsolePort"] and type == CB.E.InventoryType.Inventory then
+    if _G["ConsolePort"] then
         local lTexture = cFrame:CreateTexture(nil, "ARTWORK")
         lTexture:SetPoint("LEFT", cFrame, "LEFT", 6, 0)
         lTexture:SetSize(24, 24)
@@ -66,39 +79,25 @@ function CB.G.BuildFilteringContainer(parent, type)
     parent.FilterFrame = cFrame
 end
 
-function CB.G.UpdateFilterButtons(type, pool)
-    local cats = nil
+function CB.G.UpdateFilterButtons(categories, type, pool)
+    local view
     if type == CB.E.InventoryType.Inventory then
-        cats = CB.Session.Categories
+        view = CB.View
     elseif type == CB.E.InventoryType.Bank then
-        cats = CB.Session.Bank.Categories
+        view = CB.BankView
     end
 
-    if cats == nil then return end
-
-    -- Filter Categories
-    local foundCategories = {}
-    for _, value in pairs(cats) do
-        if value.count > 0 then
-            tinsert(foundCategories, value)
-        end
-    end
-
-    -- Sort By Order
-    table.sort(foundCategories, function(a, b) return a.order < b.order end)
-
-
-    local orderedCategories = {}
-    for i = 1, #foundCategories do
-        orderedCategories[i] = foundCategories[i]
+    -- Cleanup
+    for i = 2, #categories + 1 do
+        view.FilterFrame.Buttons[i] = nil
     end
 
     local filterOffset = 2
-    for _, categoryData in ipairs(orderedCategories) do
+    for _, categoryData in ipairs(categories) do
         local frame = Pool.FetchInactive(pool, filterOffset, CB.G.CreateFilterButtonPlaceholder)
         Pool.InsertActive(pool, frame, filterOffset)
         BuildFilterButton(frame, type, categoryData, filterOffset)
-        CB.View.FilterFrame.Buttons[filterOffset] = frame -- Add the button to the index
+        view.FilterFrame.Buttons[filterOffset] = frame
         filterOffset = filterOffset + 1
     end
 end
@@ -178,10 +177,10 @@ function Filter_OnClick(self, type, categoryKey, index)
     self:GetParent().selectedTexture:SetPoint("LEFT", (index * 30), 0)
 
     if type == CB.E.InventoryType.Inventory then
-        CB.Session.Filter = categoryKey
+        CB.Session.InventoryFilter = categoryKey
         CB.G.UpdateInventory()
     elseif type == CB.E.InventoryType.Bank then
-        CB.Session.Bank.Filter = categoryKey
+        CB.Session.BankFilter = categoryKey
         CB.G.UpdateBank()
     end
 end
