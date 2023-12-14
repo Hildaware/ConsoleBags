@@ -79,6 +79,7 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
         CB.U.CreateEnableBagButtons()
         CB.U.BagDestroyer()
         CB.U.DestroyDefaultBags()
+        CB.GatherItems()
     end
 
     if event == "BAG_UPDATE_DELAYED" then
