@@ -5,6 +5,7 @@
 ## Version: 1
 ## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
 ## SavedVariables: CBData
+## X-Curse-Project-ID: 950246
 
 Libs/Libs.xml
 Utils.lua
