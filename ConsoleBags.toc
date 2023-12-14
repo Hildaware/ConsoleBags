@@ -4,6 +4,7 @@
 ## Authors: Sel
 ## Version: 1
 ## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
+## OptionalDeps: ConsolePort
 ## SavedVariables: CBData
 ## X-Curse-Project-ID: 950246
 

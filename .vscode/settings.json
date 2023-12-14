@@ -275,7 +275,9 @@
         "tostringall",
         "ITEM_CONJURED",
         "Add",
-        "CallErrorHandler"
+        "CallErrorHandler",
+        "_G",
+        "string"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
