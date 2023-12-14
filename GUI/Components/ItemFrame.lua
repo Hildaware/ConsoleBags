@@ -43,6 +43,7 @@ function CB.G.BuildItemFrame(item, offset, frame, parent)
     frame.icon:CheckUpdateTooltip(tooltipOwner)
     frame.icon:SetMatchesSearch(not item.isFiltered)
     frame.icon:Show()
+    frame.icon:EnableMouse(false)
 
     -- Pawn Support
     if _G["PawnIsContainerItemAnUpgrade"] then
