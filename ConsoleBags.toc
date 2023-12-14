@@ -1,6 +1,6 @@
 ## Interface: 100200
 ## Title: ConsoleBags
-## Notes: List Mode for Items
+## Notes: Inventory Addon designed for Gamepad users!
 ## Authors: Sel
 ## Version: 1
 ## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
