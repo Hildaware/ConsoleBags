@@ -200,3 +200,131 @@ function CB.U.RestoreDefaultBags()
     killableFramesParent:Show()
     CB.Settings.HideBags = true
 end
+
+function CB.U.AddItemToCategory(item, catTable)
+    -- Category Data
+    if item.category ~= nil then
+        catTable[item.category] = catTable[item.category] or {}
+        catTable[item.category].items = catTable[item.category].items or {}
+
+        catTable[item.category].count =
+            (catTable[item.category].count or 0) + 1
+        tinsert(catTable[item.category].items, item)
+        if item.isNew then
+            catTable[item.category].hasNew = true
+        end
+    else
+        catTable[Enum.ItemClass.Miscellaneous] = catTable[Enum.ItemClass.Miscellaneous] or {}
+        catTable[Enum.ItemClass.Miscellaneous].items = catTable[Enum.ItemClass.Miscellaneous].items or {}
+
+        catTable[Enum.ItemClass.Miscellaneous].count =
+            (catTable[Enum.ItemClass.Miscellaneous].count or 0) + 1
+        tinsert(catTable[Enum.ItemClass.Miscellaneous].items, item)
+        if item.isNew then
+            catTable[Enum.ItemClass.Miscellaneous].hasNew = true
+        end
+    end
+end
+
+function CB.U.ReplaceBagSlot(bag)
+    if bag == -3 then
+        return 98
+    end
+
+    if bag == -1 then
+        return 99
+    end
+
+    return bag
+end
+
+function CB.U.SortItems(categorizedTable, sortField)
+    local type = sortField.Field
+    local order = sortField.Sort
+
+    for _, cat in pairs(categorizedTable) do
+        if type == CB.E.SortFields.COUNT then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.stackCount > b.stackCount
+                    else
+                        return a.stackCount < b.stackCount
+                    end
+                end)
+        end
+
+        if type == CB.E.SortFields.Name then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.name < b.name
+                    else
+                        return a.name > b.name
+                    end
+                end)
+        end
+
+        if type == CB.E.SortFields.Icon then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.quality > b.quality
+                    else
+                        return a.quality < b.quality
+                    end
+                end)
+        end
+
+        if type == CB.E.SortFields.Category then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.type > b.type
+                    else
+                        return a.type < b.type
+                    end
+                end)
+        end
+
+        if type == CB.E.SortFields.Ilvl then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.ilvl > b.ilvl
+                    else
+                        return a.ilvl < b.ilvl
+                    end
+                end)
+        end
+
+        if type == CB.E.SortFields.ReqLvl then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.reqLvl > b.reqLvl
+                    else
+                        return a.reqLvl < b.reqLvl
+                    end
+                end)
+        end
+
+        if type == CB.E.SortFields.Value then
+            table.sort(cat.items,
+                function(a, b)
+                    if order == CB.E.SortOrder.Desc then
+                        return a.value > b.value
+                    else
+                        return a.value < b.value
+                    end
+                end)
+        end
+
+        -- Always put new on top
+        for index, item in ipairs(cat.items) do
+            if item.isNew == true then
+                table.insert(cat.items, 1, table.remove(cat.items, index))
+            end
+        end
+    end
+end

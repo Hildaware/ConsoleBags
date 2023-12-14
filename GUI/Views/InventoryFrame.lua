@@ -43,9 +43,6 @@ function CB.G.InitializeInventoryGUI()
         local filterCount = #self.FilterFrame.Buttons
         local index = self.FilterFrame.SelectedIndex
 
-        -- This doesn't work, as the OnEnter doesn't trigger on changing tabs
-        -- GameTooltip:Hide()
-
         if key == "PADRSHOULDER" then -- Right
             if index == filterCount then
                 self.FilterFrame.SelectedIndex = 1
@@ -84,28 +81,29 @@ function CB.G.InitializeInventoryGUI()
         CB.CloseAllBags()
     end)
 
-    local defaultButton = CreateFrame("Button", nil, header)
-    defaultButton:SetSize(32, 32)
-    defaultButton:SetPoint("LEFT", header, "LEFT", 6, 0)
-    defaultButton:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Back_Normal")
-    defaultButton:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Back_Highlight")
-    defaultButton:HookScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
-        GameTooltip:SetText("Show Default bags temporarily. ", 1, 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    defaultButton:HookScript("OnLeave", function(self)
-        GameTooltip:Hide()
-    end)
-    defaultButton:SetScript("OnClick", function(self, button, down)
-        CB.U.RestoreDefaultBags()
-        CloseAllBags()
-        OpenAllBags()
-    end)
+    -- local defaultButton = CreateFrame("Button", nil, header)
+    -- defaultButton:SetSize(32, 32)
+    -- defaultButton:SetPoint("LEFT", header, "LEFT", 6, 0)
+    -- defaultButton:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Back_Normal")
+    -- defaultButton:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Back_Highlight")
+    -- defaultButton:HookScript("OnEnter", function(self)
+    --     GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+    --     GameTooltip:SetText("Show Default bags temporarily. ", 1, 1, 1, 1, true)
+    --     GameTooltip:Show()
+    -- end)
+    -- defaultButton:HookScript("OnLeave", function(self)
+    --     GameTooltip:Hide()
+    -- end)
+    -- defaultButton:SetScript("OnClick", function(self, button, down)
+    --     CB.U.RestoreDefaultBags()
+    --     CloseAllBags()
+    --     OpenAllBags()
+    -- end)
 
     local goldView = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    goldView:SetPoint("LEFT", defaultButton, "RIGHT", 6, 0)
+    goldView:SetPoint("LEFT", header, "LEFT", 12, 0)
     goldView:SetWidth(140)
+    goldView:SetJustifyH("LEFT")
     goldView:SetText(GetCoinTextureString(GetMoney()))
 
     header.Gold = goldView
@@ -186,25 +184,49 @@ function CB.G.UpdateInventory()
     if CB.View == nil then return end
 
     local inventoryType = CB.E.InventoryType.Inventory
-    CB.SortItems(inventoryType, CB.Session.Categories)
 
     Pool.Cleanup(ItemPool)
     Pool.Cleanup(CategoryPool)
     Pool.Cleanup(FilterPool)
 
-    -- Filter Categories
-    local foundCategories = {}
-    for _, value in pairs(CB.Session.Categories) do
-        if (value.key == CB.Session.Filter) or CB.Session.Filter == nil then
-            tinsert(foundCategories, value)
+    -- Categorize
+    local catTable = {}
+    for _, slots in pairs(CB.Session.Items) do
+        for _, item in pairs(slots) do
+            if item.location == CB.E.InventoryType.Inventory then
+                CB.U.AddItemToCategory(item, catTable)
+            end
         end
     end
 
-    table.sort(foundCategories, function(a, b) return a.order < b.order end)
+    CB.U.SortItems(catTable, CBData.View.SortField)
+
+    -- Filter Categories
+    local allCategories = {}
+    local filteredCategories = {}
+    local iter = 1
+    for key, value in pairs(catTable) do
+        value.key = key
+        value.order = CB.E.Categories[key].order
+        value.name = CB.E.Categories[key].name
+        allCategories[iter] = value
+        if (key == CB.Session.InventoryFilter) or CB.Session.InventoryFilter == nil then
+            tinsert(filteredCategories, value)
+        end
+        iter = iter + 1
+    end
+
+    table.sort(allCategories, function(a, b) return a.order < b.order end)
+    table.sort(filteredCategories, function(a, b) return a.order < b.order end)
 
     local orderedCategories = {}
-    for i = 1, #foundCategories do
-        orderedCategories[i] = foundCategories[i]
+    for i = 1, #filteredCategories do
+        orderedCategories[i] = filteredCategories[i]
+    end
+
+    local orderedAllCategories = {}
+    for i = 1, #allCategories do
+        orderedAllCategories[i] = allCategories[i]
     end
 
     local offset = 1
@@ -231,6 +253,6 @@ function CB.G.UpdateInventory()
         end
     end
 
-    CB.G.UpdateFilterButtons(inventoryType, FilterPool)
+    CB.G.UpdateFilterButtons(orderedAllCategories, inventoryType, FilterPool)
     CB.G.UpdateBags(CB.View.Bags.Container, inventoryType)
 end

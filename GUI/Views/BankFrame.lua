@@ -35,6 +35,12 @@ function CB.G.InitializeBankGUI()
     header.texture:SetAllPoints(header)
     header.texture:SetColorTexture(0.5, 0.5, 0.5, 0.15)
 
+    local name = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    name:SetPoint("LEFT", header, "LEFT", 12, 0)
+    name:SetWidth(100)
+    name:SetJustifyH("LEFT")
+    name:SetText("Bank")
+
     local close = CreateFrame("Button", nil, header)
     close:SetSize(32, 32)
     close:SetPoint("RIGHT", header, "RIGHT", -6, 0)
@@ -110,25 +116,49 @@ function CB.G.UpdateBank()
     if CB.BankView == nil then return end
 
     local inventoryType = CB.E.InventoryType.Bank
-    CB.SortItems(inventoryType, CB.Session.Bank.Categories)
 
     Pool.Cleanup(ItemPool)
     Pool.Cleanup(CategoryPool)
     Pool.Cleanup(FilterPool)
 
-    -- Filter Categories
-    local foundCategories = {}
-    for _, value in pairs(CB.Session.Bank.Categories) do
-        if (value.key == CB.Session.Bank.Filter) or CB.Session.Bank.Filter == nil then
-            tinsert(foundCategories, value)
+    -- Categorize
+    local catTable = {}
+    for _, slots in pairs(CB.Session.Items) do
+        for _, item in pairs(slots) do
+            if item.location == CB.E.InventoryType.Bank then
+                CB.U.AddItemToCategory(item, catTable)
+            end
         end
     end
 
-    table.sort(foundCategories, function(a, b) return a.order < b.order end)
+    CB.U.SortItems(catTable, CBData.BankView.SortField)
+
+    -- Filter Categories
+    local allCategories = {}
+    local filteredCategories = {}
+    local iter = 1
+    for key, value in pairs(catTable) do
+        value.key = key
+        value.order = CB.E.Categories[key].order
+        value.name = CB.E.Categories[key].name
+        allCategories[iter] = value
+        if (key == CB.Session.BankFilter) or CB.Session.BankFilter == nil then
+            tinsert(filteredCategories, value)
+        end
+        iter = iter + 1
+    end
+
+    table.sort(allCategories, function(a, b) return a.order < b.order end)
+    table.sort(filteredCategories, function(a, b) return a.order < b.order end)
 
     local orderedCategories = {}
-    for i = 1, #foundCategories do
-        orderedCategories[i] = foundCategories[i]
+    for i = 1, #filteredCategories do
+        orderedCategories[i] = filteredCategories[i]
+    end
+
+    local orderedAllCategories = {}
+    for i = 1, #allCategories do
+        orderedAllCategories[i] = allCategories[i]
     end
 
     local offset = 1
@@ -155,13 +185,14 @@ function CB.G.UpdateBank()
         end
     end
 
-    CB.G.UpdateFilterButtons(inventoryType, FilterPool)
+    CB.G.UpdateFilterButtons(orderedAllCategories, inventoryType, FilterPool)
     CB.G.UpdateBags(CB.BankView.Bags.Container, inventoryType)
 end
 
 function CB.G.ShowBank()
     if CB.BankView == nil then
-        CB.G.InitializeBankGUI()
+        -- CB.G.InitializeBankGUI()
+        CB.G.InitializeView(CB.E.InventoryType.Bank, "Bank", CBData.BankView)
     end
 
     if not CB.BankView:IsShown() then

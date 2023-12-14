@@ -2,7 +2,7 @@ local _, CB = ...
 CB.T = {}
 
 local Item = {}
-Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
+Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo, inventoryLocation)
     local self = {}
     self.id = containerItem.itemID
     self.name = containerItem.itemName
@@ -26,6 +26,7 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, qu
     self.isFiltered = containerItem.isFiltered
     self.hasNoValue = containerItem.hasNoValue
     self.category = Item.GetCategory(self)
+    self.location = inventoryLocation
 
     return self
 end

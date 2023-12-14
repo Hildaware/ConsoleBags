@@ -2,7 +2,7 @@ local _, CB = ...
 
 CB.G.CollapsedCategories = {}
 
-function CB.G.BuildCategoryFrame(data, offset, frame, parent)
+function CB.G.BuildCategoryFrame(data, offset, frame, parent, inventoryType)
     if frame == nil then return end
 
     frame:SetParent(parent)
@@ -26,7 +26,12 @@ function CB.G.BuildCategoryFrame(data, offset, frame, parent)
             else
                 CB.G.CollapsedCategories[data.key] = true
             end
-            CB.G.UpdateInventory()
+
+            if inventoryType == CB.E.InventoryType.Inventory then
+                CB.G.UpdateInventory()
+            elseif inventoryType == CB.E.InventoryType.Bank then
+                CB.G.UpdateBank()
+            end
         end
     end)
 
