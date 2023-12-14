@@ -50,7 +50,7 @@ function CB.G.BuildFilteringContainer(parent, type)
     selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
     -- LEFT / RIGHT Buttons
-    if _G["ConsolePort"] then
+    if _G["ConsolePort"] and type == CB.E.InventoryType.Inventory then
         local lTexture = cFrame:CreateTexture(nil, "ARTWORK")
         lTexture:SetPoint("LEFT", cFrame, "LEFT", 6, 0)
         lTexture:SetSize(24, 24)
@@ -179,11 +179,9 @@ function Filter_OnClick(self, type, categoryKey, index)
 
     if type == CB.E.InventoryType.Inventory then
         CB.Session.Filter = categoryKey
-        CB.GatherItems()
         CB.G.UpdateInventory()
     elseif type == CB.E.InventoryType.Bank then
         CB.Session.Bank.Filter = categoryKey
-        CB.GatherBankItems()
         CB.G.UpdateBank()
     end
 end

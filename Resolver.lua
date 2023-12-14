@@ -29,3 +29,16 @@ end
 CB.R.GetInventoryType = function(link)
     return C_Item.GetItemInventoryTypeByID(link)
 end
+
+CB.R.ResolveItem = function(bag, slot)
+    local itemDataProto = {}
+
+    local i = Item:CreateFromBagAndSlot(bag, slot)
+    local data = setmetatable({}, { __index = itemDataProto })
+    data.bag = bag
+    data.slot = slot
+
+    if not i:IsItemEmpty() and not i:IsItemDataCached() then
+        print(i:GetItemLink())
+    end
+end
