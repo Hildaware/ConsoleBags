@@ -48,8 +48,22 @@ local CBDataDefaults = {
     }
 }
 
+CB.Session = {
+    Items = {},
+    InventoryCount = 0,
+    InventoryResolved = 0,
+    BankCount = 0,
+    BankResolved = 0,
+    InventoryFilter = nil,
+    BankFilter = nil
+}
+
 local backpackShouldOpen = false
 local backpackShouldClose = false
+local buildingCache = false
+
+local bankShouldOpen = false
+local buildingBankCache = false
 
 local playerIdentifier = ""
 
@@ -79,7 +93,6 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
         CB.U.CreateEnableBagButtons()
         CB.U.BagDestroyer()
         CB.U.DestroyDefaultBags()
-        CB.BuildItemCache()
     end
 
     if event == "BAG_UPDATE_DELAYED" then
@@ -104,10 +117,8 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
             CB.G.InitializeBankGUI()
         end
 
-        CB.BuildBankCache()
-        CB.G.UpdateBank()
-        CB.G.ShowBank()
 
+        bankShouldOpen = true
         CB.OpenBackpack()
     end
 
@@ -129,14 +140,19 @@ eventFrame:SetScript("OnUpdate", function()
     if backpackShouldOpen then
         if CB.Settings.HideBags == true then return end
 
-        backpackShouldOpen = false
-        backpackShouldClose = false
+        if not buildingCache then
+            CB.BuildItemCache()
+        end
 
-        CB.BuildItemCache()
-        CB.G.UpdateInventory()
+        if CB.Session.InventoryResolved >= CB.Session.InventoryCount then
+            backpackShouldOpen = false
+            backpackShouldClose = false
 
-        PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
-        CB.View:Show()
+            CB.G.UpdateInventory()
+
+            PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
+            CB.View:Show()
+        end
     elseif backpackShouldClose then
         backpackShouldClose = false
 
@@ -148,6 +164,19 @@ eventFrame:SetScript("OnUpdate", function()
             CB.BankView:Hide()
         end
     end
+
+    if bankShouldOpen then
+        if not buildingBankCache then
+            CB.BuildBankCache()
+        end
+
+        if CB.Session.BankResolved >= CB.Session.BankCount then
+            bankShouldOpen = false
+
+            CB.G.UpdateBank()
+            CB.BankView:Show()
+        end
+    end
 end)
 
 function CB.Init()
@@ -156,16 +185,6 @@ function CB.Init()
     --     }
     -- }
 
-    CB.Session = {
-        Items = {}, -- All Items
-        Categories = CB.U.BuildCategoriesTable(),
-        Filter = nil,
-        Bank = {
-            Items = {},
-            Categories = CB.U.BuildBankCategoriesTable(),
-            Filter = nil
-        }
-    }
 
     CB.Settings = { -- This is technically Session data as well
         Defaults = {
@@ -207,7 +226,7 @@ function CB.Init()
     hooksecurefunc('ToggleBag', CB.ToggleBag)
 end
 
-local function GetItemData(bag, slot)
+local function GetItemData(bag, slot, inventoryLocation)
     local containerItem = CB.R.GetContainerItemInfo(bag, slot)
     if containerItem ~= nil then
         local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
@@ -217,83 +236,116 @@ local function GetItemData(bag, slot)
         local isNew = C_NewItems.IsNewItem(bag, slot)
 
         -- Create Item
-        local item = CB.T.Item.new(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo)
+        local item = CB.T.Item.new(containerItem, itemInfo, ilvl, bag, slot,
+            isNew, invType, questInfo, inventoryLocation)
         return item
     end
     return nil
 end
 
-local function CategorizeItem(item, SessionInventory)
-    tinsert(SessionInventory.Items, item)
+local function AddItemToSession(item)
+    CB.Session.Items[CB.U.ReplaceBagSlot(item.bag)][item.slot] = item
 
-    -- Category Data
-    if item.category ~= nil then
-        SessionInventory.Categories[item.category].count =
-            SessionInventory.Categories[item.category].count + 1
-        tinsert(SessionInventory.Categories[item.category].items, item)
-        if item.isNew then
-            SessionInventory.Categories[item.category].hasNew = true
-        end
-    else
-        SessionInventory.Categories[Enum.ItemClass.Miscellaneous].count =
-            SessionInventory.Categories[Enum.ItemClass.Miscellaneous] + 1
-        tinsert(SessionInventory.Categories[Enum.ItemClass.Miscellaneous].items, item)
-        if item.isNew then
-            SessionInventory.Categories[Enum.ItemClass.Miscellaneous].hasNew = true
-        end
+    if item.location == CB.E.InventoryType.Inventory then
+        CB.Session.InventoryResolved = CB.Session.InventoryResolved + 1
+    elseif item.location == CB.E.InventoryType.Bank then
+        CB.Session.BankResolved = CB.Session.BankResolved + 1
     end
 end
 
-local function CreateItem(bag, slot, SessionInventory)
+local function CreateItem(bag, slot, inventoryLocation)
     local i = Item:CreateFromBagAndSlot(bag, slot)
     if not i:IsItemEmpty() then
         if i:IsItemDataCached() then
-            local item = GetItemData(bag, slot)
+            local item = GetItemData(bag, slot, inventoryLocation)
             if item then
-                CategorizeItem(item, SessionInventory)
+                AddItemToSession(item)
             end
         else
             i:ContinueOnItemLoad(function()
                 local item = GetItemData(bag, slot)
                 if item then
-                    CategorizeItem(item, SessionInventory)
+                    AddItemToSession(item)
                 end
             end)
         end
     end
 end
 
-function CB.BuildItemCache()
-    CB.Session.Items = {}
-    CB.Session.Categories = CB.U.BuildCategoriesTable()
+local function CreateBagData(bag, inventoryType)
+    local bagSize = C_Container.GetContainerNumSlots(bag)
+    local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
 
-    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
-        for slot = 1, C_Container.GetContainerNumSlots(bag) do
-            CreateItem(bag, slot, CB.Session)
-        end
+    if inventoryType == CB.E.InventoryType.Inventory then
+        CB.Session.InventoryCount = CB.Session.InventoryCount + (bagSize - freeSlots)
+    elseif inventoryType == CB.E.InventoryType.Bank then
+        CB.Session.BankCount = CB.Session.BankCount + (bagSize - freeSlots)
+    end
+
+    CB.Session.Items[CB.U.ReplaceBagSlot(bag)] =
+        CB.Session.Items[CB.U.ReplaceBagSlot(bag)] or {}
+
+    return bagSize
+end
+
+local function CleanupSessionItems(bag, bagSize)
+    for i = bagSize + 1, #CB.Session.Items[bag] do
+        CB.Session.Items[bag][i] = nil
     end
 end
 
+function CB.BuildItemCache()
+    buildingCache = true
+    CB.Session.InventoryCount = 0
+    CB.Session.InventoryResolved = 0
+
+    local invType = CB.E.InventoryType.Inventory
+    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+        local bagSize = CreateBagData(bag, invType)
+        for slot = 1, bagSize do
+            CreateItem(bag, slot, invType)
+        end
+
+        CleanupSessionItems(bag, bagSize)
+    end
+
+    buildingCache = false
+end
+
 function CB.BuildBankCache()
-    CB.Session.Bank.Items = {}
-    CB.Session.Bank.Categories = CB.U.BuildBankCategoriesTable()
+    buildingBankCache = true
+    CB.Session.BankCount = 0
+    CB.Session.BankResolved = 0
+
+    local invType = CB.E.InventoryType.Bank
 
     -- Bank Container
-    for slot = 1, C_Container.GetContainerNumSlots(BANK_CONTAINER) do
-        CreateItem(BANK_CONTAINER, slot, CB.Session.Bank)
+    local bagSize = CreateBagData(BANK_CONTAINER, invType)
+    for slot = 1, bagSize do
+        CreateItem(BANK_CONTAINER, slot, invType)
     end
+
+    CleanupSessionItems(CB.U.ReplaceBagSlot(BANK_CONTAINER), bagSize)
 
     -- Bank Bags
     for bag = ITEM_INVENTORY_BANK_BAG_OFFSET, ITEM_INVENTORY_BANK_BAG_OFFSET + NUM_BANKBAGSLOTS do
-        for slot = 1, C_Container.GetContainerNumSlots(bag) do
-            CreateItem(bag, slot, CB.Session.Bank)
+        local bankBagSize = CreateBagData(bag, invType)
+        for slot = 1, bankBagSize do
+            CreateItem(bag, slot, CB.E.InventoryType.Bank)
         end
+
+        CleanupSessionItems(bag, bankBagSize)
     end
 
-    -- Reagent Bank
-    for slot = 1, C_Container.GetContainerNumSlots(REAGENTBANK_CONTAINER) do
-        CreateItem(REAGENTBANK_CONTAINER, slot, CB.Session.Bank)
+    -- Bank Reagent Container
+    local reagentContainerSize = CreateBagData(REAGENTBANK_CONTAINER, invType)
+    for slot = 1, reagentContainerSize do
+        CreateItem(REAGENTBANK_CONTAINER, slot, CB.E.InventoryType.Bank)
     end
+
+    CleanupSessionItems(CB.U.ReplaceBagSlot(REAGENTBANK_CONTAINER), reagentContainerSize)
+
+    buildingBankCache = false
 end
 
 function CB.SortItems(inventoryType, categories)
