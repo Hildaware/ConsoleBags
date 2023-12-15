@@ -97,7 +97,8 @@ eventFrame:SetScript("OnEvent", function(self, event, param1, param2, param3)
 
     if event == "BAG_UPDATE_DELAYED" then
         CB.BuildItemCache()
-        if CB.View:IsShown() then
+        if CB.View and CB.View:IsShown() then
+            print("Update Inventory")
             CB.G.UpdateInventory()
         end
     end
@@ -293,6 +294,7 @@ end
 
 local function CleanupSessionItems(bag, bagSize)
     for i = bagSize + 1, #CB.Session.Items[bag] do
+        print("Removing: " .. i .. " MAX: " .. #CB.Session.Items[bag])
         CB.Session.Items[bag][i] = nil
     end
 end

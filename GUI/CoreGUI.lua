@@ -159,7 +159,7 @@ function BuildFilterButton(f, type, categoryData, index)
     f.OnSelect = function() Filter_OnClick(f, type, categoryData.key, index) end
 
     f:SetScript("OnClick", function(self)
-        Filter_OnClick(f, type, categoryData.key, index)
+        Filter_OnClick(self, type, categoryData.key, index)
     end)
 
     f:SetScript("OnEnter", function(self)

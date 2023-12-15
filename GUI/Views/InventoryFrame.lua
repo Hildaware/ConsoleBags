@@ -236,7 +236,7 @@ function CB.G.UpdateInventory()
         if #categoryData.items > 0 then
             local catFrame = Pool.FetchInactive(CategoryPool, catIndex, CB.G.CreateCategoryHeaderPlaceholder)
             Pool.InsertActive(CategoryPool, catFrame, catIndex)
-            CB.G.BuildCategoryFrame(categoryData, offset, catFrame, CB.View.ListView)
+            CB.G.BuildCategoryFrame(categoryData, offset, catFrame, CB.View.ListView, inventoryType)
 
             offset = offset + 1
             catIndex = catIndex + 1
