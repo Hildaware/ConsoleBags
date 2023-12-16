@@ -11,6 +11,10 @@ local Masque = LibStub('Masque', true)
 
 function itemFrame:BuildItemFrame(item, offset, frame, parent)
     if frame == nil then return end
+    
+    frame.item = item
+    session.FramesByItemId[item.id] = session.FramesByItemId[item.id] or {}
+    tinsert(session.FramesByItemId[item.id], frame)
 
     frame:SetParent(parent)
     frame:SetPoint('TOP', 0, -((offset - 1) * session.Settings.Defaults.Sections.ListItemHeight))
@@ -73,15 +77,6 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
         end
     end
 
-    -- Scrap Support
-    if _G['Scrap'] then
-        if _G['Scrap']:IsJunk(item.id) then
-            frame.icon.scrap:Show()
-        else
-            frame.icon.scrap:Hide()
-        end
-    end
-
     -- Masque Support
     if Masque then
         ---@diagnostic disable-next-line: undefined-field
@@ -128,9 +123,20 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
 
     frame.index = offset
 
-
+    self:Update(frame)
     frame:Show()
     frame.itemButton:Show()
+end
+
+function itemFrame:Update(frame)
+    -- Scrap Support
+    if _G['Scrap'] then
+        if _G['Scrap']:IsJunk(frame.item.id) then
+            frame.icon.scrap:Show()
+        else
+            frame.icon.scrap:Hide()
+        end
+    end
 end
 
 -- TODO: SetSize will eventually need to be set based on the View
@@ -299,3 +305,14 @@ function itemFrame:CreateItemFramePlaceholder()
 
     return f
 end
+
+function itemFrame:Refresh(itemId)
+    if not session.FramesByItemId[itemId] then
+        return
+    end
+    for _, frame in pairs(session.FramesByItemId[itemId]) do
+        itemFrame:Update(frame)
+    end
+end
+
+itemFrame:Enable()

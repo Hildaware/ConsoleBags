@@ -16,6 +16,9 @@ local bank = addon:GetModule('Bank')
 ---@class CoreGUI: AceModule
 local coreGui = addon:GetModule('CoreGUI')
 
+---@class ItemFrame: AceModule
+local itemFrame = addon:GetModule('ItemFrame')
+
 local backpackShouldOpen = false
 local backpackShouldClose = false
 local bankShouldOpen = false
@@ -148,6 +151,6 @@ if _G["Scrap"] then
     local original = _G["Scrap"].ToggleJunk
     _G["Scrap"].ToggleJunk = function(self, id)
         original(self, id)
-        inventory:Update()
+        itemFrame:Refresh(id)
     end
 end

@@ -99,6 +99,7 @@ function items.BuildItemCache()
     session.BuildingCache = true
     session.InventoryCount = 0
     session.InventoryResolved = 0
+    session.FramesByItemId = {}
 
     local invType = enums.InventoryType.Inventory
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do

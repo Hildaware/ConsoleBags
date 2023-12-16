@@ -6,6 +6,7 @@ local session = addon:NewModule('Session')
 
 function session:OnInitialize()
     self.Items = {}
+    self.FramesByItemId = {}
 
     self.InventoryCount = 0
     self.InventoryResolved = 0
