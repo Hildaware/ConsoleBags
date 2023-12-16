@@ -143,3 +143,11 @@ function addon:CloseBank()
         coreGui.Bank:Hide()
     end
 end
+
+if _G["Scrap"] then
+    local original = _G["Scrap"].ToggleJunk
+    _G["Scrap"].ToggleJunk = function(self, id)
+        original(self, id)
+        inventory:Update()
+    end
+end

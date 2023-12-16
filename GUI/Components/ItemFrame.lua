@@ -73,6 +73,15 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
         end
     end
 
+    -- Scrap Support
+    if _G['Scrap'] then
+        if _G['Scrap']:IsJunk(item.id) then
+            frame.icon.scrap:Show()
+        else
+            frame.icon.scrap:Hide()
+        end
+    end
+
     -- Masque Support
     if Masque then
         ---@diagnostic disable-next-line: undefined-field
@@ -214,6 +223,17 @@ function itemFrame:CreateItemFramePlaceholder()
 
     canIFrame.text = canIMogIt
     iconTexture.canI = canIFrame
+    
+    local scrapFrame = CreateFrame('Frame', nil, iconTexture)
+    scrapFrame:SetPoint('BOTTOMRIGHT', iconTexture, 'BOTTOMRIGHT', -2, -1)
+    scrapFrame:SetSize(14, 14)
+    scrapFrame.tex = scrapFrame:CreateTexture(nil, 'BACKGROUND')
+    scrapFrame.tex:SetAllPoints(scrapFrame)
+    scrapFrame.tex:SetColorTexture(0, 0, 0, 1)
+    scrapFrame.tex:SetTexture("Interface\\Buttons\\UI-GroupLoot-Coin-Up")
+
+    scrapFrame:Hide()
+    iconTexture.scrap = scrapFrame
 
     f.icon = iconTexture
 
