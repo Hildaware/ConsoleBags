@@ -59,11 +59,15 @@ function inventory:OnInitialize()
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.75)
 
-    -- Stop ConsolePort from reading shoulder buttons
+    -- Stop ConsolePort from reading buttons
     f:SetScript('OnShow', function(self)
         if _G['ConsolePortInputHandler'] then
             _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
             _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
+        
+            if _G["Scrap"] then
+                _G['ConsolePortInputHandler']:SetCommand('PAD3', self, true, 'LeftButton', 'UIControl', nil)
+            end
         end
     end)
 
@@ -76,6 +80,12 @@ function inventory:OnInitialize()
 
     f:SetPropagateKeyboardInput(true)
     f:SetScript('OnGamePadButtonDown', function(self, key)
+        if _G["Scrap"] and key == "PAD3" then
+            local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
+            if item then
+                _G["Scrap"]:ToggleJunk(tonumber(item:match('item:(%d+)')))
+            end
+        end
         if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
         local filterCount = #self.FilterFrame.Buttons
         local index = self.FilterFrame.SelectedIndex
