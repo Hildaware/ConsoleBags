@@ -1,98 +1,136 @@
-local _, CB = ...
+local addonName = ...
+local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
-local ItemPool = CB.U.Pool.New()
-local CategoryPool = CB.U.Pool.New()
-local FilterPool = CB.U.Pool.New()
+---@class Bank: AceModule
+local bank = addon:NewModule('Bank')
 
-function CB.G.InitializeBankGUI()
-    local inventoryType = CB.E.InventoryType.Bank
+---@class GUIUtils: AceModule
+local guiUtils = addon:GetModule('GUIUtils')
 
-    local f = CreateFrame("Frame", "ConsoleBagsBanking", UIParent)
-    f:SetFrameStrata("HIGH")
-    f:SetSize(600, CBData.BankView.Size.Y or 396)
-    f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", CBData.BankView.Position.X or 500, CBData.BankView.Position.Y or 800)
+---@class Pooling: AceModule
+local pooling = addon:GetModule('Pooling')
+
+---@class Enums: AceModule
+local enums = addon:GetModule('Enums')
+
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
+---@class Database: AceModule
+local database = addon:GetModule('Database')
+
+---@class Session: AceModule
+local session = addon:GetModule('Session')
+
+---@class Items: AceModule
+local items = addon:GetModule('Items')
+
+---@class BagContainer: AceModule
+local bags = addon:GetModule('BagContainer')
+
+---@class CategoryHeaders: AceModule
+local categoryHeaders = addon:GetModule('CategoryHeaders')
+
+---@class ItemFrame: AceModule
+local itemFrame = addon:GetModule('ItemFrame')
+
+---@class Events: AceModule
+local events = addon:GetModule('Events')
+
+-- Frame Pools
+local ItemPool = pooling.Pool.New()
+local CategoryPool = pooling.Pool.New()
+local FilterPool = pooling.Pool.New()
+
+function bank:OnInitialize()
+    local inventoryType = enums.InventoryType.Bank
+
+    local f = CreateFrame('Frame', 'ConsoleBagsBanking', UIParent)
+    f:SetFrameStrata('HIGH')
+    f:SetSize(600, database:GetBankViewHeight())
+    f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', database:GetBankViewPositionX(), database:GetBankViewPositionX())
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetResizable(true)
     f:SetResizeBounds(600, 396, 600, 2000)
 
-    f.texture = f:CreateTexture(nil, "BACKGROUND")
+    f.texture = f:CreateTexture(nil, 'BACKGROUND')
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.75)
 
-    f.texture = f:CreateTexture(nil, "BACKGROUND")
+    f.texture = f:CreateTexture(nil, 'BACKGROUND')
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.65)
 
     -- Frame Header
-    local header = CreateFrame("Frame", nil, f)
-    header:SetSize(f:GetWidth(), CB.Settings.Defaults.Sections.Header)
-    header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
+    local header = CreateFrame('Frame', nil, f)
+    header:SetSize(f:GetWidth(), session.Settings.Defaults.Sections.Header)
+    header:SetPoint('TOPLEFT', f, 'TOPLEFT', 1, -1)
     header:EnableMouse(true)
 
-    header.texture = header:CreateTexture(nil, "BACKGROUND")
+    header.texture = header:CreateTexture(nil, 'BACKGROUND')
     header.texture:SetAllPoints(header)
     header.texture:SetColorTexture(0.5, 0.5, 0.5, 0.15)
 
-    local name = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    name:SetPoint("LEFT", header, "LEFT", 12, 0)
+    local name = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    name:SetPoint('LEFT', header, 'LEFT', 12, 0)
     name:SetWidth(100)
-    name:SetJustifyH("LEFT")
-    name:SetText("Bank")
+    name:SetJustifyH('LEFT')
+    name:SetText('Bank')
 
-    local close = CreateFrame("Button", nil, header)
+    local close = CreateFrame('Button', nil, header)
     close:SetSize(32, 32)
-    close:SetPoint("RIGHT", header, "RIGHT", -6, 0)
-    close:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Normal")
-    close:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight")
-    close:SetPushedTexture("Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed")
-    close:SetScript("OnClick", function()
-        CB.G.HideBank()
+    close:SetPoint('RIGHT', header, 'RIGHT', -6, 0)
+    close:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Normal')
+    close:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight')
+    close:SetPushedTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed')
+    close:SetScript('OnClick', function()
+        addon:CloseBank()
     end)
 
-    header:RegisterForDrag("LeftButton")
-    header:SetScript("OnDragStart", function(self, button)
+    header:RegisterForDrag('LeftButton')
+    header:SetScript('OnDragStart', function(self, button)
         self:GetParent():StartMoving()
     end)
-    header:SetScript("OnDragStop", function(self)
+    header:SetScript('OnDragStop', function(self)
         self:GetParent():StopMovingOrSizing()
-        local x = CB.BankView:GetLeft()
-        local y = CB.BankView:GetTop()
-        CBData.BankView.Position = { X = x, Y = y }
+        local x = self:GetParent():GetLeft()
+        local y = self:GetParent():GetTop()
+        database:SetBankPosition(x, y)
     end)
 
     f.Header = header
 
     -- Drag Bar
-    local drag = CreateFrame("Button", nil, f)
+    local drag = CreateFrame('Button', nil, f)
     drag:SetSize(64, 12)
-    drag:SetPoint("BOTTOM", f, "BOTTOM", 0, -6)
-    drag:SetScript("OnMouseDown", function(self)
-        self:GetParent():StartSizing("BOTTOM")
+    drag:SetPoint('BOTTOM', f, 'BOTTOM', 0, -6)
+    drag:SetScript('OnMouseDown', function(self)
+        self:GetParent():StartSizing('BOTTOM')
     end)
-    drag:SetScript("OnMouseUp", function(self)
-        self:GetParent():StopMovingOrSizing("BOTTOM")
-        CBData.BankView.Size.Y = CB.BankView:GetHeight()
+    drag:SetScript('OnMouseUp', function(self)
+        self:GetParent():StopMovingOrSizing('BOTTOM')
+        database:SetBankViewHeight(self:GetParent():GetHeight())
     end)
-    local dragTex = drag:CreateTexture(nil, "BACKGROUND")
+    local dragTex = drag:CreateTexture(nil, 'BACKGROUND')
     dragTex:SetAllPoints(drag)
-    dragTex:SetTexture("Interface\\Addons\\ConsoleBags\\Media\\Handlebar")
+    dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
     -- Filters
-    CB.G.BuildFilteringContainer(f, inventoryType)
+    guiUtils:BuildFilteringContainer(f, inventoryType, function() session.BankFilter = nil self:Update() end)
 
     -- 'Header'
-    CB.G.BuildSortingContainer(f, inventoryType)
+    guiUtils:BuildSortingContainer(f, inventoryType, function() self:Update() end)
 
-    local scroller = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-    local offset = CB.Settings.Defaults.Sections.Header + CB.Settings.Defaults.Sections.Filters
-        + CB.Settings.Defaults.Sections.ListViewHeader
-    scroller:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -offset)
-    scroller:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -24, 2)
+    local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
+    local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
+        + session.Settings.Defaults.Sections.ListViewHeader
+    scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
+    scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, 2)
     scroller:SetWidth(f:GetWidth())
 
-    local scrollChild = CreateFrame("Frame")
+    local scrollChild = CreateFrame('Frame')
     scroller:SetScrollChild(scrollChild)
     scrollChild:SetSize(scroller:GetWidth(), 1)
 
@@ -101,21 +139,21 @@ function CB.G.InitializeBankGUI()
 
     table.insert(UISpecialFrames, f:GetName())
 
-    CB.G.U.CreateBorder(f)
+    guiUtils:CreateBorder(f)
 
-    CB.BankView = f
+    self.View = f
 
-    CB.G.CreateBags(inventoryType, CB.BankView)
+    bags:CreateBags(inventoryType, self.View)
 
-    if _G["ConsolePort"] then
-        _G["ConsolePort"]:AddInterfaceCursorFrame(CB.BankView)
+    if _G['ConsolePort'] then
+        _G['ConsolePort']:AddInterfaceCursorFrame(self.View)
     end
 end
 
-function CB.G.UpdateBank()
-    if CB.BankView == nil then return end
+function bank:Update()
+    if self.View == nil then return end
 
-    local inventoryType = CB.E.InventoryType.Bank
+    local inventoryType = enums.InventoryType.Bank
 
     Pool.Cleanup(ItemPool)
     Pool.Cleanup(CategoryPool)
@@ -123,15 +161,15 @@ function CB.G.UpdateBank()
 
     -- Categorize
     local catTable = {}
-    for _, slots in pairs(CB.Session.Items) do
+    for _, slots in pairs(session.Items) do
         for _, item in pairs(slots) do
-            if item.location == CB.E.InventoryType.Bank then
-                CB.U.AddItemToCategory(item, catTable)
+            if item.location == enums.InventoryType.Bank then
+                utils.AddItemToCategory(item, catTable)
             end
         end
     end
 
-    CB.U.SortItems(catTable, CBData.BankView.SortField)
+    items:SortItems(catTable, database:GetBankSortField())
 
     -- Filter Categories
     local allCategories = {}
@@ -139,10 +177,10 @@ function CB.G.UpdateBank()
     local iter = 1
     for key, value in pairs(catTable) do
         value.key = key
-        value.order = CB.E.Categories[key].order
-        value.name = CB.E.Categories[key].name
+        value.order = enums.Categories[key].order
+        value.name = enums.Categories[key].name
         allCategories[iter] = value
-        if (key == CB.Session.BankFilter) or CB.Session.BankFilter == nil then
+        if (key == session.BankFilter) or session.BankFilter == nil then
             tinsert(filteredCategories, value)
         end
         iter = iter + 1
@@ -166,17 +204,17 @@ function CB.G.UpdateBank()
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            local catFrame = Pool.FetchInactive(CategoryPool, catIndex, CB.G.CreateCategoryHeaderPlaceholder)
+            local catFrame = Pool.FetchInactive(CategoryPool, catIndex, categoryHeaders.CreateCategoryHeaderPlaceholder)
             Pool.InsertActive(CategoryPool, catFrame, catIndex)
-            CB.G.BuildCategoryFrame(categoryData, offset, catFrame, CB.BankView.ListView, inventoryType)
+            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.View.ListView, session.BankCollapsedCategories, function() self:Update() end)
 
             offset = offset + 1
             catIndex = catIndex + 1
-            if CB.G.CollapsedCategories[categoryData.key] ~= true then
+            if session.BankCollapsedCategories[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    local frame = Pool.FetchInactive(ItemPool, itemIndex, CB.G.CreateItemFramePlaceholder)
+                    local frame = Pool.FetchInactive(ItemPool, itemIndex, itemFrame.CreateItemFramePlaceholder)
                     Pool.InsertActive(ItemPool, frame, itemIndex)
-                    CB.G.BuildItemFrame(item, offset, frame, CB.BankView.ListView)
+                    itemFrame:BuildItemFrame(item, offset, frame, self.View.ListView)
 
                     offset = offset + 1
                     itemIndex = itemIndex + 1
@@ -185,24 +223,28 @@ function CB.G.UpdateBank()
         end
     end
 
-    CB.G.UpdateFilterButtons(orderedAllCategories, inventoryType, FilterPool)
-    CB.G.UpdateBags(CB.BankView.Bags.Container, inventoryType)
-end
-
-function CB.G.ShowBank()
-    if CB.BankView == nil then
-        -- CB.G.InitializeBankGUI()
-        CB.G.InitializeView(CB.E.InventoryType.Bank, "Bank", CBData.BankView)
+    local function onFilterSelectCallback(key)
+        session.BankFilter = key
+        self:Update()
     end
 
-    if not CB.BankView:IsShown() then
-        PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
-        CB.BankView:Show()
-    end
+    guiUtils:UpdateFilterButtons(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
+    bags:UpdateBags(self.View, inventoryType)
 end
 
-function CB.G.HideBank()
-    if CB.BankView and CB.BankView:IsShown() then
-        CB.BankView:Hide()
-    end
+function events:PLAYERBANKSLOTS_CHANGED()
+    items.BuildBankCache()
+    bank:Update()
 end
+
+function events:BANKFRAME_CLOSED()
+    bank.View:Hide()
+    addon:CloseBank()
+end
+
+function events:BANKFRAME_OPENED()
+    addon:OpenBank()
+    addon:OpenBackpack()
+end
+
+bank:Enable()

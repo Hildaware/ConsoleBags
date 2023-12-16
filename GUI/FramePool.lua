@@ -1,4 +1,8 @@
-local _, CB = ...
+local addonName = ...
+local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
+
+---@class Pooling: AceModule
+local pooling = addon:NewModule('Pooling')
 
 Pool = {}
 Pool.__index = Pool
@@ -44,4 +48,6 @@ function Pool.FetchInactive(self, index, createFunc)
     return frame
 end
 
-CB.U.Pool = Pool
+pooling.Pool = Pool
+
+pooling:Enable()

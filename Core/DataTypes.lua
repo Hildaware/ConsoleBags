@@ -1,5 +1,14 @@
-local _, CB = ...
-CB.T = {}
+local addonName = ...
+local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
+
+---@class Types: AceModule
+local types = addon:NewModule('Types')
+
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
+---@class Enums: AceModule
+local enums = addon:GetModule('Enums')
 
 local Item = {}
 Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo, inventoryLocation)
@@ -32,14 +41,14 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, qu
 end
 
 function Item.GetCategory(self)
-    if CB.U.IsEquipmentUnbound(self) then
-        return CB.E.CustomCategory.BindOnEquip
+    if utils.IsEquipmentUnbound(self) then
+        return enums.CustomCategory.BindOnEquip
     elseif self.quality == Enum.ItemQuality.Heirloom then
-        return CB.E.CustomCategory.BindOnAccount
-    elseif CB.U.IsJewelry(self) then
-        return CB.E.CustomCategory.Jewelry
-    elseif CB.U.IsTrinket(self) then
-        return CB.E.CustomCategory.Trinket
+        return enums.CustomCategory.BindOnAccount
+    elseif utils.IsJewelry(self) then
+        return enums.CustomCategory.Jewelry
+    elseif utils.IsTrinket(self) then
+        return enums.CustomCategory.Trinket
     elseif self.id == 82800 then
         return Enum.ItemClass.Battlepet
     elseif self.type == nil then
@@ -49,4 +58,6 @@ function Item.GetCategory(self)
     end
 end
 
-CB.T.Item = Item
+types.Item = Item
+
+types:Enable()

@@ -4,14 +4,11 @@
 ## Authors: Sel
 ## Version: 1
 ## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
-## OptionalDeps: ConsolePort
-## SavedVariables: CBData
+## OptionalDeps: ConsolePort, Masque, Pawn, CanIMogIt
+## SavedVariables: ConsoleBagsDB
 ## X-Curse-Project-ID: 950246
 
 Libs/Libs.xml
-Utils.lua
+Core/Core.xml
 GUI/GUI.xml
-DataTypes.lua
-Resolver.lua
-Enums.lua
 ConsoleBags.lua

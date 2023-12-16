@@ -1,37 +1,46 @@
-local _, CB = ...
+local addonName = ...
+local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
-CB.G.CollapsedCategories = {}
+---@class CategoryHeaders: AceModule
+local categoryHeaders = addon:NewModule('CategoryHeaders')
 
-function CB.G.BuildCategoryFrame(data, offset, frame, parent, inventoryType)
+---@class Session: AceModule
+local session = addon:GetModule('Session')
+
+---@class Enums: AceModule
+local enums = addon:GetModule('Enums')
+
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
+function categoryHeaders:BuildCategoryFrame(data, offset, frame, parent, collapsedCategories, callback)
     if frame == nil then return end
 
     frame:SetParent(parent)
-    frame:SetPoint("TOP", 0, -((offset - 1) * CB.Settings.Defaults.Sections.ListItemHeight))
+    frame:SetPoint('TOP', 0, -((offset - 1) * session.Settings.Defaults.Sections.ListItemHeight))
 
-    if CB.G.CollapsedCategories[data.key] then
+    if collapsedCategories[data.key] then
         frame:GetNormalTexture():SetVertexColor(1, 0, 0, 1)
     else
         frame:GetNormalTexture():SetVertexColor(1, 1, 1, 0.35)
     end
 
-    frame.type:SetTexture(CB.U.GetCategoyIcon(data.key))
-    frame.name:SetText(data.name .. " (" .. data.count .. ")")
+    frame.type:SetTexture(utils.GetCategoyIcon(data.key))
+    frame.name:SetText(data.name .. ' (' .. data.count .. ')')
 
-    frame:SetScript("OnClick", function(self, button, down)
-        if button == "LeftButton" then
-            local isCollapsed = CB.G.CollapsedCategories[data.key] and
-                CB.G.CollapsedCategories[data.key] == true
+    frame:SetScript('OnClick', function(self, button, down)
+        if button == 'LeftButton' then
+
+            local isCollapsed = collapsedCategories[data.key] and
+                collapsedCategories[data.key] == true
+
             if isCollapsed then
-                CB.G.CollapsedCategories[data.key] = false
+                collapsedCategories[data.key] = false
             else
-                CB.G.CollapsedCategories[data.key] = true
+                collapsedCategories[data.key] = true
             end
 
-            if inventoryType == CB.E.InventoryType.Inventory then
-                CB.G.UpdateInventory()
-            elseif inventoryType == CB.E.InventoryType.Bank then
-                CB.G.UpdateBank()
-            end
+            callback()
         end
     end)
 
@@ -39,37 +48,37 @@ function CB.G.BuildCategoryFrame(data, offset, frame, parent, inventoryType)
 end
 
 -- TODO: SetSize will eventually need to be set based on the View
-function CB.G.CreateCategoryHeaderPlaceholder()
-    local f = CreateFrame("Button")
-    f:SetSize(CB.View.ListView:GetWidth(), CB.Settings.Defaults.Sections.ListItemHeight)
+function categoryHeaders:CreateCategoryHeaderPlaceholder()
+    local f = CreateFrame('Button')
+    f:SetSize(600-24, session.Settings.Defaults.Sections.ListItemHeight)
 
-    f:RegisterForClicks("LeftButtonUp")
+    f:RegisterForClicks('LeftButtonUp')
 
-    f:SetNormalTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid")
+    f:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid')
     f:GetNormalTexture():SetVertexColor(1, 1, 0, 0.5)
-    f:SetHighlightTexture("Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid")
+    f:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid')
     f:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.25)
 
     -- type
-    local type = CreateFrame("Frame", nil, f)
-    type:SetPoint("LEFT", f, "LEFT", 8, 0)
-    type:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
+    local type = CreateFrame('Frame', nil, f)
+    type:SetPoint('LEFT', f, 'LEFT', 8, 0)
+    type:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
     type:SetWidth(32)
 
-    local typeTex = type:CreateTexture(nil, "ARTWORK")
-    typeTex:SetPoint("CENTER", type, "CENTER")
+    local typeTex = type:CreateTexture(nil, 'ARTWORK')
+    typeTex:SetPoint('CENTER', type, 'CENTER')
     typeTex:SetSize(24, 24)
 
     f.type = typeTex
 
     -- Name
-    local name = CreateFrame("Frame", nil, f)
-    name:SetPoint("LEFT", type, "RIGHT", 8, 0)
-    name:SetHeight(CB.Settings.Defaults.Sections.ListItemHeight)
+    local name = CreateFrame('Frame', nil, f)
+    name:SetPoint('LEFT', type, 'RIGHT', 8, 0)
+    name:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
     name:SetWidth(300)
-    local nameText = name:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     nameText:SetAllPoints(name)
-    nameText:SetJustifyH("LEFT")
+    nameText:SetJustifyH('LEFT')
 
     f.name = nameText
 
@@ -77,3 +86,5 @@ function CB.G.CreateCategoryHeaderPlaceholder()
 
     return f
 end
+
+categoryHeaders:Enable()

@@ -1,12 +1,14 @@
--- WoW API Calls, etc.
-local _, CB = ...
-CB.R = {}
+local addonName = ...
+local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
-CB.R.GetContainerItemInfo = function(bagId, slotId)
+---@class Resolver: AceModule
+local resolver = addon:NewModule('Resolver')
+
+resolver.GetContainerItemInfo = function(bagId, slotId)
     return C_Container.GetContainerItemInfo(bagId, slotId)
 end
 
-CB.R.GetItemInfo = function(link)
+resolver.GetItemInfo = function(link)
     local _, _, rarity, _, reqLvl, _, _, stackCount, _, texture, sellPrice, classId, subClassId, _, xpacId =
         GetItemInfo(link)
     return {
@@ -21,16 +23,16 @@ CB.R.GetItemInfo = function(link)
     }
 end
 
-CB.R.GetEffectiveItemLevel = function(link)
+resolver.GetEffectiveItemLevel = function(link)
     local ilvl = GetDetailedItemLevelInfo(link)
     return ilvl
 end
 
-CB.R.GetInventoryType = function(link)
+resolver.GetInventoryType = function(link)
     return C_Item.GetItemInventoryTypeByID(link)
 end
 
-CB.R.ResolveItem = function(bag, slot)
+resolver.ResolveItem = function(bag, slot)
     local itemDataProto = {}
 
     local i = Item:CreateFromBagAndSlot(bag, slot)
@@ -42,3 +44,5 @@ CB.R.ResolveItem = function(bag, slot)
         print(i:GetItemLink())
     end
 end
+
+resolver:Enable()

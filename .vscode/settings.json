@@ -274,13 +274,20 @@
         "LE_ITEM_BIND_QUEST",
         "tostringall",
         "ITEM_CONJURED",
-        "Add",
-        "CallErrorHandler",
-        "_G",
-        "string"
+        "hash_SlashCmdList",
+        "NORMAL_FONT_COLOR_CODE",
+        "FONT_COLOR_CODE_CLOSE",
+        "SELECTED_CHAT_FRAME",
+        "GameFontNormal",
+        "GameFontHighlight",
+        "ACCEPT",
+        "InterfaceOptions_AddCategory",
+        "GameFontHighlightLarge",
+        "GameFontHighlightSmall"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
-        "param-type-mismatch"
+        "param-type-mismatch",
+        "duplicate-set-field"
     ]
 }
