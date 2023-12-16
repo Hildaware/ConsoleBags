@@ -6,7 +6,7 @@ With ConsoleBags, you can:
 - View your bags and bank in a simple and organized list
 - Sort your items by various criteria, such as name, rarity, item level, required level, and sell price
 - Perform actions such as equip, use, sell, or delete items with a controller
-- See additional information from other addons, such as Pawn and CanIMogIt icons
+- See additional information from other addons with Pawn, CanIMogIt, and Scrap icons
 - Customize the appearance of your items with Masque support
 
 ConsoleBags is the perfect addon for controller users who want to have more control over their inventory and bank. Download it today and enjoy a new way of playing World of Warcraft!
@@ -28,6 +28,8 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 - Can't use scrolls?
 - Tooltip (backgrounds?) stick around when switching tabs
     - Not sure how to fix this issue
+- Selecting a tab with the mouse and then using keybinds tabs from the original location
+- Keybinds should disable when in combat
 
 Tech Debt TODOS:
 - InventoryFrame & BankFrame are almost identical
