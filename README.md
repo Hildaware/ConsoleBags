@@ -29,7 +29,6 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 - Tooltip (backgrounds?) stick around when switching tabs
     - Not sure how to fix this issue
 - Selecting a tab with the mouse and then using keybinds tabs from the original location
-- Keybinds should disable when in combat
 - Bags and Money do not work sometimes
 - Preview item does not work (shows magnifying glass but does nothing)
 - Default bag location is not good

@@ -13,7 +13,7 @@ local defaults = {
         Characters = {},
         InventoryFrame = {
             Size = {
-                X = 632,
+                X = 600,
                 Y = 396,
             },
             Position = {
@@ -35,7 +35,7 @@ local defaults = {
         },
         BankFrame = {
             Size = {
-                X = 632,
+                X = 600,
                 Y = 396,
             },
             Position = {

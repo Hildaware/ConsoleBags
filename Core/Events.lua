@@ -15,6 +15,8 @@ function events:OnInitialize()
     events:RegisterEvent('BANKFRAME_OPENED')
     events:RegisterEvent('BANKFRAME_CLOSED')
     events:RegisterEvent('PLAYERBANKSLOTS_CHANGED')
+    events:RegisterEvent('PLAYER_REGEN_DISABLED')
+    events:RegisterEvent('PLAYER_REGEN_ENABLED')
 end
 
 function events:PLAYER_ENTERING_WORLD()

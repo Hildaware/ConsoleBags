@@ -45,6 +45,8 @@ local FilterPool = pooling.Pool.New()
 function inventory:OnInitialize()
     local inventoryType = enums.InventoryType.Inventory
 
+    self.inCombat = false
+
     local f = CreateFrame('Frame', 'ConsoleBagsInventory', UIParent)
     f:SetFrameStrata('HIGH')
     f:SetSize(600, database:GetInventoryViewHeight())
@@ -80,6 +82,8 @@ function inventory:OnInitialize()
 
     f:SetPropagateKeyboardInput(true)
     f:SetScript('OnGamePadButtonDown', function(self, key)
+        if inventory.inCombat then return end
+
         if _G["Scrap"] and key == "PAD3" then
             local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
             if item then
@@ -322,5 +326,17 @@ function events:EQUIPMENT_SETS_CHANGED()
         inventory:Update()
     end
 end
+
+function events:PLAYER_REGEN_DISABLED()
+    inventory.inCombat = true
+    if _G['ConsolePortInputHandler'] then
+        _G['ConsolePortInputHandler']:Release(inventory.View)
+    end
+end
+
+function events:PLAYER_REGEN_ENABLED()
+    inventory.inCombat = false
+end
+
 
 inventory:Enable()
