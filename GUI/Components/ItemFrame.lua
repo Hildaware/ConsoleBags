@@ -11,7 +11,7 @@ local Masque = LibStub('Masque', true)
 
 function itemFrame:BuildItemFrame(item, offset, frame, parent)
     if frame == nil then return end
-    
+
     frame.item = item
     session.FramesByItemId[item.id] = session.FramesByItemId[item.id] or {}
     tinsert(session.FramesByItemId[item.id], frame)
@@ -147,7 +147,6 @@ function itemFrame:CreateItemFramePlaceholder()
     local itemButton = CreateFrame('ItemButton', nil, f, 'ContainerFrameItemButtonTemplate')
     itemButton:SetAllPoints(f)
     itemButton:RegisterForClicks('LeftButtonUp', 'RightButtonUp')
-    itemButton:RegisterForClicks('RightButtonUp')
 
     itemButton.NormalTexture:Hide()
     itemButton.NormalTexture:SetParent(nil)
