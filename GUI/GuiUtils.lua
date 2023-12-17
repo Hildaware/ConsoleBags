@@ -60,6 +60,10 @@ function guiUtils:BuildFilteringContainer(parent, type, onSelect)
     f:RegisterForClicks('AnyUp')
     f.OnSelect = function() Filter_OnClick(f, 1, onSelect) end
 
+    f:SetScript('OnLeave', function(self)
+        GameTooltip:Hide()
+    end)
+
     cFrame.Buttons[1] = f
 
     -- IsSelected
