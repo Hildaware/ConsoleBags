@@ -173,6 +173,9 @@ end
 
 function Filter_OnClick(self, index, callback)
     self:GetParent().selectedTexture:SetPoint('LEFT', (index * 30), 0)
+    
+    GameTooltip.comparing = false
+
     callback()
 end
 
