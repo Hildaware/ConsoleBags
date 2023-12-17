@@ -31,6 +31,8 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 - Selecting a tab with the mouse and then using keybinds tabs from the original location
 - Keybinds should disable when in combat
 - Bags and Money do not work sometimes
+- Preview item does not work (shows magnifying glass but does nothing)
+- Default bag location is not good
 
 Tech Debt TODOS:
 - InventoryFrame & BankFrame are almost identical
