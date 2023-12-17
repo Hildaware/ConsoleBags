@@ -26,8 +26,6 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 - Moving item from bank > bag... bank doesn't refresh (May be fixed?)
 - Equipping bag update?
 - Can't use scrolls?
-- Tooltip (backgrounds?) stick around when switching tabs
-    - Not sure how to fix this issue
 - Selecting a tab with the mouse and then using keybinds tabs from the original location
 - Bags and Money do not work sometimes
 - Default bag location is not good

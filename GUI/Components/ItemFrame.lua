@@ -29,6 +29,15 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
     local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     frame.itemButton.HighlightTexture:SetVertexColor(r, g, b, 1)
 
+    frame.itemButton:HookScript('OnEnter', function(s)
+        s.HighlightTexture:Show()
+    end)
+    frame.itemButton:HookScript('OnLeave', function(s)
+        s.HighlightTexture:Hide()
+        s.NewTexture:Hide()
+        frame.item.isNew = false
+    end)
+
     local questInfo = item.questInfo
     local isQuestItem = questInfo.isQuestItem;
     local questID = questInfo.questID;
@@ -84,12 +93,6 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
         cBags:AddButton(frame.icon)
     end
 
-    if item.isNew == true then
-        frame.itemButton.NewTexture:Show()
-    else
-        frame.itemButton.NewTexture:Hide()
-    end
-
     local stackString = (item.stackCount and item.stackCount > 1) and '(' .. item.stackCount .. ')' or nil
     local nameString = item.name
     if stackString then
@@ -137,6 +140,12 @@ function itemFrame:Update(frame)
             frame.icon.scrap:Hide()
         end
     end
+
+    if frame.item.isNew == true then
+        frame.itemButton.NewTexture:Show()
+    else
+        frame.itemButton.NewTexture:Hide()
+    end
 end
 
 -- TODO: SetSize will eventually need to be set based on the View
@@ -174,13 +183,6 @@ function itemFrame:CreateItemFramePlaceholder()
     highlight:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight')
     highlight:Hide()
     itemButton.HighlightTexture = highlight
-    itemButton:HookScript('OnEnter', function(s)
-        s.HighlightTexture:Show()
-    end)
-    itemButton:HookScript('OnLeave', function(s)
-        s.HighlightTexture:Hide()
-        s.NewTexture:Hide()
-    end)
 
     local new = itemButton:CreateTexture()
     new:SetDrawLayer('BACKGROUND')
