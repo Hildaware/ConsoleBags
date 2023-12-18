@@ -50,7 +50,8 @@ function inventory:OnInitialize()
     local f = CreateFrame('Frame', 'ConsoleBagsInventory', UIParent)
     f:SetFrameStrata('HIGH')
     f:SetSize(600, database:GetInventoryViewHeight())
-    f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', database:GetInventoryViewPositionX(), database:GetInventoryViewPositionY())
+    f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', database:GetInventoryViewPositionX(),
+        database:GetInventoryViewPositionY())
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
@@ -66,7 +67,7 @@ function inventory:OnInitialize()
         if _G['ConsolePortInputHandler'] then
             _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
             _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
-        
+
             if _G["Scrap"] then
                 _G['ConsolePortInputHandler']:SetCommand('PAD3', self, true, 'LeftButton', 'UIControl', nil)
             end
@@ -84,12 +85,14 @@ function inventory:OnInitialize()
     f:SetScript('OnGamePadButtonDown', function(self, key)
         if inventory.inCombat then return end
 
-        if _G["Scrap"] and key == "PAD3" then
+        if _G["Scrap"] and key == "PAD3" then -- Square
             local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
             if item then
                 _G["Scrap"]:ToggleJunk(tonumber(item:match('item:(%d+)')))
             end
+            return
         end
+
         if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
         local filterCount = #self.FilterFrame.Buttons
         local index = self.FilterFrame.SelectedIndex
@@ -111,7 +114,6 @@ function inventory:OnInitialize()
         end
     end)
 
-    -- TODO: Split header
     -- Frame Header
     local header = CreateFrame('Frame', nil, f)
     header:SetSize(f:GetWidth(), session.Settings.Defaults.Sections.Header)
@@ -132,6 +134,7 @@ function inventory:OnInitialize()
         addon:CloseAllBags()
     end)
 
+    -- Re-add this once we create the footer
     -- local defaultButton = CreateFrame('Button', nil, header)
     -- defaultButton:SetSize(32, 32)
     -- defaultButton:SetPoint('LEFT', header, 'LEFT', 6, 0)
@@ -157,18 +160,7 @@ function inventory:OnInitialize()
     goldView:SetJustifyH('LEFT')
     goldView:SetText(GetCoinTextureString(GetMoney()))
 
-    header.Gold = goldView
-
-    -- TODO: Eventually add Search
-    -- local search = CreateFrame('EditBox', nil, header, 'BagSearchBoxTemplate')
-    -- search:SetPoint('LEFT', goldView, 'RIGHT', 6, 0)
-    -- search:SetSize(200, 28)
-    -- search:SetScript('OnTextChanged', function(self, changed)
-    --     if changed then
-    --         local text = self:GetText()
-    --         CB.G.SearchFilter(inventoryType, text)
-    --     end
-    -- end)
+    f.GoldView = goldView
 
     header:RegisterForDrag('LeftButton')
     header:SetScript('OnDragStart', function(self, button)
@@ -199,7 +191,10 @@ function inventory:OnInitialize()
     dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
     -- Filters
-    guiUtils:BuildFilteringContainer(f, inventoryType, function() session.InventoryFilter = nil self:Update() end)
+    guiUtils:BuildFilteringContainer(f, inventoryType, function()
+        session.InventoryFilter = nil
+        self:Update()
+    end)
 
     -- 'Header'
     guiUtils:BuildSortingContainer(f, inventoryType, function() self:Update() end)
@@ -287,7 +282,8 @@ function inventory:Update()
         if #categoryData.items > 0 then
             local catFrame = Pool.FetchInactive(CategoryPool, catIndex, categoryHeaders.CreateCategoryHeaderPlaceholder)
             Pool.InsertActive(CategoryPool, catFrame, catIndex)
-            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.View.ListView, session.InventoryCollapsedCategories, function() self:Update() end)
+            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.View.ListView,
+                session.InventoryCollapsedCategories, function() self:Update() end)
 
             offset = offset + 1
             catIndex = catIndex + 1
@@ -311,6 +307,16 @@ function inventory:Update()
 
     guiUtils:UpdateFilterButtons(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
     bags:UpdateBags(self.View, inventoryType)
+end
+
+function inventory:UpdateCurrency()
+    if self.View then
+        self.View.GoldView:SetText(GetCoinTextureString(GetMoney()))
+    end
+end
+
+function events:PLAYER_MONEY()
+    inventory:UpdateCurrency()
 end
 
 function events:BAG_UPDATE_DELAYED()
@@ -337,6 +343,5 @@ end
 function events:PLAYER_REGEN_ENABLED()
     inventory.inCombat = false
 end
-
 
 inventory:Enable()

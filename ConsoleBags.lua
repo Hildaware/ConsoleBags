@@ -13,9 +13,6 @@ local inventory = addon:GetModule('Inventory')
 ---@class Bank: AceModule
 local bank = addon:GetModule('Bank')
 
----@class CoreGUI: AceModule
-local coreGui = addon:GetModule('CoreGUI')
-
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
 
@@ -52,7 +49,6 @@ function addon:OnEnable()
 end
 
 function addon.OnUpdate()
-
     if backpackShouldOpen then
         if session.Settings.HideBags == true then return end
 
@@ -67,17 +63,17 @@ function addon.OnUpdate()
             inventory:Update()
 
             PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
-            coreGui.Inventory:Show()
+            inventory.View:Show()
         end
     elseif backpackShouldClose then
         backpackShouldClose = false
 
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-        coreGui.Inventory:Hide()
+        inventory.View:Hide()
 
-        local bankFrame = coreGui.Bank and coreGui.Bank:IsShown()
+        local bankFrame = bank and bank.View:IsShown()
         if bankFrame then
-            coreGui.Bank:Hide()
+            bank.View:Hide()
         end
     end
 
@@ -90,7 +86,7 @@ function addon.OnUpdate()
             bankShouldOpen = false
 
             bank:Update()
-            coreGui.Bank:Show()
+            bank.View:Show()
         end
     end
 end
@@ -112,7 +108,7 @@ function addon:OpenBackpack()
 end
 
 function addon:ToggleBag()
-    if coreGui.Inventory:IsShown() then
+    if inventory.View:IsShown() then
         backpackShouldClose = true
     else
         backpackShouldOpen = true
@@ -120,7 +116,7 @@ function addon:ToggleBag()
 end
 
 function addon:ToggleAllBags()
-    if coreGui.Inventory:IsShown() then
+    if inventory.View:IsShown() then
         backpackShouldClose = true
     else
         backpackShouldOpen = true
@@ -128,7 +124,7 @@ function addon:ToggleAllBags()
 end
 
 function addon:ToggleBackpack()
-    if coreGui.Inventory:IsShown() then
+    if inventory.View:IsShown() then
         backpackShouldClose = true
     else
         backpackShouldOpen = true
@@ -136,14 +132,14 @@ function addon:ToggleBackpack()
 end
 
 function addon:OpenBank()
-    if not coreGui.Bank:IsShown() then
+    if not bank.View:IsShown() then
         bankShouldOpen = true
     end
 end
 
 function addon:CloseBank()
-    if coreGui.Bank:IsShown() then
-        coreGui.Bank:Hide()
+    if bank.View:IsShown() then
+        bank.View:Hide()
     end
 end
 
