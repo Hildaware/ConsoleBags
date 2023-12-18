@@ -247,4 +247,29 @@ function utils.ReplaceBagSlot(bag)
     return bag
 end
 
+function utils:CreateBorder(self)
+    if not self.borders then
+        self.borders = {}
+        for i = 1, 4 do
+            self.borders[i] = self:CreateLine(nil, 'BACKGROUND', nil, 0)
+            local l = self.borders[i]
+            l:SetThickness(1)
+            l:SetColorTexture(0, 0, 0, 1)
+            if i == 1 then
+                l:SetStartPoint('TOPLEFT')
+                l:SetEndPoint('TOPRIGHT')
+            elseif i == 2 then
+                l:SetStartPoint('TOPRIGHT')
+                l:SetEndPoint('BOTTOMRIGHT')
+            elseif i == 3 then
+                l:SetStartPoint('BOTTOMRIGHT')
+                l:SetEndPoint('BOTTOMLEFT')
+            else
+                l:SetStartPoint('BOTTOMLEFT')
+                l:SetEndPoint('TOPLEFT')
+            end
+        end
+    end
+end
+
 utils:Enable()

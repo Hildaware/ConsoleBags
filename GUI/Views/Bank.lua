@@ -4,9 +4,6 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Bank: AceModule
 local bank = addon:NewModule('Bank')
 
----@class GUIUtils: AceModule
-local guiUtils = addon:GetModule('GUIUtils')
-
 ---@class Pooling: AceModule
 local pooling = addon:GetModule('Pooling')
 
@@ -24,6 +21,12 @@ local session = addon:GetModule('Session')
 
 ---@class Items: AceModule
 local items = addon:GetModule('Items')
+
+---@class Filtering: AceModule
+local filtering = addon:GetModule('Filtering')
+
+---@class Sorting: AceModule
+local sorting = addon:GetModule('Sorting')
 
 ---@class BagContainer: AceModule
 local bags = addon:GetModule('BagContainer')
@@ -118,10 +121,13 @@ function bank:OnInitialize()
     dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
     -- Filters
-    guiUtils:BuildFilteringContainer(f, inventoryType, function() session.BankFilter = nil self:Update() end)
+    filtering:BuildContainer(f, inventoryType, function()
+        session.BankFilter = nil
+        self:Update()
+    end)
 
     -- 'Header'
-    guiUtils:BuildSortingContainer(f, inventoryType, function() self:Update() end)
+    sorting:Build(f, inventoryType, function() self:Update() end)
 
     local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
     local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
@@ -139,11 +145,11 @@ function bank:OnInitialize()
 
     table.insert(UISpecialFrames, f:GetName())
 
-    guiUtils:CreateBorder(f)
+    utils:CreateBorder(f)
 
     self.View = f
 
-    bags:CreateBags(inventoryType, self.View)
+    bags:Build(inventoryType, self.View)
 
     if _G['ConsolePort'] then
         _G['ConsolePort']:AddInterfaceCursorFrame(self.View)
@@ -206,7 +212,8 @@ function bank:Update()
         if #categoryData.items > 0 then
             local catFrame = Pool.FetchInactive(CategoryPool, catIndex, categoryHeaders.CreateCategoryHeaderPlaceholder)
             Pool.InsertActive(CategoryPool, catFrame, catIndex)
-            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.View.ListView, session.BankCollapsedCategories, function() self:Update() end)
+            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.View.ListView,
+                session.BankCollapsedCategories, function() self:Update() end)
 
             offset = offset + 1
             catIndex = catIndex + 1
@@ -228,8 +235,8 @@ function bank:Update()
         self:Update()
     end
 
-    guiUtils:UpdateFilterButtons(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
-    bags:UpdateBags(self.View, inventoryType)
+    filtering:Update(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
+    bags:Update(self.View, inventoryType)
 end
 
 function events:PLAYERBANKSLOTS_CHANGED()

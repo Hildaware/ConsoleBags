@@ -4,9 +4,6 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Inventory: AceModule
 local inventory = addon:NewModule('Inventory')
 
----@class GUIUtils: AceModule
-local guiUtils = addon:GetModule('GUIUtils')
-
 ---@class Pooling: AceModule
 local pooling = addon:GetModule('Pooling')
 
@@ -24,6 +21,13 @@ local session = addon:GetModule('Session')
 
 ---@class Items: AceModule
 local items = addon:GetModule('Items')
+
+---@class Filtering: AceModule
+local filtering = addon:GetModule('Filtering')
+
+---@class Sorting: AceModule
+local sorting = addon:GetModule('Sorting')
+
 
 ---@class BagContainer: AceModule
 local bags = addon:GetModule('BagContainer')
@@ -173,8 +177,6 @@ function inventory:OnInitialize()
         database:SetInventoryPosition(x, y)
     end)
 
-    f.Header = header
-
     -- Drag Bar
     local drag = CreateFrame('Button', nil, f)
     drag:SetSize(64, 12)
@@ -191,13 +193,13 @@ function inventory:OnInitialize()
     dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
     -- Filters
-    guiUtils:BuildFilteringContainer(f, inventoryType, function()
+    filtering:BuildContainer(f, inventoryType, function()
         session.InventoryFilter = nil
         self:Update()
     end)
 
     -- 'Header'
-    guiUtils:BuildSortingContainer(f, inventoryType, function() self:Update() end)
+    sorting:Build(f, inventoryType, function() self:Update() end)
 
     local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
     local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
@@ -215,11 +217,11 @@ function inventory:OnInitialize()
 
     table.insert(UISpecialFrames, f:GetName())
 
-    guiUtils:CreateBorder(f)
+    utils:CreateBorder(f)
+
+    bags:Build(inventoryType, f)
 
     self.View = f
-
-    bags:CreateBags(inventoryType, self.View)
 
     if _G['ConsolePort'] then
         _G['ConsolePort']:AddInterfaceCursorFrame(self.View)
@@ -305,8 +307,8 @@ function inventory:Update()
         self:Update()
     end
 
-    guiUtils:UpdateFilterButtons(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
-    bags:UpdateBags(self.View, inventoryType)
+    filtering:Update(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
+    bags:Update(self.View, inventoryType)
 end
 
 function inventory:UpdateCurrency()

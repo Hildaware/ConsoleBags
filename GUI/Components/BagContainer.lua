@@ -10,7 +10,7 @@ local enums = addon:GetModule('Enums')
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
-function bags:CreateBags(type, parent)
+function bags:Build(type, parent)
     local f = CreateFrame('Frame', nil, parent.Header)
     f:SetSize(32, 32)
     f:SetPoint('RIGHT', parent.Header, 'RIGHT', -40, 0)
@@ -51,7 +51,7 @@ function bags:CreateBags(type, parent)
     parent.ItemCountText = itemCountText
 end
 
-function bags:UpdateBags(container, type)
+function bags:Update(container, type)
     if container == nil then return end
     if container.Bags.Container == nil then return end
 
@@ -67,7 +67,8 @@ function bags:UpdateBags(container, type)
         bagEnd = NUM_BANKBAGSLOTS + NUM_BAG_SLOTS + 1
     end
 
-    local max = type == enums.InventoryType.Bank and 28 or 16 -- TODO: Max needs to be variable based on Race / etc. Prob an API call we can make
+    local max = type == enums.InventoryType.Bank and 28 or
+        16 -- TODO: Max needs to be variable based on Race / etc. Prob an API call we can make
     for bag = bagStart, bagEnd do
         local bagID = C_Container.ContainerIDToInventoryID(bag)
         local iconID = GetInventoryItemTexture('player', bagID)
