@@ -49,12 +49,10 @@ function filtering:BuildContainer(parent, type, onSelect)
         GameTooltip:Show()
     end)
 
-    f:SetScript('OnClick', function(self)
-        Filter_OnClick(f, 1, onSelect)
-    end)
     f:RegisterForClicks('AnyDown')
     f:RegisterForClicks('AnyUp')
-    f.OnSelect = function() Filter_OnClick(f, 1, onSelect) end
+    f:SetScript('OnClick', function(self) Filter_OnClick(f, 1, onSelect, true) end)
+    f.OnSelect = function() Filter_OnClick(f, 1, onSelect, false) end
 
     f:SetScript('OnLeave', function(self)
         GameTooltip:Hide()
@@ -166,8 +164,11 @@ function filtering:Build(view, frame, categoryData, index, callback)
     return frame
 end
 
-function Filter_OnClick(self, index, callback)
+function Filter_OnClick(self, index, callback, shouldSetIndex)
     self:GetParent().selectedTexture:SetPoint('LEFT', (index * 30), 0)
+    if shouldSetIndex then
+        self:GetParent().SelectedIndex = index
+    end
 
     if GameTooltip.shoppingTooltips then
         for _, frame in pairs(GameTooltip.shoppingTooltips) do

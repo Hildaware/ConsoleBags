@@ -93,8 +93,6 @@ function bags:Update(container, type)
             bagData.isPurchased = bagIndex <= numSlots
         end
 
-        print("bag slot: " .. bagIndex .. "  " .. tostring(bagData.icon))
-
         container.Bags.Container.Slots[bagIndex] = UpdateBagSlot(container.Bags.Container.Slots[bagIndex], bagData)
     end
 
