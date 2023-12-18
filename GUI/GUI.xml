@@ -5,6 +5,6 @@
     <Include file = "Components/ItemFrame.lua" />
     <Include file = "Components/CategoryHeaderFrame.lua" />
     <Include file = "Components/BagContainer.lua" />
-    <Include file = "Views/InventoryFrame.lua" />
-    <Include file = "Views/BankFrame.lua" />
+    <Include file = "Views/Inventory.lua" />
+    <Include file = "Views/Bank.lua" />
 </UI>

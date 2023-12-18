@@ -24,7 +24,7 @@ function bags:Build(type, parent)
     btnTex:SetAllPoints(bagButton)
     btnTex:SetTexture(133633) -- Generic Bag
 
-    CreateBagContainerG(bagButton, type)
+    CreateContainer(bagButton, type)
 
     bagButton:SetScript('OnClick', function(self)
         if self.Container:IsShown() then
@@ -93,7 +93,9 @@ function bags:Update(container, type)
             bagData.isPurchased = bagIndex <= numSlots
         end
 
-        container.Bags.Container.Bags[bagIndex] = UpdateBagSlotG(container.Bags.Container[bagIndex], bagData)
+        print("bag slot: " .. bagIndex .. "  " .. tostring(bagData.icon))
+
+        container.Bags.Container.Slots[bagIndex] = UpdateBagSlot(container.Bags.Container.Slots[bagIndex], bagData)
     end
 
     if type == enums.InventoryType.Inventory then
@@ -103,12 +105,12 @@ function bags:Update(container, type)
     end
 end
 
-function CreateBagContainerG(parent, type)
+function CreateContainer(parent, type)
     local container = CreateFrame('Frame', nil, parent)
     container:SetPoint('RIGHT', parent, 'LEFT', -4, 0)
     container:SetSize(1, parent:GetHeight())
 
-    container.Bags = {}
+    container.Slots = {}
 
     local bagStart = 1
     local bagEnd = NUM_TOTAL_EQUIPPED_BAG_SLOTS
@@ -139,14 +141,14 @@ function CreateBagContainerG(parent, type)
             bagData.isPurchased = bagIndex <= numSlots
         end
 
-        local f = CreateBagSlotG(container, bagData)
-        container.Bags[bagIndex] = f
+        local f = CreateBagSlot(container, bagData)
+        container.Slots[bagIndex] = f
     end
 
     if type == enums.InventoryType.Bank then
         local purchaseBagButton = CreateFrame('Button', nil, container)
         purchaseBagButton:SetSize(28, 28)
-        purchaseBagButton:SetPoint('LEFT', container.Bags[#container.Bags], 'RIGHT', 12, 0)
+        purchaseBagButton:SetPoint('LEFT', container.Slots[#container.Slots], 'RIGHT', 12, 0)
         purchaseBagButton:SetNormalTexture(133784)
 
         purchaseBagButton:SetScript('OnEnter', function(self)
@@ -179,7 +181,7 @@ function CreateBagContainerG(parent, type)
     container:Hide()
 end
 
-function CreateBagSlotG(parent, bagData)
+function CreateBagSlot(parent, bagData)
     local f = CreateFrame('Button', nil, parent)
     f:SetPoint('RIGHT', parent, 'LEFT', (bagData.bagIndex * 30), 0)
     f:SetSize(28, 28)
@@ -236,7 +238,7 @@ function CreateBagSlotG(parent, bagData)
     return f
 end
 
-function UpdateBagSlotG(self, bagData)
+function UpdateBagSlot(self, bagData)
     if self == nil then return end
 
     self.bagID = bagData.id

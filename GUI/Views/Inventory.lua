@@ -177,6 +177,8 @@ function inventory:OnInitialize()
         database:SetInventoryPosition(x, y)
     end)
 
+    f.Header = header
+
     -- Drag Bar
     local drag = CreateFrame('Button', nil, f)
     drag:SetSize(64, 12)

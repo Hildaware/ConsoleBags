@@ -18,7 +18,7 @@ local defaults = {
             },
             Position = {
                 X = 500,
-                Y = 200
+                Y = 500
             },
             Columns = {
                 Icon = 32,
@@ -40,7 +40,7 @@ local defaults = {
             },
             Position = {
                 X = 20,
-                Y = 20
+                Y = 500
             },
             Columns = {
                 Icon = 32,

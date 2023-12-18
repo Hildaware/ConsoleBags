@@ -27,7 +27,6 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 - Equipping bag update?
 - Can't use scrolls?
 - Selecting a tab with the mouse and then using keybinds tabs from the original location
-- Bags and Money do not work sometimes
 - Default bag location is not good
 
 Tech Debt TODOS:

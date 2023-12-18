@@ -171,7 +171,6 @@ function Filter_OnClick(self, index, callback)
 
     if GameTooltip.shoppingTooltips then
         for _, frame in pairs(GameTooltip.shoppingTooltips) do
-            print("removing")
             frame:Hide()
         end
     end

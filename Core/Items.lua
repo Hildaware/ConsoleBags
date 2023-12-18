@@ -117,6 +117,7 @@ function items.BuildItemCache()
 end
 
 function items.BuildBankCache()
+    print("Bank Cache rebuild")
     session.BuildingBankCache = true
     session.BankCount = 0
     session.BankResolved = 0
