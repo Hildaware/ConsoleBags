@@ -274,16 +274,14 @@
         "LE_ITEM_BIND_QUEST",
         "tostringall",
         "ITEM_CONJURED",
+        "Add",
+        "CallErrorHandler",
+        "_G",
+        "string",
+        "xx",
         "hash_SlashCmdList",
         "NORMAL_FONT_COLOR_CODE",
-        "FONT_COLOR_CODE_CLOSE",
-        "SELECTED_CHAT_FRAME",
-        "GameFontNormal",
-        "GameFontHighlight",
-        "ACCEPT",
-        "InterfaceOptions_AddCategory",
-        "GameFontHighlightLarge",
-        "GameFontHighlightSmall"
+        "FONT_COLOR_CODE_CLOSE"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

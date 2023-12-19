@@ -110,4 +110,56 @@ function database:SetBankViewHeight(height)
     database.internal.global.BankFrame.Size.Y = height
 end
 
+---@param inventoryType Enums.InventoryType
+function database:GetViewHeight(inventoryType)
+    if inventoryType == enums.InventoryType.Inventory then
+        return database:GetInventoryViewHeight()
+    elseif inventoryType == enums.InventoryType.Bank then
+        return database:GetBankViewHeight()
+    end
+end
+
+---@param inventoryType Enums.InventoryType
+---@param height integer
+function database:SetViewHeight(inventoryType, height)
+    if inventoryType == enums.InventoryType.Inventory then
+        database:SetInventoryViewHeight(height)
+    elseif inventoryType == enums.InventoryType.Bank then
+        database:SetBankViewHeight(height)
+    end
+end
+
+---@param inventoryType Enums.InventoryType
+---@return {x: integer, y: integer}
+function database:GetViewPosition(inventoryType)
+    local position = { x = 0, y = 0 }
+    if inventoryType == enums.InventoryType.Inventory then
+        position.x, position.y = database:GetInventoryViewPositionX(), database:GetInventoryViewPositionY()
+    elseif inventoryType == enums.InventoryType.Bank then
+        position.x, position.y = database:GetBankViewPositionX(), database:GetBankViewPositionY()
+    end
+
+    return position
+end
+
+---@param inventoryType Enums.InventoryType
+---@param x integer
+---@param y integer
+function database:SetViewPosition(inventoryType, x, y)
+    if inventoryType == enums.InventoryType.Inventory then
+        database:SetInventoryPosition(x, y)
+    elseif inventoryType == enums.InventoryType.Bank then
+        database:SetBankPosition(x, y)
+    end
+end
+
+---@param inventoryType Enums.InventoryType
+function database:GetSortField(inventoryType)
+    if inventoryType == enums.InventoryType.Inventory then
+        return database:GetInventorySortField()
+    elseif inventoryType == enums.InventoryType.Bank then
+        return database:GetBankSortField()
+    end
+end
+
 database:Enable()

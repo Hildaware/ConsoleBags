@@ -1,18 +1,19 @@
----@diagnostic disable: undefined-field
 local addonName = ...
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
+---@cast addon +AceHook-3.0
 
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
+---@class Enums: AceModule
+local enums = addon:GetModule('Enums')
+
 ---@class Items: AceModule
 local items = addon:GetModule('Items')
 
----@class Inventory: AceModule
-local inventory = addon:GetModule('Inventory')
+---@class View: AceModule
+local view = addon:GetModule('View')
 
----@class Bank: AceModule
-local bank = addon:GetModule('Bank')
 
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
@@ -61,20 +62,20 @@ function addon.OnUpdate()
             backpackShouldOpen = false
             backpackShouldClose = false
 
-            inventory:Update()
+            view:Update(enums.InventoryType.Inventory)
 
             PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
-            inventory.View:Show()
+            view.inventory.frame:Show()
         end
     elseif backpackShouldClose then
         backpackShouldClose = false
 
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
-        inventory.View:Hide()
+        view.inventory.frame:Hide()
 
-        local bankFrame = bank and bank.View:IsShown()
+        local bankFrame = view.bank and view.bank.frame:IsShown()
         if bankFrame then
-            bank.View:Hide()
+            view.bank.frame:Hide()
         end
     end
 
@@ -86,8 +87,8 @@ function addon.OnUpdate()
         if session.BankResolved >= session.BankCount then
             bankShouldOpen = false
 
-            bank:Update()
-            bank.View:Show()
+            view:Update(enums.InventoryType.Bank)
+            view.bank.frame:Show()
         end
     end
 end
@@ -109,7 +110,7 @@ function addon:OpenBackpack()
 end
 
 function addon:ToggleBag()
-    if inventory.View:IsShown() then
+    if view.inventory.frame:IsShown() then
         backpackShouldClose = true
     else
         backpackShouldOpen = true
@@ -117,7 +118,7 @@ function addon:ToggleBag()
 end
 
 function addon:ToggleAllBags()
-    if inventory.View:IsShown() then
+    if view.inventory.frame:IsShown() then
         backpackShouldClose = true
     else
         backpackShouldOpen = true
@@ -125,7 +126,7 @@ function addon:ToggleAllBags()
 end
 
 function addon:ToggleBackpack()
-    if inventory.View:IsShown() then
+    if view.inventory.frame:IsShown() then
         backpackShouldClose = true
     else
         backpackShouldOpen = true
@@ -133,14 +134,18 @@ function addon:ToggleBackpack()
 end
 
 function addon:OpenBank()
-    if not bank.View:IsShown() then
+    if view.bank == nil then
+        view:Create(enums.InventoryType.Bank)
+    end
+
+    if not view.bank.frame:IsShown() then
         bankShouldOpen = true
     end
 end
 
 function addon:CloseBank()
-    if bank.View:IsShown() then
-        bank.View:Hide()
+    if view.bank.frame:IsShown() then
+        view.bank.frame:Hide()
     end
 end
 

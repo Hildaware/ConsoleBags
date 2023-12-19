@@ -4,6 +4,15 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Pooling: AceModule
 local pooling = addon:NewModule('Pooling')
 
+---@class (exact) Pool
+---@field Active table
+---@field Inactive table
+---@field New function
+---@field Cleanup function
+---@field InsertActive function
+---@field RemoveActive function
+---@field InsertInactive function
+---@field FetchInactive function
 Pool = {}
 Pool.__index = Pool
 

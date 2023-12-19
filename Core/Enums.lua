@@ -4,6 +4,7 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Enums: AceModule
 local enums = addon:NewModule('Enums')
 
+---@enum Enums.InventoryType
 enums.InventoryType = {
     Inventory = 1,
     Bank = 2,

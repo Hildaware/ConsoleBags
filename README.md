@@ -27,6 +27,3 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 - Equipping bag update?
 - Can't use scrolls?
 - Default bag location is not good
-
-Tech Debt TODOS:
-- InventoryFrame & BankFrame are almost identical

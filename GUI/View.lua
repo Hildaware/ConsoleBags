@@ -1,8 +1,8 @@
 local addonName = ...
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
----@class Inventory: AceModule
-local inventory = addon:NewModule('Inventory')
+---@class View: AceModule
+local view = addon:NewModule('View')
 
 ---@class Pooling: AceModule
 local pooling = addon:GetModule('Pooling')
@@ -19,6 +19,9 @@ local database = addon:GetModule('Database')
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
+---@class Events: AceModule
+local events = addon:GetModule('Events')
+
 ---@class Items: AceModule
 local items = addon:GetModule('Items')
 
@@ -27,7 +30,6 @@ local filtering = addon:GetModule('Filtering')
 
 ---@class Sorting: AceModule
 local sorting = addon:GetModule('Sorting')
-
 
 ---@class BagContainer: AceModule
 local bags = addon:GetModule('BagContainer')
@@ -38,24 +40,44 @@ local categoryHeaders = addon:GetModule('CategoryHeaders')
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
 
----@class Events: AceModule
-local events = addon:GetModule('Events')
+---@class (exact) BagView
+---@field itemPool Pool
+---@field categoryPool Pool
+---@field filterPool Pool
+---@field frame Frame
+local viewPrototype = {}
 
--- Frame Pools
-local ItemPool = pooling.Pool.New()
-local CategoryPool = pooling.Pool.New()
-local FilterPool = pooling.Pool.New()
-
-function inventory:OnInitialize()
-    local inventoryType = enums.InventoryType.Inventory
-
+function view:OnInitialize()
+    ---@type BagView[]
+    self.views = {}
     self.inCombat = false
 
-    local f = CreateFrame('Frame', 'ConsoleBagsInventory', UIParent)
+    ---@type BagView
+    self.inventory = nil
+    ---@type BagView
+    self.bank = nil
+
+    self:Create(enums.InventoryType.Inventory) -- Create the Inv frame
+end
+
+---@param inventoryType Enums.InventoryType
+function view:Create(inventoryType)
+    ---@type BagView
+    local newView = {
+        itemPool = pooling.Pool.New(),
+        categoryPool = pooling.Pool.New(),
+        filterPool = pooling.Pool.New(),
+        frame = {}
+    }
+
+    local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
+
+    local f = CreateFrame('Frame', 'ConsoleBags' .. viewName, UIParent)
     f:SetFrameStrata('HIGH')
-    f:SetSize(600, database:GetInventoryViewHeight())
-    f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', database:GetInventoryViewPositionX(),
-        database:GetInventoryViewPositionY())
+    f:SetSize(600, database:GetViewHeight(inventoryType))
+
+    local position = database:GetViewPosition(inventoryType)
+    f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', position.x, position.y)
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
@@ -66,6 +88,7 @@ function inventory:OnInitialize()
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.75)
 
+    -- TODO: Inv only?
     -- Stop ConsolePort from reading buttons
     f:SetScript('OnShow', function(self)
         if _G['ConsolePortInputHandler'] then
@@ -87,7 +110,7 @@ function inventory:OnInitialize()
 
     f:SetPropagateKeyboardInput(true)
     f:SetScript('OnGamePadButtonDown', function(self, key)
-        if inventory.inCombat then return end
+        if view.inCombat then return end
 
         if _G["Scrap"] and key == "PAD3" then -- Square
             local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
@@ -135,8 +158,13 @@ function inventory:OnInitialize()
     close:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight')
     close:SetPushedTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed')
     close:SetScript('OnClick', function()
-        ---@diagnostic disable-next-line: undefined-field
-        addon:CloseAllBags()
+        if inventoryType == enums.InventoryType.Inventory then
+            ---@diagnostic disable-next-line: undefined-field
+            addon:CloseAllBags()
+        elseif inventoryType == enums.InventoryType.Bank then
+            ---@diagnostic disable-next-line: undefined-field
+            addon:CloseBank()
+        end
     end)
 
     -- Re-add this once we create the footer
@@ -159,13 +187,15 @@ function inventory:OnInitialize()
     --     OpenAllBags()
     -- end)
 
-    local goldView = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    goldView:SetPoint('LEFT', header, 'LEFT', 12, 0)
-    goldView:SetWidth(140)
-    goldView:SetJustifyH('LEFT')
-    goldView:SetText(GetCoinTextureString(GetMoney()))
+    if inventoryType == enums.InventoryType.Inventory then
+        local goldView = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+        goldView:SetPoint('LEFT', header, 'LEFT', 12, 0)
+        goldView:SetWidth(140)
+        goldView:SetJustifyH('LEFT')
+        goldView:SetText(GetCoinTextureString(GetMoney()))
 
-    f.GoldView = goldView
+        f.GoldView = goldView
+    end
 
     header:RegisterForDrag('LeftButton')
     header:SetScript('OnDragStart', function(self, button)
@@ -175,7 +205,7 @@ function inventory:OnInitialize()
         self:GetParent():StopMovingOrSizing()
         local x = self:GetParent():GetLeft()
         local y = self:GetParent():GetTop()
-        database:SetInventoryPosition(x, y)
+        database:SetViewPosition(inventoryType, x, y)
     end)
 
     f.Header = header
@@ -184,25 +214,33 @@ function inventory:OnInitialize()
     local drag = CreateFrame('Button', nil, f)
     drag:SetSize(64, 12)
     drag:SetPoint('BOTTOM', f, 'BOTTOM', 0, -6)
+
     drag:SetScript('OnMouseDown', function(self)
         self:GetParent():StartSizing('BOTTOM')
     end)
+
     drag:SetScript('OnMouseUp', function(self)
         self:GetParent():StopMovingOrSizing('BOTTOM')
-        database:SetInventoryViewHeight(self:GetParent():GetHeight())
+        database:SetViewHeight(inventoryType, self:GetParent():GetHeight())
     end)
+
     local dragTex = drag:CreateTexture(nil, 'BACKGROUND')
     dragTex:SetAllPoints(drag)
     dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
     -- Filters
     filtering:BuildContainer(f, inventoryType, function()
-        session.InventoryFilter = nil
-        self:Update()
+        if inventoryType == enums.InventoryType.Inventory then
+            session.InventoryFilter = nil
+        elseif inventoryType == enums.InventoryType.Bank then
+            session.BankFilter = nil
+        end
+
+        self:Update(inventoryType)
     end)
 
     -- 'Header'
-    sorting:Build(f, inventoryType, function() self:Update() end)
+    sorting:Build(f, inventoryType, function() self:Update(inventoryType) end)
 
     local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
     local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
@@ -224,44 +262,63 @@ function inventory:OnInitialize()
 
     bags:Build(inventoryType, f)
 
-    self.View = f
-
     if _G['ConsolePort'] then
-        _G['ConsolePort']:AddInterfaceCursorFrame(self.View)
+        _G['ConsolePort']:AddInterfaceCursorFrame(f)
+    end
+
+    newView.frame = f
+    self.views[inventoryType] = newView
+
+    if inventoryType == enums.InventoryType.Inventory then
+        self.inventory = self.views[inventoryType]
+    elseif inventoryType == enums.InventoryType.Bank then
+        self.bank = self.views[inventoryType]
     end
 end
 
-function inventory:Update()
-    if self.View == nil then return end
+---@param inventoryType Enums.InventoryType
+function view:Update(inventoryType)
+    if self.views[inventoryType] == nil then return end
 
-    local inventoryType = enums.InventoryType.Inventory
+    local currentView = self.views[inventoryType]
 
-    Pool.Cleanup(ItemPool)
-    Pool.Cleanup(CategoryPool)
-    Pool.Cleanup(FilterPool)
+    Pool.Cleanup(currentView.itemPool)
+    Pool.Cleanup(currentView.categoryPool)
+    Pool.Cleanup(currentView.filterPool)
+
+    local sessionFilter = nil
+    local sessionCats = {}
+    if inventoryType == enums.InventoryType.Inventory then
+        sessionFilter = session.InventoryFilter
+        sessionCats = session.InventoryCollapsedCategories
+    elseif inventoryType == enums.InventoryType.Bank then
+        sessionFilter = session.BankFilter
+        sessionCats = session.BankCollapsedCategories
+    end
 
     -- Categorize
     local catTable = {}
     for _, slots in pairs(session.Items) do
         for _, item in pairs(slots) do
-            if item.location == enums.InventoryType.Inventory then
+            if item.location == inventoryType then
                 utils.AddItemToCategory(item, catTable)
             end
         end
     end
 
-    items:SortItems(catTable, database:GetInventorySortField())
+    items:SortItems(catTable, database:GetSortField(inventoryType))
 
     -- Filter Categories
     local allCategories = {}
     local filteredCategories = {}
     local iter = 1
+
     for key, value in pairs(catTable) do
         value.key = key
         value.order = enums.Categories[key].order
         value.name = enums.Categories[key].name
         allCategories[iter] = value
-        if (key == session.InventoryFilter) or session.InventoryFilter == nil then
+        if (key == sessionFilter) or sessionFilter == nil then
             tinsert(filteredCategories, value)
         end
         iter = iter + 1
@@ -285,18 +342,20 @@ function inventory:Update()
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            local catFrame = Pool.FetchInactive(CategoryPool, catIndex, categoryHeaders.CreateCategoryHeaderPlaceholder)
-            Pool.InsertActive(CategoryPool, catFrame, catIndex)
-            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.View.ListView,
-                session.InventoryCollapsedCategories, function() self:Update() end)
+            local catFrame = Pool.FetchInactive(currentView.categoryPool, catIndex,
+                categoryHeaders.CreateCategoryHeaderPlaceholder)
+            Pool.InsertActive(currentView.categoryPool, catFrame, catIndex)
+            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, currentView.frame.ListView,
+                sessionCats, function() self:Update(inventoryType) end)
 
             offset = offset + 1
             catIndex = catIndex + 1
-            if session.InventoryCollapsedCategories[categoryData.key] ~= true then
+            if sessionCats[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    local frame = Pool.FetchInactive(ItemPool, itemIndex, itemFrame.CreateItemFramePlaceholder)
-                    Pool.InsertActive(ItemPool, frame, itemIndex)
-                    itemFrame:BuildItemFrame(item, offset, frame, self.View.ListView)
+                    local frame = Pool.FetchInactive(currentView.itemPool, itemIndex,
+                        itemFrame.CreateItemFramePlaceholder)
+                    Pool.InsertActive(currentView.itemPool, frame, itemIndex)
+                    itemFrame:BuildItemFrame(item, offset, frame, currentView.frame.ListView)
 
                     offset = offset + 1
                     itemIndex = itemIndex + 1
@@ -306,47 +365,72 @@ function inventory:Update()
     end
 
     local function onFilterSelectCallback(key)
-        session.InventoryFilter = key
-        self:Update()
+        if inventoryType == enums.InventoryType.Inventory then
+            session.InventoryFilter = key
+        elseif inventoryType == enums.InventoryType.Bank then
+            session.BankFilter = key
+        end
+
+        self:Update(inventoryType)
     end
 
-    filtering:Update(self.View, orderedAllCategories, FilterPool, onFilterSelectCallback)
-    bags:Update(self.View, inventoryType)
+    filtering:Update(currentView.frame, orderedAllCategories, currentView.filterPool, onFilterSelectCallback)
+    bags:Update(currentView.frame, inventoryType)
 end
 
-function inventory:UpdateCurrency()
-    if self.View then
-        self.View.GoldView:SetText(GetCoinTextureString(GetMoney()))
+function view:UpdateCurrency()
+    if view.inventory then
+        view.inventory.frame.GoldView:SetText(GetCoinTextureString(GetMoney()))
     end
 end
+
+--#region Events
 
 function events:PLAYER_MONEY()
-    inventory:UpdateCurrency()
+    view:UpdateCurrency()
 end
 
 function events:BAG_UPDATE_DELAYED()
     items.BuildItemCache()
-    if inventory.View and inventory.View:IsShown() then
-        inventory:Update()
+    if view.inventory and view.inventory.frame:IsShown() then
+        view:Update(enums.InventoryType.Inventory)
     end
 end
 
 function events:EQUIPMENT_SETS_CHANGED()
     items.BuildItemCache()
-    if inventory.View and inventory.View:IsShown() then
-        inventory:Update()
+    if view.inventory and view.inventory.frame:IsShown() then
+        view:Update(enums.InventoryType.Inventory)
     end
 end
 
 function events:PLAYER_REGEN_DISABLED()
-    inventory.inCombat = true
+    view.inCombat = true
     if _G['ConsolePortInputHandler'] then
-        _G['ConsolePortInputHandler']:Release(inventory.View)
+        -- TODO: All frames?
+        _G['ConsolePortInputHandler']:Release(view.inventory.frame)
     end
 end
 
 function events:PLAYER_REGEN_ENABLED()
-    inventory.inCombat = false
+    view.inCombat = false
 end
 
-inventory:Enable()
+function events:PLAYERBANKSLOTS_CHANGED()
+    items.BuildBankCache()
+    view:Update(enums.InventoryType.Bank)
+end
+
+function events:BANKFRAME_CLOSED()
+    view.bank.frame:Hide()
+    addon:CloseBank()
+end
+
+function events:BANKFRAME_OPENED()
+    addon:OpenBank()
+    addon:OpenBackpack()
+end
+
+--#endregion
+
+view:Enable()
