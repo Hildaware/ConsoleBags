@@ -135,6 +135,7 @@ function inventory:OnInitialize()
     close:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight')
     close:SetPushedTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed')
     close:SetScript('OnClick', function()
+        ---@diagnostic disable-next-line: undefined-field
         addon:CloseAllBags()
     end)
 

@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 local addonName = ...
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 

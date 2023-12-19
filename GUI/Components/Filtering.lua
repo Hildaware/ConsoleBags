@@ -170,8 +170,8 @@ function Filter_OnClick(self, index, callback, shouldSetIndex)
         self:GetParent().SelectedIndex = index
     end
 
-    if GameTooltip.shoppingTooltips then
-        for _, frame in pairs(GameTooltip.shoppingTooltips) do
+    if GameTooltip['shoppingTooltips'] then
+        for _, frame in pairs(GameTooltip['shoppingTooltips']) do
             frame:Hide()
         end
     end
