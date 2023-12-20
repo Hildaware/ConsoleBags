@@ -38,7 +38,7 @@ function session:OnInitialize()
                 Filters = 40,
                 ListViewHeader = 40,
                 ListItemHeight = 40,
-                Footer = 40
+                Footer = 32
             }
         },
         HideBags = false

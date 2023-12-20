@@ -149,9 +149,9 @@ function addon:CloseBank()
     end
 end
 
-if _G["Scrap"] then
-    local original = _G["Scrap"].ToggleJunk
-    _G["Scrap"].ToggleJunk = function(self, id)
+if _G['Scrap'] then
+    local original = _G['Scrap'].ToggleJunk
+    _G['Scrap'].ToggleJunk = function(self, id)
         original(self, id)
         itemFrame:Refresh(id)
     end

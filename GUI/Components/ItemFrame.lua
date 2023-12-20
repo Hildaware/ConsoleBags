@@ -237,7 +237,7 @@ function itemFrame:CreateItemFramePlaceholder()
     scrapFrame.tex = scrapFrame:CreateTexture(nil, 'BACKGROUND')
     scrapFrame.tex:SetAllPoints(scrapFrame)
     scrapFrame.tex:SetColorTexture(0, 0, 0, 1)
-    scrapFrame.tex:SetTexture("Interface\\Buttons\\UI-GroupLoot-Coin-Up")
+    scrapFrame.tex:SetTexture('Interface\\Buttons\\UI-GroupLoot-Coin-Up')
 
     scrapFrame:Hide()
     iconTexture.scrap = scrapFrame

@@ -95,7 +95,7 @@ function view:Create(inventoryType)
             _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
             _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
 
-            if _G["Scrap"] then
+            if _G['Scrap'] then
                 _G['ConsolePortInputHandler']:SetCommand('PAD3', self, true, 'LeftButton', 'UIControl', nil)
             end
         end
@@ -112,10 +112,10 @@ function view:Create(inventoryType)
     f:SetScript('OnGamePadButtonDown', function(self, key)
         if view.inCombat then return end
 
-        if _G["Scrap"] and key == "PAD3" then -- Square
+        if _G['Scrap'] and key == 'PAD3' then -- Square
             local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
             if item then
-                _G["Scrap"]:ToggleJunk(tonumber(item:match('item:(%d+)')))
+                _G['Scrap']:ToggleJunk(tonumber(item:match('item:(%d+)')))
             end
             return
         end
@@ -166,26 +166,6 @@ function view:Create(inventoryType)
             addon:CloseBank()
         end
     end)
-
-    -- Re-add this once we create the footer
-    -- local defaultButton = CreateFrame('Button', nil, header)
-    -- defaultButton:SetSize(32, 32)
-    -- defaultButton:SetPoint('LEFT', header, 'LEFT', 6, 0)
-    -- defaultButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Back_Normal')
-    -- defaultButton:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Back_Highlight')
-    -- defaultButton:HookScript('OnEnter', function(self)
-    --     GameTooltip:SetOwner(self, 'ANCHOR_TOPRIGHT')
-    --     GameTooltip:SetText('Show Default bags temporarily. ', 1, 1, 1, 1, true)
-    --     GameTooltip:Show()
-    -- end)
-    -- defaultButton:HookScript('OnLeave', function(self)
-    --     GameTooltip:Hide()
-    -- end)
-    -- defaultButton:SetScript('OnClick', function(self, button, down)
-    --     CB.U.RestoreDefaultBags()
-    --     CloseAllBags()
-    --     OpenAllBags()
-    -- end)
 
     header:RegisterForDrag('LeftButton')
     header:SetScript('OnDragStart', function(self, button)
@@ -240,6 +220,25 @@ function view:Create(inventoryType)
         goldView:SetText(GetCoinTextureString(GetMoney()))
 
         f.gold = goldView
+
+        local defaultButton = CreateFrame('Button', nil, footer)
+        defaultButton:SetSize(28, 28)
+        defaultButton:SetPoint('RIGHT', footer, 'RIGHT', -6, 0)
+        defaultButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Back_Normal')
+        defaultButton:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Back_Highlight')
+        defaultButton:HookScript('OnEnter', function(self)
+            GameTooltip:SetOwner(self, 'ANCHOR_TOPRIGHT')
+            GameTooltip:SetText('Show Default bags temporarily. ', 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        defaultButton:HookScript('OnLeave', function(self)
+            GameTooltip:Hide()
+        end)
+        defaultButton:SetScript('OnClick', function(self, button, down)
+            utils.RestoreDefaultBags()
+            view.inventory.frame:Hide()
+            addon:OpenAllBags()
+        end)
     end
 
     -- Drag Bar
