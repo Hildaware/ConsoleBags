@@ -27,26 +27,26 @@ function sorting:Build(parent, type, onSelect)
     tex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Doubleline')
     tex:SetVertexColor(1, 1, 1, 0.5)
 
-    local icon = self:CreateButton(hFrame, hFrame, '•', session.Settings.Defaults.Columns.Icon,
+    local icon = self:Create(hFrame, hFrame, '•', session.Settings.Defaults.Columns.Icon,
         enums.SortFields.Icon, true, type, 'Rarity', onSelect)
 
-    local name = self:CreateButton(hFrame, icon, 'name', session.Settings.Defaults.Columns.Name,
+    local name = self:Create(hFrame, icon, 'name', session.Settings.Defaults.Columns.Name,
         enums.SortFields.Name, false, type, 'Item Name', onSelect)
 
     -- local category = CreateButton(hFrame, name, 'cat', session.Settings.Defaults.Columns.Category,
     --     enums.SortFields.Category, false, type)
 
-    local ilvl = self:CreateButton(hFrame, name, 'ilvl', session.Settings.Defaults.Columns.Ilvl,
+    local ilvl = self:Create(hFrame, name, 'ilvl', session.Settings.Defaults.Columns.Ilvl,
         enums.SortFields.Ilvl, false, type, 'Item Level', onSelect)
 
-    local reqlvl = self:CreateButton(hFrame, ilvl, 'req', session.Settings.Defaults.Columns.ReqLvl,
+    local reqlvl = self:Create(hFrame, ilvl, 'req', session.Settings.Defaults.Columns.ReqLvl,
         enums.SortFields.ReqLvl, false, type, 'Required Level', onSelect)
 
-    local value = self:CreateButton(hFrame, reqlvl, 'value', session.Settings.Defaults.Columns.Value,
+    local value = self:Create(hFrame, reqlvl, 'value', session.Settings.Defaults.Columns.Value,
         enums.SortFields.Value, false, type, 'Gold Value', onSelect)
 end
 
-function sorting:CreateButton(parent, anchor, name, width, sortField, initial, type, friendlyName, onSelect)
+function sorting:Create(parent, anchor, name, width, sortField, initial, type, friendlyName, onSelect)
     local frame = CreateFrame('Button', nil, parent)
     frame:SetSize(width, parent:GetHeight())
     frame:SetPoint('LEFT', anchor, initial and 'LEFT' or 'RIGHT', initial and 3 or 0, 0)

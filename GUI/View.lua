@@ -1,4 +1,4 @@
-local addonName = ...
+local addonName = ... ---@type string
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
 ---@class View: AceModule
@@ -57,7 +57,7 @@ function view:OnInitialize()
     ---@type BagView
     self.bank = nil
 
-    self:Create(enums.InventoryType.Inventory) -- Create the Inv frame
+    self:Create(enums.InventoryType.Inventory)
 end
 
 ---@param inventoryType Enums.InventoryType
@@ -72,7 +72,7 @@ function view:Create(inventoryType)
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
-    local f = CreateFrame('Frame', 'ConsoleBags' .. viewName, UIParent)
+    local f = CreateFrame('Frame', addonName .. viewName, UIParent)
     f:SetFrameStrata('HIGH')
     f:SetSize(600, database:GetViewHeight(inventoryType))
 
@@ -82,7 +82,7 @@ function view:Create(inventoryType)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetResizable(true)
-    f:SetResizeBounds(600, 396, 600, 2000)
+    f:SetResizeBounds(600, 436, 600, 2000)
 
     f.texture = f:CreateTexture(nil, 'BACKGROUND')
     f.texture:SetAllPoints(f)
@@ -187,16 +187,6 @@ function view:Create(inventoryType)
     --     OpenAllBags()
     -- end)
 
-    if inventoryType == enums.InventoryType.Inventory then
-        local goldView = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-        goldView:SetPoint('LEFT', header, 'LEFT', 12, 0)
-        goldView:SetWidth(140)
-        goldView:SetJustifyH('LEFT')
-        goldView:SetText(GetCoinTextureString(GetMoney()))
-
-        f.GoldView = goldView
-    end
-
     header:RegisterForDrag('LeftButton')
     header:SetScript('OnDragStart', function(self, button)
         self:GetParent():StartMoving()
@@ -209,6 +199,48 @@ function view:Create(inventoryType)
     end)
 
     f.Header = header
+
+    -- Filters
+    filtering:BuildContainer(f, inventoryType, function()
+        if inventoryType == enums.InventoryType.Inventory then
+            session.InventoryFilter = nil
+        elseif inventoryType == enums.InventoryType.Bank then
+            session.BankFilter = nil
+        end
+
+        self:Update(inventoryType)
+    end)
+
+    sorting:Build(f, inventoryType, function() self:Update(inventoryType) end)
+
+    local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
+    local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
+        + session.Settings.Defaults.Sections.ListViewHeader
+    scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
+    scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, session.Settings.Defaults.Sections.Footer + 2)
+    scroller:SetWidth(f:GetWidth())
+
+    local scrollChild = CreateFrame('Frame')
+    scroller:SetScrollChild(scrollChild)
+    scrollChild:SetSize(scroller:GetWidth(), 1)
+
+    local footer = CreateFrame('Frame', nil, f)
+    footer:SetSize(f:GetWidth(), session.Settings.Defaults.Sections.Footer)
+    footer:SetPoint('BOTTOMLEFT', f, 'BOTTOMLEFT', 1, 1)
+
+    footer.texture = footer:CreateTexture(nil, 'BACKGROUND')
+    footer.texture:SetAllPoints(footer)
+    footer.texture:SetColorTexture(0, 0, 0, 0.5)
+
+    if inventoryType == enums.InventoryType.Inventory then
+        local goldView = footer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+        goldView:SetPoint('LEFT', footer, 'LEFT', 12, 0)
+        goldView:SetWidth(140)
+        goldView:SetJustifyH('LEFT')
+        goldView:SetText(GetCoinTextureString(GetMoney()))
+
+        f.gold = goldView
+    end
 
     -- Drag Bar
     local drag = CreateFrame('Button', nil, f)
@@ -228,30 +260,6 @@ function view:Create(inventoryType)
     dragTex:SetAllPoints(drag)
     dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
-    -- Filters
-    filtering:BuildContainer(f, inventoryType, function()
-        if inventoryType == enums.InventoryType.Inventory then
-            session.InventoryFilter = nil
-        elseif inventoryType == enums.InventoryType.Bank then
-            session.BankFilter = nil
-        end
-
-        self:Update(inventoryType)
-    end)
-
-    -- 'Header'
-    sorting:Build(f, inventoryType, function() self:Update(inventoryType) end)
-
-    local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
-    local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
-        + session.Settings.Defaults.Sections.ListViewHeader
-    scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
-    scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, 2)
-    scroller:SetWidth(f:GetWidth())
-
-    local scrollChild = CreateFrame('Frame')
-    scroller:SetScrollChild(scrollChild)
-    scrollChild:SetSize(scroller:GetWidth(), 1)
 
     f.ListView = scrollChild
     f:Hide()
@@ -380,7 +388,7 @@ end
 
 function view:UpdateCurrency()
     if view.inventory then
-        view.inventory.frame.GoldView:SetText(GetCoinTextureString(GetMoney()))
+        view.inventory.frame.gold:SetText(GetCoinTextureString(GetMoney()))
     end
 end
 

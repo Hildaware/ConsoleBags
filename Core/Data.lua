@@ -14,7 +14,7 @@ local defaults = {
         InventoryFrame = {
             Size = {
                 X = 600,
-                Y = 396,
+                Y = 436,
             },
             Position = {
                 X = 500,
@@ -36,7 +36,7 @@ local defaults = {
         BankFrame = {
             Size = {
                 X = 600,
-                Y = 396,
+                Y = 436,
             },
             Position = {
                 X = 20,

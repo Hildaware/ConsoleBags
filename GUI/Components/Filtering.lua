@@ -92,7 +92,7 @@ function filtering:Update(view, categories, pool, callback)
 
     local filterOffset = 2
     for _, categoryData in ipairs(categories) do
-        local frame = Pool.FetchInactive(pool, filterOffset, self.CreateButton)
+        local frame = Pool.FetchInactive(pool, filterOffset, self.Create)
         Pool.InsertActive(pool, frame, filterOffset)
         self:Build(view, frame, categoryData, filterOffset, callback)
         view.FilterFrame.Buttons[filterOffset] = frame
@@ -100,7 +100,7 @@ function filtering:Update(view, categories, pool, callback)
     end
 end
 
-function filtering:CreateButton()
+function filtering:Create()
     local f = CreateFrame('Button')
     f:SetSize(28, session.Settings.Defaults.Sections.Filters)
 
@@ -127,6 +127,21 @@ function filtering:CreateButton()
     return f
 end
 
+local function OnFilterSelect(self, index, callback, shouldSetIndex)
+    self:GetParent().selectedTexture:SetPoint('LEFT', (index * 30), 0)
+    if shouldSetIndex then
+        self:GetParent().SelectedIndex = index
+    end
+
+    if GameTooltip['shoppingTooltips'] then
+        for _, frame in pairs(GameTooltip['shoppingTooltips']) do
+            frame:Hide()
+        end
+    end
+
+    callback()
+end
+
 function filtering:Build(view, frame, categoryData, index, callback)
     if frame == nil then return end
 
@@ -147,10 +162,10 @@ function filtering:Build(view, frame, categoryData, index, callback)
     local onSelect = function()
         callback(categoryData.key)
     end
-    frame.OnSelect = function() Filter_OnClick(frame, index, onSelect) end
+    frame.OnSelect = function() OnFilterSelect(frame, index, onSelect) end
 
     frame:SetScript('OnClick', function(self)
-        Filter_OnClick(self, index, onSelect)
+        OnFilterSelect(self, index, onSelect)
     end)
 
     frame:SetScript('OnEnter', function(self)
@@ -162,19 +177,4 @@ function filtering:Build(view, frame, categoryData, index, callback)
     frame:Show()
 
     return frame
-end
-
-function Filter_OnClick(self, index, callback, shouldSetIndex)
-    self:GetParent().selectedTexture:SetPoint('LEFT', (index * 30), 0)
-    if shouldSetIndex then
-        self:GetParent().SelectedIndex = index
-    end
-
-    if GameTooltip['shoppingTooltips'] then
-        for _, frame in pairs(GameTooltip['shoppingTooltips']) do
-            frame:Hide()
-        end
-    end
-
-    callback()
 end
