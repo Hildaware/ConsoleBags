@@ -13,6 +13,22 @@ local enums = addon:GetModule('Enums')
 ---@class Utils: AceModule
 local utils = addon:GetModule('Utils')
 
+local function OnFilterSelect(self, index, callback, shouldSetIndex)
+    index = index or 1
+    self:GetParent().selectedTexture:SetPoint('LEFT', (index * 30), 0)
+    if shouldSetIndex then
+        self:GetParent().SelectedIndex = index
+    end
+
+    if GameTooltip['shoppingTooltips'] then
+        for _, frame in pairs(GameTooltip['shoppingTooltips']) do
+            frame:Hide()
+        end
+    end
+
+    callback()
+end
+
 function filtering:BuildContainer(parent, type, onSelect)
     local cFrame = CreateFrame('Frame', nil, parent)
     cFrame:SetSize(parent:GetWidth(), session.Settings.Defaults.Sections.Filters)
@@ -51,8 +67,8 @@ function filtering:BuildContainer(parent, type, onSelect)
 
     f:RegisterForClicks('AnyDown')
     f:RegisterForClicks('AnyUp')
-    f:SetScript('OnClick', function(self) Filter_OnClick(f, 1, onSelect, true) end)
-    f.OnSelect = function() Filter_OnClick(f, 1, onSelect, false) end
+    f:SetScript('OnClick', function(self) OnFilterSelect(f, 1, onSelect, true) end)
+    f.OnSelect = function() OnFilterSelect(f, 1, onSelect, false) end
 
     f:SetScript('OnLeave', function(self)
         GameTooltip:Hide()
@@ -125,21 +141,6 @@ function filtering:Create()
     end)
 
     return f
-end
-
-local function OnFilterSelect(self, index, callback, shouldSetIndex)
-    self:GetParent().selectedTexture:SetPoint('LEFT', (index * 30), 0)
-    if shouldSetIndex then
-        self:GetParent().SelectedIndex = index
-    end
-
-    if GameTooltip['shoppingTooltips'] then
-        for _, frame in pairs(GameTooltip['shoppingTooltips']) do
-            frame:Hide()
-        end
-    end
-
-    callback()
 end
 
 function filtering:Build(view, frame, categoryData, index, callback)
