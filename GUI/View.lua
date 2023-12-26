@@ -387,7 +387,11 @@ end
 
 function view:UpdateCurrency()
     if view.inventory then
-        view.inventory.frame.gold:SetText(GetCoinTextureString(GetMoney()))
+        local money = GetMoney()
+        if money == nil then return end
+        local str = GetCoinTextureString(money)
+        if str == nil or str == '' then return end
+        view.inventory.frame.gold:SetText(str)
     end
 end
 

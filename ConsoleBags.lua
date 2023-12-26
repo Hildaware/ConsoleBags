@@ -62,6 +62,7 @@ function addon.OnUpdate()
             backpackShouldOpen = false
             backpackShouldClose = false
 
+            view:UpdateCurrency()
             view:Update(enums.InventoryType.Inventory)
 
             PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)

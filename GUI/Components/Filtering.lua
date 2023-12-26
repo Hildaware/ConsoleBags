@@ -163,10 +163,10 @@ function filtering:Build(view, frame, categoryData, index, callback)
     local onSelect = function()
         callback(categoryData.key)
     end
-    frame.OnSelect = function() OnFilterSelect(frame, index, onSelect) end
+    frame.OnSelect = function() OnFilterSelect(frame, index, onSelect, false) end
 
     frame:SetScript('OnClick', function(self)
-        OnFilterSelect(self, index, onSelect)
+        OnFilterSelect(self, index, onSelect, true)
     end)
 
     frame:SetScript('OnEnter', function(self)

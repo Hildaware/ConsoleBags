@@ -25,5 +25,4 @@ ConsoleBags is the perfect addon for controller users who want to have more cont
 # Bugs
 - Moving item from bank > bag... bank doesn't refresh (May be fixed?)
 - Equipping bag update?
-- Can't use scrolls?
 - Default bag location is not good
