@@ -45,6 +45,8 @@ local itemFrame = addon:GetModule('ItemFrame')
 ---@field categoryPool Pool
 ---@field filterPool Pool
 ---@field frame Frame
+---@field selectedFilter integer
+---@field filterIndex integer
 local viewPrototype = {}
 
 function view:OnInitialize()
@@ -67,8 +69,11 @@ function view:Create(inventoryType)
         itemPool = pooling.Pool.New(),
         categoryPool = pooling.Pool.New(),
         filterPool = pooling.Pool.New(),
-        frame = {}
+        frame = {},
+        selectedFilter = 0,
+        filterIndex = 1
     }
+    newView.selectedFilter = nil
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
@@ -88,58 +93,58 @@ function view:Create(inventoryType)
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.75)
 
-    -- TODO: Inv only?
-    -- Stop ConsolePort from reading buttons
-    f:SetScript('OnShow', function(self)
-        if _G['ConsolePortInputHandler'] then
-            _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
-            _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
+    if inventoryType == enums.InventoryType.Inventory then
+        -- Stop ConsolePort from reading buttons
+        f:SetScript('OnShow', function(self)
+            if _G['ConsolePortInputHandler'] then
+                _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
+                _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
 
-            if _G['Scrap'] then
-                _G['ConsolePortInputHandler']:SetCommand('PAD3', self, true, 'LeftButton', 'UIControl', nil)
+                if _G['Scrap'] then
+                    _G['ConsolePortInputHandler']:SetCommand('PAD3', self, true, 'LeftButton', 'UIControl', nil)
+                end
             end
-        end
-    end)
+        end)
 
-    -- Re-allow ConsolePort Input handling
-    f:SetScript('OnHide', function(self)
-        if _G['ConsolePortInputHandler'] then
-            _G['ConsolePortInputHandler']:Release(self)
-        end
-    end)
-
-    f:SetPropagateKeyboardInput(true)
-    f:SetScript('OnGamePadButtonDown', function(self, key)
-        if view.inCombat then return end
-
-        if _G['Scrap'] and key == 'PAD3' then -- Square
-            local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
-            if item then
-                _G['Scrap']:ToggleJunk(tonumber(item:match('item:(%d+)')))
+        -- Re-allow ConsolePort Input handling
+        f:SetScript('OnHide', function(self)
+            if _G['ConsolePortInputHandler'] then
+                _G['ConsolePortInputHandler']:Release(self)
             end
-            return
-        end
+        end)
 
-        if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
-        local filterCount = #self.FilterFrame.Buttons
-        local index = self.FilterFrame.SelectedIndex
+        f:SetPropagateKeyboardInput(true)
+        f:SetScript('OnGamePadButtonDown', function(self, key)
+            if view.inCombat then return end
 
-        if key == 'PADRSHOULDER' then -- Right
-            if index == filterCount then
-                self.FilterFrame.SelectedIndex = 1
-            else
-                self.FilterFrame.SelectedIndex = self.FilterFrame.SelectedIndex + 1
+            if _G['Scrap'] and key == 'PAD3' then -- Square
+                local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
+                if item then
+                    _G['Scrap']:ToggleJunk(tonumber(item:match('item:(%d+)')))
+                end
+                return
             end
-            self.FilterFrame.Buttons[self.FilterFrame.SelectedIndex].OnSelect()
-        elseif key == 'PADLSHOULDER' then -- Left
-            if index == 1 then
-                self.FilterFrame.SelectedIndex = filterCount
-            else
-                self.FilterFrame.SelectedIndex = self.FilterFrame.SelectedIndex - 1
+
+            if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
+            local filterCount = #self.FilterFrame.Buttons
+
+            if key == 'PADRSHOULDER' then -- Right
+                if newView.filterIndex == filterCount then
+                    newView.filterIndex = 1
+                else
+                    newView.filterIndex = newView.filterIndex + 1
+                end
+                self.FilterFrame.Buttons[newView.filterIndex].OnSelect()
+            elseif key == 'PADLSHOULDER' then -- Left
+                if newView.filterIndex == 1 then
+                    newView.filterIndex = filterCount
+                else
+                    newView.filterIndex = newView.filterIndex - 1
+                end
+                self.FilterFrame.Buttons[newView.filterIndex].OnSelect()
             end
-            self.FilterFrame.Buttons[self.FilterFrame.SelectedIndex].OnSelect()
-        end
-    end)
+        end)
+    end
 
     -- Frame Header
     local header = CreateFrame('Frame', nil, f)
