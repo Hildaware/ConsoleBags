@@ -156,7 +156,7 @@ function filtering:Build(view, frame, categoryData, index, callback)
     if frame == nil then return end
 
     frame:SetParent(view.FilterFrame)
-    frame:SetPoint('LEFT', index * 34, 0)
+    frame:SetPoint('LEFT', index * 32, 0)
 
     frame:RegisterForClicks('AnyDown')
     frame:RegisterForClicks('AnyUp')

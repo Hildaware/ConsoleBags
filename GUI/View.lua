@@ -93,6 +93,7 @@ function view:Create(inventoryType)
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.75)
 
+    -- Input Handling for Inventory (todo: Bank?)
     if inventoryType == enums.InventoryType.Inventory then
         -- Stop ConsolePort from reading buttons
         f:SetScript('OnShow', function(self)
@@ -204,6 +205,14 @@ function view:Create(inventoryType)
     scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
     scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, session.Settings.Defaults.Sections.Footer + 2)
     scroller:SetWidth(f:GetWidth())
+
+    -- Disable targetting the scrollbar for CP users
+    if _G['ConsolePort'] then
+        local scrollerName = addonName .. viewName .. 'ScrollBar'
+        if _G[scrollerName] then
+            _G[scrollerName]:EnableMouse(false)
+        end
+    end
 
     local scrollChild = CreateFrame('Frame')
     scroller:SetScrollChild(scrollChild)
