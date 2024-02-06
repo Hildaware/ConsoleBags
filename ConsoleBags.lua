@@ -58,7 +58,7 @@ function addon.OnUpdate()
             items.BuildItemCache()
         end
 
-        if session.InventoryResolved >= session.InventoryCount then
+        if session.Inventory.Resolved >= session.Inventory.TotalCount then
             backpackShouldOpen = false
             backpackShouldClose = false
 
@@ -85,7 +85,7 @@ function addon.OnUpdate()
             items.BuildBankCache()
         end
 
-        if session.BankResolved >= session.BankCount then
+        if session.Bank.Resolved >= session.Bank.TotalCount then
             bankShouldOpen = false
 
             view:Update(enums.InventoryType.Bank)

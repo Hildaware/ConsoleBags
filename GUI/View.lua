@@ -157,6 +157,12 @@ function view:Create(inventoryType)
     header.texture:SetAllPoints(header)
     header.texture:SetColorTexture(0, 0, 0, 0.5)
 
+    local text = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    text:SetPoint('LEFT', header, 'LEFT', 12, 0)
+    text:SetWidth(140)
+    text:SetJustifyH('LEFT')
+    text:SetText(viewName)
+
     local close = CreateFrame('Button', nil, header)
     close:SetSize(32, 32)
     close:SetPoint('RIGHT', header, 'RIGHT', -6, 0)

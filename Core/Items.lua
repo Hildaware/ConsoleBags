@@ -43,9 +43,9 @@ local function AddItemToSession(item)
     session.Items[utils.ReplaceBagSlot(item.bag)][item.slot] = item
 
     if item.location == enums.InventoryType.Inventory then
-        session.InventoryResolved = session.InventoryResolved + 1
+        session.Inventory.Resolved = session.Inventory.Resolved + 1
     elseif item.location == enums.InventoryType.Bank then
-        session.BankResolved = session.BankResolved + 1
+        session.Bank.Resolved = session.Bank.Resolved + 1
     end
 end
 
@@ -76,9 +76,15 @@ local function CreateBagData(bag, inventoryType)
     local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
 
     if inventoryType == enums.InventoryType.Inventory then
-        session.InventoryCount = session.InventoryCount + (bagSize - freeSlots)
+        session.Inventory.TotalCount = session.Inventory.TotalCount + (bagSize - freeSlots)
+
+        if bag == NUM_TOTAL_EQUIPPED_BAG_SLOTS then -- Reagent Bag
+            session.Inventory.ReagentCount = bagSize - freeSlots
+        else
+            session.Inventory.Count = session.Inventory.Count + (bagSize - freeSlots)
+        end
     elseif inventoryType == enums.InventoryType.Bank then
-        session.BankCount = session.BankCount + (bagSize - freeSlots)
+        session.Bank.TotalCount = session.Bank.TotalCount + (bagSize - freeSlots)
     end
 
     session.Items[utils.ReplaceBagSlot(bag)] =
@@ -97,8 +103,10 @@ end
 
 function items.BuildItemCache()
     session.BuildingCache = true
-    session.InventoryCount = 0
-    session.InventoryResolved = 0
+    session.Inventory.TotalCount = 0
+    session.Inventory.Count = 0
+    session.Inventory.ReagentCount = 0
+    session.Inventory.Resolved = 0
     session.FramesByItemId = {}
 
     local invType = enums.InventoryType.Inventory
@@ -118,8 +126,10 @@ end
 
 function items.BuildBankCache()
     session.BuildingBankCache = true
-    session.BankCount = 0
-    session.BankResolved = 0
+    session.Bank.TotalCount = 0
+    session.Bank.Count = 0
+    session.Bank.ReagentCount = 0
+    session.Bank.Resolved = 0
 
     local invType = enums.InventoryType.Bank
 

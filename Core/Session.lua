@@ -8,11 +8,19 @@ function session:OnInitialize()
     self.Items = {}
     self.FramesByItemId = {}
 
-    self.InventoryCount = 0
-    self.InventoryResolved = 0
+    self.Inventory = {
+        TotalCount = 0,
+        Count = 0,
+        ReagentCount = 0,
+        Resolved = 0
+    }
 
-    self.BankCount = 0
-    self.BankResolved = 0
+    self.Bank = {
+        TotalCount = 0,
+        Count = 0,
+        ReagentCount = 0,
+        Resolved = 0
+    }
 
     self.InventoryFilter = nil
     self.BankFilter = nil

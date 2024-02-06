@@ -67,18 +67,25 @@ function bags:Update(container, type)
         bagEnd = NUM_BANKBAGSLOTS + NUM_BAG_SLOTS + 1
     end
 
-    local max = type == enums.InventoryType.Bank and 28 or
-        16 -- TODO: Max needs to be variable based on Race / etc. Prob an API call we can make
+    -- TODO: Max needs to be variable based on Race / etc. Prob an API call we can make
+    local max = type == enums.InventoryType.Bank and 28 or 16
+    local reagentCount = 0
+
     for bag = bagStart, bagEnd do
         local bagID = C_Container.ContainerIDToInventoryID(bag)
         local iconID = GetInventoryItemTexture('player', bagID)
         local link = GetInventoryItemLink('player', bag)
         local maxSlots = C_Container.GetContainerNumSlots(bag)
-        max = max + maxSlots
 
         local bagIndex = bag
         if type == enums.InventoryType.Bank then
             bagIndex = bagIndex - ITEM_INVENTORY_BANK_BAG_OFFSET
+        end
+
+        if type == enums.InventoryType.Inventory and bag == NUM_TOTAL_EQUIPPED_BAG_SLOTS then
+            reagentCount = maxSlots
+        else
+            max = max + maxSlots
         end
 
         local bagData = {
@@ -97,9 +104,13 @@ function bags:Update(container, type)
     end
 
     if type == enums.InventoryType.Inventory then
-        container.ItemCountText:SetText(session.InventoryCount .. '/' .. max)
+        local invString = session.Inventory.Count .. '/' .. max
+        if reagentCount > 0 then
+            invString = invString .. '|cff3AA64B (' .. session.Inventory.ReagentCount .. '/' .. reagentCount .. ')|r'
+        end
+        container.ItemCountText:SetText(invString)
     elseif type == enums.InventoryType.Bank then
-        container.ItemCountText:SetText(session.BankCount .. '/' .. max)
+        container.ItemCountText:SetText(session.Bank.TotalCount .. '/' .. max)
     end
 end
 

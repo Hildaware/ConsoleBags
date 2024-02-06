@@ -58,9 +58,9 @@ function filtering:BuildContainer(view, type, onSelect)
     f:SetScript('OnEnter', function(self)
         local itemCount = 0
         if type == enums.InventoryType.Inventory then
-            itemCount = session.InventoryCount
+            itemCount = session.Inventory.TotalCount
         elseif type == enums.InventoryType.Bank then
-            itemCount = session.BankCount
+            itemCount = session.Bank.TotalCount
         end
 
         GameTooltip:SetOwner(self, 'ANCHOR_TOPRIGHT')

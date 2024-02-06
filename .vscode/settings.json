@@ -295,7 +295,8 @@
         "GameFontDisableSmall",
         "GameFontNormalSmall",
         "SELECTED_CHAT_FRAME",
-        "NOT_BOUND"
+        "NOT_BOUND",
+        "FillLocalizedClassList"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
