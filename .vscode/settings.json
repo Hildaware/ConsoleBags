@@ -281,7 +281,21 @@
         "xx",
         "hash_SlashCmdList",
         "NORMAL_FONT_COLOR_CODE",
-        "FONT_COLOR_CODE_CLOSE"
+        "FONT_COLOR_CODE_CLOSE",
+        "GameFontHighlightSmall",
+        "GameFontNormal",
+        "ACCEPT",
+        "ChatFontNormal",
+        "OKAY",
+        "SetDesaturation",
+        "GameFontHighlight",
+        "InterfaceOptions_AddCategory",
+        "GameFontHighlightLarge",
+        "CLOSE",
+        "GameFontDisableSmall",
+        "GameFontNormalSmall",
+        "SELECTED_CHAT_FRAME",
+        "NOT_BOUND"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
