@@ -36,7 +36,8 @@ enums.CustomCategory = {
     BindOnAccount = 99,
     BindOnEquip = 98,
     Jewelry = 97,
-    Trinket = 96
+    Trinket = 96,
+    Warbound = 95
 }
 
 ---@class HildaCategory
@@ -46,27 +47,28 @@ enums.CustomCategory = {
 ---@type table<number, HildaCategory>
 enums.Categories = {
     [enums.CustomCategory.BindOnAccount] = { order = 1, name = 'Bind On Account' },
-    [enums.CustomCategory.BindOnEquip] = { order = 2, name = 'Bind On Equip' },
-    [Enum.ItemClass.Weapon] = { order = 3, name = 'Weapons' },
-    [Enum.ItemClass.Armor] = { order = 4, name = 'Armor' },
-    [enums.CustomCategory.Jewelry] = { order = 5, name = 'Jewelry' },
-    [enums.CustomCategory.Trinket] = { order = 6, name = 'Trinkets' },
-    [Enum.ItemClass.ItemEnhancement] = { order = 7, name = 'Item Enhancements' },
-    [Enum.ItemClass.Gem] = { order = 8, name = 'Gems' },
-    [Enum.ItemClass.Glyph] = { order = 9, name = 'Glyphs' },
-    [Enum.ItemClass.Consumable] = { order = 10, name = 'Consumables' },
-    [Enum.ItemClass.Reagent] = { order = 11, name = 'Reagents' },
-    [Enum.ItemClass.Tradegoods] = { order = 12, name = 'Trade Goods' },
-    [Enum.ItemClass.Recipe] = { order = 13, name = 'Recipes' },
-    [Enum.ItemClass.Miscellaneous] = { order = 14, name = 'Misc' },
-    [Enum.ItemClass.Battlepet] = { order = 15, name = 'Battle Pets' },
-    [Enum.ItemClass.Profession] = { order = 16, name = 'Professions' },
-    [Enum.ItemClass.Container] = { order = 17, name = 'Containers' },
-    [Enum.ItemClass.Projectile] = { order = 18, name = 'Projectiles' },
-    [Enum.ItemClass.Quiver] = { order = 19, name = 'Quivers' },
-    [Enum.ItemClass.Questitem] = { order = 20, name = 'Quest Items' },
-    [Enum.ItemClass.Key] = { order = 21, name = 'Keys' },
-    [Enum.ItemClass.WoWToken] = { order = 22, name = 'Tokens' }
+    [enums.CustomCategory.Warbound] = { order = 2, name = 'Warbound' },
+    [enums.CustomCategory.BindOnEquip] = { order = 3, name = 'Bind On Equip' },
+    [Enum.ItemClass.Weapon] = { order = 4, name = 'Weapons' },
+    [Enum.ItemClass.Armor] = { order = 5, name = 'Armor' },
+    [enums.CustomCategory.Jewelry] = { order = 6, name = 'Jewelry' },
+    [enums.CustomCategory.Trinket] = { order = 7, name = 'Trinkets' },
+    [Enum.ItemClass.ItemEnhancement] = { order = 8, name = 'Item Enhancements' },
+    [Enum.ItemClass.Gem] = { order = 9, name = 'Gems' },
+    [Enum.ItemClass.Glyph] = { order = 10, name = 'Glyphs' },
+    [Enum.ItemClass.Consumable] = { order = 11, name = 'Consumables' },
+    [Enum.ItemClass.Reagent] = { order = 12, name = 'Reagents' },
+    [Enum.ItemClass.Tradegoods] = { order = 13, name = 'Trade Goods' },
+    [Enum.ItemClass.Recipe] = { order = 14, name = 'Recipes' },
+    [Enum.ItemClass.Miscellaneous] = { order = 15, name = 'Misc' },
+    [Enum.ItemClass.Battlepet] = { order = 16, name = 'Battle Pets' },
+    [Enum.ItemClass.Profession] = { order = 17, name = 'Professions' },
+    [Enum.ItemClass.Container] = { order = 18, name = 'Containers' },
+    [Enum.ItemClass.Projectile] = { order = 19, name = 'Projectiles' },
+    [Enum.ItemClass.Quiver] = { order = 20, name = 'Quivers' },
+    [Enum.ItemClass.Questitem] = { order = 21, name = 'Quest Items' },
+    [Enum.ItemClass.Key] = { order = 22, name = 'Keys' },
+    [Enum.ItemClass.WoWToken] = { order = 23, name = 'Tokens' }
 }
 
 enums:Enable()

@@ -16,6 +16,8 @@ local enums = addon:GetModule('Enums')
 ---@field link string
 ---@field stackCount number
 ---@field bound boolean
+---@field bindType integer
+---@field isWarbound boolean
 ---@field quality Enum.ItemQuality
 ---@field type Enum.ItemClass
 ---@field subType number -- This is actually an Enum, but wrong?
@@ -38,13 +40,15 @@ local enums = addon:GetModule('Enums')
 ---@field GetCategory function
 local Item = {}
 
-Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo, inventoryLocation)
+Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo, inventoryLocation, isWarbound)
     local self = setmetatable({}, { __index = Item })
     self.id = containerItem.itemID
     self.name = containerItem.itemName
     self.link = containerItem.hyperlink
     self.stackCount = containerItem.stackCount
     self.bound = containerItem.isBound
+    self.bindType = itemInfo.bindType
+    self.isWarbound = isWarbound
     self.quality = containerItem.quality
     self.type = itemInfo.type
     self.subType = itemInfo.subType
@@ -72,6 +76,8 @@ function Item.GetCategory(self)
         return enums.CustomCategory.BindOnEquip
     elseif self.quality == Enum.ItemQuality.Heirloom then
         return enums.CustomCategory.BindOnAccount
+    elseif self.isWarbound then
+        return enums.CustomCategory.Warbound
     elseif utils.IsJewelry(self) then
         return enums.CustomCategory.Jewelry
     elseif utils.IsTrinket(self) then

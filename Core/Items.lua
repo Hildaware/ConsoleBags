@@ -31,9 +31,14 @@ local function GetItemData(bag, slot, inventoryLocation)
         local invType = resolver.GetInventoryType(containerItem.hyperlink)
         local isNew = C_NewItems.IsNewItem(bag, slot)
 
+        local warboundStatus = false
+        if resolver.IsEquippableItem(itemInfo.type) then
+            warboundStatus = resolver.GetWarboundStatus(itemInfo.bindType, bag, slot)
+        end
+
         -- Create Item
         local item = types.Item.new(containerItem, itemInfo, ilvl, bag, slot,
-            isNew, invType, questInfo, inventoryLocation)
+            isNew, invType, questInfo, inventoryLocation, warboundStatus)
         return item
     end
     return nil
