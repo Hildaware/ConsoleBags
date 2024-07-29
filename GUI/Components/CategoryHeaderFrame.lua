@@ -13,6 +13,12 @@ local enums = addon:GetModule('Enums')
 ---@class Utils: AceModule
 local utils = addon:GetModule('Utils')
 
+---@param data CategorizedItemSet
+---@param offset number
+---@param frame Frame
+---@param parent Frame
+---@param collapsedCategories table
+---@param callback function
 function categoryHeaders:BuildCategoryFrame(data, offset, frame, parent, collapsedCategories, callback)
     if frame == nil then return end
 
@@ -30,7 +36,6 @@ function categoryHeaders:BuildCategoryFrame(data, offset, frame, parent, collaps
 
     frame:SetScript('OnClick', function(self, button, down)
         if button == 'LeftButton' then
-
             local isCollapsed = collapsedCategories[data.key] and
                 collapsedCategories[data.key] == true
 
@@ -50,7 +55,7 @@ end
 -- TODO: SetSize will eventually need to be set based on the View
 function categoryHeaders:CreateCategoryHeaderPlaceholder()
     local f = CreateFrame('Button')
-    f:SetSize(600-24, session.Settings.Defaults.Sections.ListItemHeight)
+    f:SetSize(600 - 24, session.Settings.Defaults.Sections.ListItemHeight)
 
     f:RegisterForClicks('LeftButtonUp')
 

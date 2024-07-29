@@ -8,7 +8,8 @@ local enums = addon:NewModule('Enums')
 enums.InventoryType = {
     Inventory = 1,
     Bank = 2,
-    GuildBank = 3
+    GuildBank = 3,
+    Shared = 4
 }
 
 enums.SortOrder = {
@@ -38,7 +39,11 @@ enums.CustomCategory = {
     Trinket = 96
 }
 
--- DO NOT USE THIS DIRECTLY. Make a Copy.
+---@class HildaCategory
+---@field order number
+---@field name string
+
+---@type table<number, HildaCategory>
 enums.Categories = {
     [enums.CustomCategory.BindOnAccount] = { order = 1, name = 'Bind On Account' },
     [enums.CustomCategory.BindOnEquip] = { order = 2, name = 'Bind On Equip' },

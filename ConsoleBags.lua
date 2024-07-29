@@ -154,6 +154,7 @@ if _G['Scrap'] then
     local original = _G['Scrap'].ToggleJunk
     _G['Scrap'].ToggleJunk = function(self, id)
         original(self, id)
+        -- Fetch the itemFrame we require (how da fuq)
         itemFrame:Refresh(id)
     end
 end

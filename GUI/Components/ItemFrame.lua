@@ -9,12 +9,39 @@ local session = addon:GetModule('Session')
 
 local Masque = LibStub('Masque', true)
 
-function itemFrame:BuildItemFrame(item, offset, frame, parent)
-    if frame == nil then return end
+---@class ItemRow : Frame
+---@field itemButton Frame
 
-    frame.item = item
-    session.FramesByItemId[item.id] = session.FramesByItemId[item.id] or {}
-    tinsert(session.FramesByItemId[item.id], frame)
+---@class ListItem
+---@field widget ItemRow
+---@field bag number
+---@field slot number
+---@field itemId number
+---@field item Item
+---@field Build function
+---@field Update function
+---@field Clear function
+itemFrame.proto = {}
+
+function itemFrame:OnInitialize()
+    self._pool = CreateObjectPool(self._DoCreate, self._DoReset)
+    if self._pool.SetResetDisallowedIfNew then
+        self._pool:SetResetDisallowedIfNew()
+    end
+
+    ---@type ListItem[]
+    local frames = {}
+    for i = 1, 700 do
+        frames[i] = self:Create()
+    end
+    for _, frame in pairs(frames) do
+        frame:Clear()
+    end
+end
+
+function itemFrame.proto:Build(item, offset, parent)
+    self.item = item
+    local frame = self.widget
 
     frame:SetParent(parent)
     frame:SetPoint('TOP', 0, -((offset - 1) * session.Settings.Defaults.Sections.ListItemHeight))
@@ -26,7 +53,8 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
 
     frame.itemButton:SetHasItem(item.texture)
 
-    local r, g, b, _ = GetItemQualityColor(item.quality or 0)
+    -- local r, g, b, _ = GetItemQualityColor(item.quality or 0)
+    local r, g, b, _ = C_Item.GetItemQualityColor(item.quality or 0)
     frame.itemButton.HighlightTexture:SetVertexColor(r, g, b, 1)
 
     frame.itemButton:HookScript('OnEnter', function(s)
@@ -35,7 +63,9 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
     frame.itemButton:HookScript('OnLeave', function(s)
         s.HighlightTexture:Hide()
         s.NewTexture:Hide()
-        frame.item.isNew = false
+        if self.item ~= nil then
+            self.item.isNew = false
+        end
     end)
 
     local questInfo = item.questInfo
@@ -131,27 +161,46 @@ function itemFrame:BuildItemFrame(item, offset, frame, parent)
     frame.itemButton:Show()
 end
 
-function itemFrame:Update(frame)
+function itemFrame.proto:Update()
     -- Scrap Support
     if _G['Scrap'] then
-        if _G['Scrap']:IsJunk(frame.item.id) then
-            frame.icon.scrap:Show()
+        if _G['Scrap']:IsJunk(self.item.id) then
+            self.widget.icon.scrap:Show()
         else
-            frame.icon.scrap:Hide()
+            self.widget.icon.scrap:Hide()
         end
     end
 
-    if frame.item.isNew == true then
-        frame.itemButton.NewTexture:Show()
+    if self.item.isNew == true then
+        self.widget.itemButton.NewTexture:Show()
     else
-        frame.itemButton.NewTexture:Hide()
+        self.widget.itemButton.NewTexture:Hide()
+    end
+end
+
+function itemFrame.proto:Empty()
+    self.item = nil
+end
+
+function itemFrame.proto:Clear()
+    self.item = nil
+    self.widget:Hide()
+    self.widget:SetParent(nil)
+    self.widget:ClearAllPoints()
+
+    if itemFrame._pool:IsActive(self) then
+        itemFrame._pool:Release(self)
     end
 end
 
 -- TODO: SetSize will eventually need to be set based on the View
-function itemFrame:CreateItemFramePlaceholder()
+---@return ListItem
+function itemFrame:_DoCreate()
+    local i = setmetatable({}, { __index = itemFrame.proto })
+    local itemHeight = session.Settings.Defaults.Sections.ListItemHeight
+
     local f = CreateFrame('Frame', nil, UIParent) -- Taint Killer
-    f:SetSize(600-24, session.Settings.Defaults.Sections.ListItemHeight)
+    f:SetSize(600 - 24, itemHeight)
 
     local itemButton = CreateFrame('ItemButton', nil, f, 'ContainerFrameItemButtonTemplate')
     itemButton:SetAllPoints(f)
@@ -198,10 +247,10 @@ function itemFrame:CreateItemFramePlaceholder()
     -- Icon
     local iconSpace = CreateFrame('Frame', nil, f)
     iconSpace:SetPoint('LEFT', f, 'LEFT', 4, 0)
-    iconSpace:SetSize(session.Settings.Defaults.Columns.Icon, session.Settings.Defaults.Sections.ListItemHeight)
+    iconSpace:SetSize(session.Settings.Defaults.Columns.Icon, itemHeight)
     local icon = CreateFrame('Frame', nil, iconSpace)
     icon:SetPoint('CENTER', iconSpace, 'CENTER')
-    icon:SetSize(32, 32)
+    icon:SetSize(itemHeight - 6, itemHeight - 6)
     local iconTexture = CreateFrame('ItemButton', nil, icon, 'ContainerFrameItemButtonTemplate')
     iconTexture:SetAllPoints(icon)
 
@@ -230,7 +279,7 @@ function itemFrame:CreateItemFramePlaceholder()
 
     canIFrame.text = canIMogIt
     iconTexture.canI = canIFrame
-    
+
     local scrapFrame = CreateFrame('Frame', nil, iconTexture)
     scrapFrame:SetPoint('BOTTOMRIGHT', iconTexture, 'BOTTOMRIGHT', -2, -1)
     scrapFrame:SetSize(14, 14)
@@ -247,7 +296,7 @@ function itemFrame:CreateItemFramePlaceholder()
     -- Name
     local name = CreateFrame('Frame', nil, f)
     name:SetPoint('LEFT', iconSpace, 'RIGHT', 8, 0)
-    name:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
+    name:SetHeight(itemHeight)
     name:SetWidth(session.Settings.Defaults.Columns.Name)
     local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     nameText:SetAllPoints(name)
@@ -270,7 +319,7 @@ function itemFrame:CreateItemFramePlaceholder()
     -- ilvl
     local ilvl = CreateFrame('Frame', nil, f)
     ilvl:SetPoint('LEFT', name, 'RIGHT')
-    ilvl:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
+    ilvl:SetHeight(itemHeight)
     ilvl:SetWidth(session.Settings.Defaults.Columns.Ilvl)
     local ilvlText = ilvl:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     ilvlText:SetAllPoints(ilvl)
@@ -281,7 +330,7 @@ function itemFrame:CreateItemFramePlaceholder()
     -- reqlvl
     local reqlvl = CreateFrame('Frame', nil, f)
     reqlvl:SetPoint('LEFT', ilvl, 'RIGHT')
-    reqlvl:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
+    reqlvl:SetHeight(itemHeight)
     reqlvl:SetWidth(session.Settings.Defaults.Columns.ReqLvl)
     local reqlvlText = reqlvl:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     reqlvlText:SetAllPoints(reqlvl)
@@ -292,7 +341,7 @@ function itemFrame:CreateItemFramePlaceholder()
     -- value
     local value = CreateFrame('Frame', nil, f)
     value:SetPoint('LEFT', reqlvl, 'RIGHT')
-    value:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
+    value:SetHeight(itemHeight)
     value:SetWidth(session.Settings.Defaults.Columns.Value)
     local valueText = value:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     valueText:SetAllPoints(value)
@@ -304,15 +353,28 @@ function itemFrame:CreateItemFramePlaceholder()
 
     f:Hide()
 
-    return f
+    i.widget = f
+
+    return i
 end
 
+---@param item ListItem
+function itemFrame:_DoReset(item)
+    -- self._pool:Release(item)
+end
+
+---@return ListItem
+function itemFrame:Create()
+    return self._pool:Acquire()
+end
+
+-- TODO: This is broken. No longer holding the framesById in sesh
 function itemFrame:Refresh(itemId)
     if not session.FramesByItemId[itemId] then
         return
     end
     for _, frame in pairs(session.FramesByItemId[itemId]) do
-        itemFrame:Update(frame)
+        frame:Update()
     end
 end
 

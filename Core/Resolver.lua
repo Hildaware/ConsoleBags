@@ -10,7 +10,7 @@ end
 
 resolver.GetItemInfo = function(link)
     local _, _, rarity, _, reqLvl, _, _, stackCount, _, texture, sellPrice, classId, subClassId, _, xpacId =
-        GetItemInfo(link)
+        C_Item.GetItemInfo(link)
     return {
         rarity = rarity,
         type = classId,

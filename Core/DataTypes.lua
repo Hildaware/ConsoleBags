@@ -10,9 +10,36 @@ local utils = addon:GetModule('Utils')
 ---@class Enums: AceModule
 local enums = addon:GetModule('Enums')
 
+---@class Item
+---@field id number
+---@field name string
+---@field link string
+---@field stackCount number
+---@field bound boolean
+---@field quality Enum.ItemQuality
+---@field type Enum.ItemClass
+---@field subType number -- This is actually an Enum, but wrong?
+---@field equipLocation Enum.InventoryType
+---@field texture string
+---@field value number
+---@field ilvl number
+---@field bag number
+---@field slot number
+---@field isNew boolean
+---@field reqLevel number
+---@field isLocked boolean
+---@field questInfo ItemQuestInfo
+---@field isReadable boolean
+---@field isFiltered boolean
+---@field hasNoValue boolean
+---@field category number
+---@field location Enums.InventoryType
+---@field new function
+---@field GetCategory function
 local Item = {}
+
 Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo, inventoryLocation)
-    local self = {}
+    local self = setmetatable({}, { __index = Item })
     self.id = containerItem.itemID
     self.name = containerItem.itemName
     self.link = containerItem.hyperlink
@@ -59,5 +86,17 @@ function Item.GetCategory(self)
 end
 
 types.Item = Item
+
+---@class CategorizedItemSet
+---@field items Item[]
+---@field count number
+---@field hasNew boolean
+---@field key integer
+---@field name string
+---@field order number
+
+---@class SortField
+---@field Sort integer
+---@field Field integer
 
 types:Enable()

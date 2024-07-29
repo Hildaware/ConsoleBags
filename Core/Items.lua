@@ -107,7 +107,6 @@ function items.BuildItemCache()
     session.Inventory.Count = 0
     session.Inventory.ReagentCount = 0
     session.Inventory.Resolved = 0
-    session.FramesByItemId = {}
 
     local invType = enums.InventoryType.Inventory
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
@@ -168,6 +167,8 @@ function items.BuildBankCache()
     session.BuildingBankCache = false
 end
 
+---@param categories CategorizedItemSet[]
+---@param sortField SortField
 function items:SortItems(categories, sortField)
     local type = sortField.Field
     local order = sortField.Sort

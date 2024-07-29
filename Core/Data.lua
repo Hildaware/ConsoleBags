@@ -28,7 +28,7 @@ local defaults = {
                 ReqLvl = 50,
                 Value = 110
             },
-            SortField = {
+            SortField = { ---@type SortField
                 Field = enums.SortFields.Name,
                 Sort = enums.SortOrder.Desc
             }
@@ -50,7 +50,7 @@ local defaults = {
                 ReqLvl = 50,
                 Value = 110
             },
-            SortField = {
+            SortField = { ---@type SortField
                 Field = enums.SortFields.Name,
                 Sort = enums.SortOrder.Desc
             }
@@ -62,10 +62,12 @@ function database:OnInitialize()
     database.internal = LibStub('AceDB-3.0'):New(addonName .. 'DB', defaults --[[@as AceDB.Schema]], true) --[[@as databaseOptions]]
 end
 
+---@return SortField
 function database:GetInventorySortField()
     return self.internal.global.InventoryFrame.SortField
 end
 
+---@return SortField
 function database:GetBankSortField()
     return database.internal.global.BankFrame.SortField
 end
@@ -154,6 +156,7 @@ function database:SetViewPosition(inventoryType, x, y)
 end
 
 ---@param inventoryType Enums.InventoryType
+---@return
 function database:GetSortField(inventoryType)
     if inventoryType == enums.InventoryType.Inventory then
         return database:GetInventorySortField()

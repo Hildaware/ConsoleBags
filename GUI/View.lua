@@ -41,13 +41,11 @@ local categoryHeaders = addon:GetModule('CategoryHeaders')
 local itemFrame = addon:GetModule('ItemFrame')
 
 ---@class (exact) BagView
----@field itemPool Pool
+---@field items ListItem[]
+---@field filterContainer FilterContainer
 ---@field categoryPool Pool
----@field filterPool Pool
 ---@field frame Frame
----@field selectedFilter integer
----@field filterIndex integer
-local viewPrototype = {}
+view.proto = {}
 
 function view:OnInitialize()
     ---@type BagView[]
@@ -66,14 +64,11 @@ end
 function view:Create(inventoryType)
     ---@type BagView
     local newView = {
-        itemPool = pooling.Pool.New(),
+        items = {},
+        filterContainer = {},
         categoryPool = pooling.Pool.New(),
-        filterPool = pooling.Pool.New(),
         frame = {},
-        selectedFilter = 0,
-        filterIndex = 1
     }
-    newView.selectedFilter = nil
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
@@ -127,22 +122,11 @@ function view:Create(inventoryType)
             end
 
             if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
-            local filterCount = #self.FilterFrame.Buttons
 
-            if key == 'PADRSHOULDER' then -- Right
-                if newView.filterIndex == filterCount then
-                    newView.filterIndex = 1
-                else
-                    newView.filterIndex = newView.filterIndex + 1
-                end
-                self.FilterFrame.Buttons[newView.filterIndex].OnSelect()
+            if key == 'PADRSHOULDER' then     -- Right
+                newView.filterContainer:ScrollRight()
             elseif key == 'PADLSHOULDER' then -- Left
-                if newView.filterIndex == 1 then
-                    newView.filterIndex = filterCount
-                else
-                    newView.filterIndex = newView.filterIndex - 1
-                end
-                self.FilterFrame.Buttons[newView.filterIndex].OnSelect()
+                newView.filterContainer:ScrollLeft()
             end
         end)
     end
@@ -193,20 +177,12 @@ function view:Create(inventoryType)
     f.Header = header
 
     -- Filters
-    filtering:BuildContainer(f, inventoryType, function()
-        if inventoryType == enums.InventoryType.Inventory then
-            session.InventoryFilter = nil
-        elseif inventoryType == enums.InventoryType.Bank then
-            session.BankFilter = nil
-        end
-
-        self:Update(inventoryType)
-    end)
+    local filterContainer = filtering:BuildContainer(f, inventoryType)
 
     sorting:Build(f, inventoryType, function() self:Update(inventoryType) end)
 
     local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
-    local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
+    local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters * 2)
         + session.Settings.Defaults.Sections.ListViewHeader
     scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
     scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, session.Settings.Defaults.Sections.Footer + 2)
@@ -279,7 +255,6 @@ function view:Create(inventoryType)
     dragTex:SetAllPoints(drag)
     dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
 
-
     f.ListView = scrollChild
     f:Hide()
 
@@ -294,6 +269,7 @@ function view:Create(inventoryType)
     end
 
     newView.frame = f
+    newView.filterContainer = filterContainer
     self.views[inventoryType] = newView
 
     if inventoryType == enums.InventoryType.Inventory then
@@ -309,9 +285,13 @@ function view:Update(inventoryType)
 
     local currentView = self.views[inventoryType]
 
-    Pool.Cleanup(currentView.itemPool)
+    -- Empty up the current items
+    for _, row in pairs(currentView.items) do
+        row:Empty()
+    end
+
+    -- TODO: Pools should be removed for basic pooling
     Pool.Cleanup(currentView.categoryPool)
-    Pool.Cleanup(currentView.filterPool)
 
     local sessionFilter = nil
     local sessionCats = {}
@@ -323,7 +303,7 @@ function view:Update(inventoryType)
         sessionCats = session.BankCollapsedCategories
     end
 
-    -- Categorize
+    ---@type CategorizedItemSet[]
     local catTable = {}
     for _, slots in pairs(session.Items) do
         for _, item in pairs(slots) do
@@ -335,11 +315,13 @@ function view:Update(inventoryType)
 
     items:SortItems(catTable, database:GetSortField(inventoryType))
 
-    -- Filter Categories
+    ---@type CategorizedItemSet[]
     local allCategories = {}
-    local filteredCategories = {}
-    local iter = 1
 
+    ---@type CategorizedItemSet[]
+    local filteredCategories = {}
+
+    local iter = 1
     for key, value in pairs(catTable) do
         value.key = key
         value.order = enums.Categories[key].order
@@ -354,11 +336,13 @@ function view:Update(inventoryType)
     table.sort(allCategories, function(a, b) return a.order < b.order end)
     table.sort(filteredCategories, function(a, b) return a.order < b.order end)
 
+    ---@type CategorizedItemSet[]
     local orderedCategories = {}
     for i = 1, #filteredCategories do
         orderedCategories[i] = filteredCategories[i]
     end
 
+    ---@type CategorizedItemSet[]
     local orderedAllCategories = {}
     for i = 1, #allCategories do
         orderedAllCategories[i] = allCategories[i]
@@ -379,15 +363,31 @@ function view:Update(inventoryType)
             catIndex = catIndex + 1
             if sessionCats[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
-                    local frame = Pool.FetchInactive(currentView.itemPool, itemIndex,
-                        itemFrame.CreateItemFramePlaceholder)
-                    Pool.InsertActive(currentView.itemPool, frame, itemIndex)
-                    itemFrame:BuildItemFrame(item, offset, frame, currentView.frame.ListView)
+                    -- Fetch a frame that we already have, OR get a new one
+                    if currentView.items[itemIndex] then
+                        currentView.items[itemIndex]:Build(item, offset, currentView.frame.ListView)
+                    else
+                        local frame = itemFrame:Create()
+                        frame:Build(item, offset, currentView.frame.ListView)
+                        tinsert(currentView.items, frame)
+                    end
+
+                    -- local frame = itemFrame:Create()
+                    -- frame:Build(item, offset, currentView.frame.ListView)
+                    -- tinsert(currentView.items, frame)
 
                     offset = offset + 1
                     itemIndex = itemIndex + 1
                 end
             end
+        end
+    end
+
+    -- Cleanup Unused
+    for index, row in pairs(currentView.items) do
+        if row.item == nil then
+            row:Clear()
+            currentView.items[index] = nil
         end
     end
 
@@ -401,7 +401,7 @@ function view:Update(inventoryType)
         self:Update(inventoryType)
     end
 
-    filtering:Update(currentView.frame, orderedAllCategories, currentView.filterPool, onFilterSelectCallback)
+    currentView.filterContainer:Update(inventoryType, orderedAllCategories, onFilterSelectCallback)
     bags:Update(currentView.frame, inventoryType)
 end
 

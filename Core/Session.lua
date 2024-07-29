@@ -5,8 +5,8 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 local session = addon:NewModule('Session')
 
 function session:OnInitialize()
+    ---@type table<number, table<number, Item>>
     self.Items = {}
-    self.FramesByItemId = {}
 
     self.Inventory = {
         TotalCount = 0,
@@ -42,10 +42,10 @@ function session:OnInitialize()
                 Value = 110
             },
             Sections = {
-                Header = 40,
-                Filters = 40,
-                ListViewHeader = 40,
-                ListItemHeight = 40,
+                Header = 32,
+                Filters = 28,
+                ListViewHeader = 28,
+                ListItemHeight = 28,
                 Footer = 32
             }
         },

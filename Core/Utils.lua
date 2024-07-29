@@ -210,6 +210,8 @@ function utils.RestoreDefaultBags()
     session.Settings.HideBags = true
 end
 
+---@param item Item
+---@param catTable CategorizedItemSet[]
 function utils.AddItemToCategory(item, catTable)
     -- Category Data
     if item.category ~= nil then

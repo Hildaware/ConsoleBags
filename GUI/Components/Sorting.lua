@@ -16,15 +16,16 @@ local database = addon:GetModule('Database')
 function sorting:Build(parent, type, onSelect)
     local hFrame = CreateFrame('Frame', nil, parent)
     hFrame:SetSize(parent:GetWidth(), session.Settings.Defaults.Sections.ListViewHeader)
-    local offset = session.Settings.Defaults.Sections.Header + session.Settings.Defaults.Sections.Filters
-    hFrame:SetPoint('TOPLEFT', parent, 'TOPLEFT', 0, -offset)
+    local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters * 2)
+    local addedOffset = 5
+    hFrame:SetPoint('TOPLEFT', parent, 'TOPLEFT', 0, -(offset + addedOffset))
 
     hFrame.fields = {}
 
     local tex = hFrame:CreateTexture(nil, 'BACKGROUND')
-    tex:SetPoint('TOPLEFT', hFrame, 'TOPLEFT', 0, -4)
-    tex:SetPoint('BOTTOMRIGHT', hFrame, 'BOTTOMRIGHT')
-    tex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Doubleline')
+    tex:SetPoint('TOPLEFT', hFrame, 'TOPLEFT')
+    tex:SetPoint('BOTTOMRIGHT', hFrame, 'BOTTOMRIGHT', 0, addedOffset)
+    tex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Underline')
     tex:SetVertexColor(1, 1, 1, 0.5)
 
     local icon = self:Create(hFrame, hFrame, '•', session.Settings.Defaults.Columns.Icon,
