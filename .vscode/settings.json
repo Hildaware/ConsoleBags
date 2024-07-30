@@ -297,7 +297,9 @@
         "SELECTED_CHAT_FRAME",
         "NOT_BOUND",
         "FillLocalizedClassList",
-        "EventUtil"
+        "EventUtil",
+        "CharacterReagentBag0Slot",
+        "C_Bank"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",

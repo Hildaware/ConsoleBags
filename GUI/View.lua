@@ -45,30 +45,16 @@ local itemFrame = addon:GetModule('ItemFrame')
 ---@field filterContainer FilterContainer
 ---@field categoryPool Pool
 ---@field frame Frame
+---@field type Enums.InventoryType
 view.proto = {}
 
-function view:OnInitialize()
-    ---@type BagView[]
-    self.views = {}
-    self.inCombat = false
-
-    ---@type BagView
-    self.inventory = nil
-    ---@type BagView
-    self.bank = nil
-
-    self:Create(enums.InventoryType.Inventory)
-end
-
 ---@param inventoryType Enums.InventoryType
+---@return BagView
 function view:Create(inventoryType)
-    ---@type BagView
-    local newView = {
-        items = {},
-        filterContainer = {},
-        categoryPool = pooling.Pool.New(),
-        frame = {},
-    }
+    local i = setmetatable({}, { __index = self.proto })
+    i.items = {}
+    i.categoryPool = pooling.Pool.New()
+    i.type = inventoryType
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
@@ -111,7 +97,7 @@ function view:Create(inventoryType)
 
         f:SetPropagateKeyboardInput(true)
         f:SetScript('OnGamePadButtonDown', function(self, key)
-            if view.inCombat then return end
+            if InCombatLockdown() then return end
 
             if _G['Scrap'] and key == 'PAD3' then -- Square
                 local item = GameTooltip:IsVisible() and select(2, GameTooltip:GetItem())
@@ -124,9 +110,9 @@ function view:Create(inventoryType)
             if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
 
             if key == 'PADRSHOULDER' then     -- Right
-                newView.filterContainer:ScrollRight()
+                i.filterContainer:ScrollRight()
             elseif key == 'PADLSHOULDER' then -- Left
-                newView.filterContainer:ScrollLeft()
+                i.filterContainer:ScrollLeft()
             end
         end)
     end
@@ -156,7 +142,7 @@ function view:Create(inventoryType)
     close:SetScript('OnClick', function()
         if inventoryType == enums.InventoryType.Inventory then
             ---@diagnostic disable-next-line: undefined-field
-            addon:CloseAllBags()
+            addon:ToggleAllBags()
         elseif inventoryType == enums.InventoryType.Bank then
             ---@diagnostic disable-next-line: undefined-field
             addon:CloseBank()
@@ -179,7 +165,7 @@ function view:Create(inventoryType)
     -- Filters
     local filterContainer = filtering:BuildContainer(f, inventoryType)
 
-    sorting:Build(f, inventoryType, function() self:Update(inventoryType) end)
+    sorting:Build(f, inventoryType, function() i:Update() end)
 
     local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
     local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters * 2)
@@ -232,8 +218,8 @@ function view:Create(inventoryType)
         end)
         defaultButton:SetScript('OnClick', function(self, button, down)
             utils.RestoreDefaultBags()
-            view.inventory.frame:Hide()
-            addon:OpenAllBags()
+            f:Hide()
+            OpenAllBags()
         end)
     end
 
@@ -268,37 +254,27 @@ function view:Create(inventoryType)
         _G['ConsolePort']:AddInterfaceCursorFrame(f)
     end
 
-    newView.frame = f
-    newView.filterContainer = filterContainer
-    self.views[inventoryType] = newView
+    i.frame = f
+    i.filterContainer = filterContainer
 
-    if inventoryType == enums.InventoryType.Inventory then
-        self.inventory = self.views[inventoryType]
-    elseif inventoryType == enums.InventoryType.Bank then
-        self.bank = self.views[inventoryType]
-    end
+    return i
 end
 
----@param inventoryType Enums.InventoryType
-function view:Update(inventoryType)
-    if self.views[inventoryType] == nil then return end
-
-    local currentView = self.views[inventoryType]
-
+function view.proto:Update()
     -- Empty up the current items
-    for _, row in pairs(currentView.items) do
+    for _, row in pairs(self.items) do
         row:Empty()
     end
 
     -- TODO: Pools should be removed for basic pooling
-    Pool.Cleanup(currentView.categoryPool)
+    Pool.Cleanup(self.categoryPool)
 
     local sessionFilter = nil
     local sessionCats = {}
-    if inventoryType == enums.InventoryType.Inventory then
+    if self.type == enums.InventoryType.Inventory then
         sessionFilter = session.InventoryFilter
         sessionCats = session.InventoryCollapsedCategories
-    elseif inventoryType == enums.InventoryType.Bank then
+    elseif self.type == enums.InventoryType.Bank then
         sessionFilter = session.BankFilter
         sessionCats = session.BankCollapsedCategories
     end
@@ -307,13 +283,13 @@ function view:Update(inventoryType)
     local catTable = {}
     for _, slots in pairs(session.Items) do
         for _, item in pairs(slots) do
-            if item.location == inventoryType then
+            if item.location == self.type then
                 utils.AddItemToCategory(item, catTable)
             end
         end
     end
 
-    items:SortItems(catTable, database:GetSortField(inventoryType))
+    items:SortItems(catTable, database:GetSortField(self.type))
 
     ---@type CategorizedItemSet[]
     local allCategories = {}
@@ -353,28 +329,24 @@ function view:Update(inventoryType)
     local itemIndex = 1
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            local catFrame = Pool.FetchInactive(currentView.categoryPool, catIndex,
+            local catFrame = Pool.FetchInactive(self.categoryPool, catIndex,
                 categoryHeaders.CreateCategoryHeaderPlaceholder)
-            Pool.InsertActive(currentView.categoryPool, catFrame, catIndex)
-            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, currentView.frame.ListView,
-                sessionCats, function() self:Update(inventoryType) end)
+            Pool.InsertActive(self.categoryPool, catFrame, catIndex)
+            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.frame.ListView,
+                sessionCats, function() self:Update() end)
 
             offset = offset + 1
             catIndex = catIndex + 1
             if sessionCats[categoryData.key] ~= true then
                 for _, item in ipairs(categoryData.items) do
                     -- Fetch a frame that we already have, OR get a new one
-                    if currentView.items[itemIndex] then
-                        currentView.items[itemIndex]:Build(item, offset, currentView.frame.ListView)
+                    if self.items[itemIndex] then
+                        self.items[itemIndex]:Build(item, offset, self.frame.ListView)
                     else
                         local frame = itemFrame:Create()
-                        frame:Build(item, offset, currentView.frame.ListView)
-                        tinsert(currentView.items, frame)
+                        frame:Build(item, offset, self.frame.ListView)
+                        tinsert(self.items, frame)
                     end
-
-                    -- local frame = itemFrame:Create()
-                    -- frame:Build(item, offset, currentView.frame.ListView)
-                    -- tinsert(currentView.items, frame)
 
                     offset = offset + 1
                     itemIndex = itemIndex + 1
@@ -384,84 +356,46 @@ function view:Update(inventoryType)
     end
 
     -- Cleanup Unused
-    for index, row in pairs(currentView.items) do
+    for index, row in pairs(self.items) do
         if row.item == nil then
             row:Clear()
-            currentView.items[index] = nil
+            self.items[index] = nil
         end
     end
 
     local function onFilterSelectCallback(key)
-        if inventoryType == enums.InventoryType.Inventory then
+        if self.type == enums.InventoryType.Inventory then
             session.InventoryFilter = key
-        elseif inventoryType == enums.InventoryType.Bank then
+        elseif self.type == enums.InventoryType.Bank then
             session.BankFilter = key
         end
 
-        self:Update(inventoryType)
+        self:Update()
     end
 
-    currentView.filterContainer:Update(inventoryType, orderedAllCategories, onFilterSelectCallback)
-    bags:Update(currentView.frame, inventoryType)
+    self.filterContainer:Update(self.type, orderedAllCategories, onFilterSelectCallback)
+    bags:Update(self.frame, self.type)
 end
 
-function view:UpdateCurrency()
-    if view.inventory then
-        local money = GetMoney()
-        if money == nil then return end
-        local str = GetCoinTextureString(money)
-        if str == nil or str == '' then return end
-        view.inventory.frame.gold:SetText(str)
-    end
+---@return boolean
+function view.proto:IsShown()
+    return self.frame:IsShown()
 end
 
---#region Events
-
-function events:PLAYER_MONEY()
-    view:UpdateCurrency()
+function view.proto:Show()
+    self.frame:Show()
 end
 
-function events:BAG_UPDATE_DELAYED()
-    items.BuildItemCache()
-    if view.inventory and view.inventory.frame:IsShown() then
-        view:Update(enums.InventoryType.Inventory)
-    end
+function view.proto:Hide()
+    self.frame:Hide()
 end
 
-function events:EQUIPMENT_SETS_CHANGED()
-    items.BuildItemCache()
-    if view.inventory and view.inventory.frame:IsShown() then
-        view:Update(enums.InventoryType.Inventory)
-    end
+function view.proto:UpdateCurrency()
+    local money = GetMoney()
+    if money == nil then return end
+    local str = GetCoinTextureString(money)
+    if str == nil or str == '' then return end
+    self.frame.gold:SetText(str)
 end
-
-function events:PLAYER_REGEN_DISABLED()
-    view.inCombat = true
-    if _G['ConsolePortInputHandler'] then
-        -- TODO: All frames?
-        _G['ConsolePortInputHandler']:Release(view.inventory.frame)
-    end
-end
-
-function events:PLAYER_REGEN_ENABLED()
-    view.inCombat = false
-end
-
-function events:PLAYERBANKSLOTS_CHANGED()
-    items.BuildBankCache()
-    view:Update(enums.InventoryType.Bank)
-end
-
-function events:BANKFRAME_CLOSED()
-    view.bank.frame:Hide()
-    addon:CloseBank()
-end
-
-function events:BANKFRAME_OPENED()
-    addon:OpenBank()
-    addon:OpenBackpack()
-end
-
---#endregion
 
 view:Enable()
