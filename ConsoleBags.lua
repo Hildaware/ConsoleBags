@@ -189,11 +189,17 @@ function events:BAG_CONTAINER_UPDATE()
     end
 end
 
-function events:BAG_UPDATE()
-    items.BuildItemCache()
+---@param bagId number
+function events:BAG_UPDATE(_, bagId)
+    items.BuildItemCache(bagId)
     if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
         addon.bags.Inventory:Update()
     end
+end
+
+function events:PLAYERBANKSLOTS_CHANGED()
+    items.BuildBankCache()
+    addon.bags.Bank:Update()
 end
 
 function events:EQUIPMENT_SETS_CHANGED()
@@ -207,11 +213,6 @@ function events:PLAYER_REGEN_DISABLED()
     if _G['ConsolePortInputHandler'] then
         _G['ConsolePortInputHandler']:Release(addon.bags.Inventory)
     end
-end
-
-function events:PLAYERBANKSLOTS_CHANGED()
-    items.BuildBankCache()
-    addon.bags.Bank:Update()
 end
 
 function events:PLAYERREAGENTBANKSLOTS_CHANGED()

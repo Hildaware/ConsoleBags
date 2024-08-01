@@ -113,7 +113,8 @@ local function CleanupSessionItems(bag, bagSize, slots)
     end
 end
 
-function items.BuildItemCache()
+---@param bagId number?
+function items.BuildItemCache(bagId)
     session.BuildingCache = true
     session.Inventory.TotalCount = 0
     session.Inventory.Count = 0
@@ -121,15 +122,26 @@ function items.BuildItemCache()
     session.Inventory.Resolved = 0
 
     local invType = enums.InventoryType.Inventory
-    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
-        local bagSize = CreateBagData(bag, invType)
+    if bagId == nil then
+        for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+            local bagSize = CreateBagData(bag, invType)
+            local requiresCleanup = {}
+            for slot = 1, bagSize do
+                local created = CreateItem(bag, slot, invType)
+                requiresCleanup[slot] = created
+            end
+
+            CleanupSessionItems(bag, bagSize, requiresCleanup)
+        end
+    else
+        local bagSize = CreateBagData(bagId, invType)
         local requiresCleanup = {}
         for slot = 1, bagSize do
-            local created = CreateItem(bag, slot, invType)
+            local created = CreateItem(bagId, slot, invType)
             requiresCleanup[slot] = created
         end
 
-        CleanupSessionItems(bag, bagSize, requiresCleanup)
+        CleanupSessionItems(bagId, bagSize, requiresCleanup)
     end
 
     session.BuildingCache = false
@@ -159,7 +171,7 @@ function items.BuildBankCache()
         local bankBagSize = CreateBagData(bag, invType)
         requiresCleanup = {}
         for slot = 1, bankBagSize do
-            local created = CreateItem(bag, slot, enums.InventoryType.Bank)
+            local created = CreateItem(bag, slot, invType)
             requiresCleanup[slot] = created
         end
 
@@ -170,7 +182,7 @@ function items.BuildBankCache()
     local reagentContainerSize = CreateBagData(REAGENTBANK_CONTAINER, invType)
     requiresCleanup = {}
     for slot = 1, reagentContainerSize do
-        local created = CreateItem(REAGENTBANK_CONTAINER, slot, enums.InventoryType.Bank)
+        local created = CreateItem(REAGENTBANK_CONTAINER, slot, invType)
         requiresCleanup[slot] = created
     end
 
