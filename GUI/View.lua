@@ -6,9 +6,6 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class View: AceModule
 local view = addon:NewModule('View')
 
----@class Pooling: AceModule
-local pooling = addon:GetModule('Pooling')
-
 ---@class Enums: AceModule
 local enums = addon:GetModule('Enums')
 
@@ -45,7 +42,7 @@ local itemFrame = addon:GetModule('ItemFrame')
 ---@class (exact) BagView
 ---@field items ListItem[]
 ---@field filterContainer FilterContainer
----@field categoryPool Pool
+---@field categoryHeaders CategoryHeader[]
 ---@field frame Frame -- TODO: Better defined
 ---@field type Enums.InventoryType
 ---@field selectedBankType? Enums.BankType
@@ -56,7 +53,7 @@ view.proto = {}
 function view:Create(inventoryType)
     local i = setmetatable({}, { __index = self.proto })
     i.items = {}
-    i.categoryPool = pooling.Pool.New()
+    i.categoryHeaders = {}
     i.type = inventoryType
 
     if i.type == enums.InventoryType.Bank then
@@ -356,8 +353,10 @@ function view.proto:Update()
         row:Empty()
     end
 
-    -- TODO: Pools should be removed for basic pooling
-    Pool.Cleanup(self.categoryPool)
+    for index, row in pairs(self.categoryHeaders) do
+        row:Clear()
+        self.categoryHeaders[index] = nil
+    end
 
     local sessionFilter = nil
     local sessionCats = {}
@@ -419,11 +418,10 @@ function view.proto:Update()
 
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
-            local catFrame = Pool.FetchInactive(self.categoryPool, catIndex,
-                categoryHeaders.CreateCategoryHeaderPlaceholder)
-            Pool.InsertActive(self.categoryPool, catFrame, catIndex)
-            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.frame.ListView, sessionCats,
+            local categoryFrame = categoryHeaders:Create()
+            categoryFrame:Build(categoryData, offset, self.frame.ListView, sessionCats,
                 function() self:Update() end)
+            tinsert(self.categoryHeaders, categoryFrame)
 
             offset = offset + 1
             catIndex = catIndex + 1

@@ -380,7 +380,9 @@ end
 
 ---@param item ListItem
 function itemFrame:_DoReset(item)
-    -- self._pool:Release(item)
+    -- if itemFrame._pool:IsActive(item) then
+    --     itemFrame._pool:Release(item)
+    -- end
 end
 
 ---@return ListItem

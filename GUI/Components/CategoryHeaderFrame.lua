@@ -13,14 +13,42 @@ local enums = addon:GetModule('Enums')
 ---@class Utils: AceModule
 local utils = addon:GetModule('Utils')
 
+---@class CategoryHeaderItem: Button
+---@field type Texture
+---@field name FontString
+---@field isHeader boolean
+
+---@class CategoryHeader
+---@field widget CategoryHeaderItem
+categoryHeaders.itemProto = {}
+
+function categoryHeaders:OnInitialize()
+    self._pool = CreateObjectPool(self._DoCreate, self._DoReset)
+    if self._pool.SetResetDisallowedIfNew then
+        self._pool:SetResetDisallowedIfNew()
+    end
+
+    ---@type
+    local frames = {}
+    for i = 1, 100 do
+        frames[i] = self:Create()
+    end
+    for _, frame in pairs(frames) do
+        frame:Clear()
+    end
+end
+
+function categoryHeaders:Create()
+    return self._pool:Acquire()
+end
+
 ---@param data CategorizedItemSet
 ---@param offset number
----@param frame Frame
 ---@param parent Frame
 ---@param collapsedCategories table
 ---@param callback function
-function categoryHeaders:BuildCategoryFrame(data, offset, frame, parent, collapsedCategories, callback)
-    if frame == nil then return end
+function categoryHeaders.itemProto:Build(data, offset, parent, collapsedCategories, callback)
+    local frame = self.widget
 
     frame:SetParent(parent)
     frame:SetPoint('TOP', 0, -((offset - 1) * session.Settings.Defaults.Sections.ListItemHeight))
@@ -52,8 +80,21 @@ function categoryHeaders:BuildCategoryFrame(data, offset, frame, parent, collaps
     frame:Show()
 end
 
--- TODO: SetSize will eventually need to be set based on the View
-function categoryHeaders:CreateCategoryHeaderPlaceholder()
+function categoryHeaders.itemProto:Clear()
+    self.widget:Hide()
+    self.widget:SetParent(nil)
+    self.widget:ClearAllPoints()
+
+    if categoryHeaders._pool:IsActive(self) then
+        categoryHeaders._pool:Release(self)
+    end
+end
+
+---@return CategoryHeader
+function categoryHeaders:_DoCreate()
+    local i = setmetatable({}, { __index = categoryHeaders.itemProto })
+
+    ---@type CategoryHeaderItem|Button
     local f = CreateFrame('Button')
     f:SetSize(600 - 24, session.Settings.Defaults.Sections.ListItemHeight)
 
@@ -89,7 +130,15 @@ function categoryHeaders:CreateCategoryHeaderPlaceholder()
 
     f.isHeader = true
 
-    return f
+    i.widget = f
+
+    return i
+end
+
+function categoryHeaders:_DoReset(item)
+    -- if categoryHeaders._pool:IsActive(item) then
+    --     categoryHeaders._pool:Release(item)
+    -- end
 end
 
 categoryHeaders:Enable()
