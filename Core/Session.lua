@@ -22,11 +22,18 @@ function session:OnInitialize()
         Resolved = 0
     }
 
+    self.Warbank = {
+        TotalCount = 0,
+        Count = 0,
+        Resolved = 0
+    }
+
     self.InventoryFilter = nil
     self.BankFilter = nil
 
     self.BuildingCache = false
     self.BuildingBankCache = false
+    self.BuildingWarbankCache = false
 
     self.InventoryCollapsedCategories = {}
     self.BankCollapsedCategories = {}

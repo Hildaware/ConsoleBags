@@ -213,7 +213,6 @@ end
 ---@param item Item
 ---@param catTable CategorizedItemSet[]
 function utils.AddItemToCategory(item, catTable)
-    -- Category Data
     if item.category ~= nil then
         catTable[item.category] = catTable[item.category] or {}
         catTable[item.category].items = catTable[item.category].items or {}

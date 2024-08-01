@@ -1,4 +1,6 @@
 local addonName = ... ---@type string
+
+---@class ConsoleBags: AceAddon
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
 ---@class View: AceModule
@@ -44,8 +46,9 @@ local itemFrame = addon:GetModule('ItemFrame')
 ---@field items ListItem[]
 ---@field filterContainer FilterContainer
 ---@field categoryPool Pool
----@field frame Frame
+---@field frame Frame -- TODO: Better defined
 ---@field type Enums.InventoryType
+---@field selectedBankType? Enums.BankType
 view.proto = {}
 
 ---@param inventoryType Enums.InventoryType
@@ -55,6 +58,10 @@ function view:Create(inventoryType)
     i.items = {}
     i.categoryPool = pooling.Pool.New()
     i.type = inventoryType
+
+    if i.type == enums.InventoryType.Bank then
+        i.selectedBankType = enums.BankType.Bank
+    end
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
@@ -127,26 +134,112 @@ function view:Create(inventoryType)
     header.texture:SetAllPoints(header)
     header.texture:SetColorTexture(0, 0, 0, 0.5)
 
-    local text = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    text:SetPoint('LEFT', header, 'LEFT', 12, 0)
-    text:SetWidth(140)
-    text:SetJustifyH('LEFT')
-    text:SetText(viewName)
+    if inventoryType == enums.InventoryType.Bank then
+        local togglerContainer = CreateFrame('Frame', nil, header)
+        togglerContainer:SetPoint('LEFT', header, 'LEFT', 12, 0)
+        togglerContainer:SetSize(200, session.Settings.Defaults.Sections.Header)
+
+        local bankButton = CreateFrame('Button', nil, togglerContainer)
+        bankButton:SetPoint('LEFT')
+        bankButton:SetSize(60, session.Settings.Defaults.Sections.Header - 8)
+        bankButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Doubleline')
+        bankButton:SetScript('OnClick', function(btn)
+            btn.text:SetTextColor(1, 1, 0)
+            btn:GetParent().warbank.text:SetTextColor(1, 1, 1)
+
+            i.selectedBankType = enums.BankType.Bank
+            addon.status.visitingWarbank = false
+
+            if not session.BuildingBankCache then
+                items.BuildBankCache()
+            end
+
+            addon.bags.Inventory:Update()
+
+            BankFrame.selectedTab = 1
+            BankFrame.activeTabIndex = 1
+            AccountBankPanel.selectedTabID = nil
+
+            if session.Bank.Resolved >= session.Bank.TotalCount then
+                addon.bags.Bank:Update()
+            end
+        end)
+
+        bankButton.text = bankButton:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+        bankButton.text:SetPoint('CENTER')
+        bankButton.text:SetText('Bank')
+        bankButton.text:SetJustifyH('CENTER')
+        bankButton.text:SetTextColor(1, 1, 0)
+
+        togglerContainer.bank = bankButton
+
+        local warbankButton = CreateFrame('Button', nil, togglerContainer)
+        warbankButton:SetPoint('LEFT', bankButton, 'RIGHT', 4, 0)
+        warbankButton:SetSize(80, session.Settings.Defaults.Sections.Header - 8)
+        warbankButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Doubleline')
+        warbankButton:SetScript('OnClick', function(btn)
+            btn.text:SetTextColor(1, 1, 0)
+            btn:GetParent().bank.text:SetTextColor(1, 1, 1)
+
+            i.selectedBankType = enums.BankType.Warbank
+            addon.status.visitingWarbank = true
+
+            if not session.BuildingWarbankCache then
+                items.BuildWarbankCache()
+            end
+
+            addon.bags.Inventory:Update()
+
+            BankFrame.selectedTab = 1
+            BankFrame.activeTabIndex = 3
+            local tabData = C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
+            for _, data in pairs(tabData) do
+                if data.ID ~= nil then
+                    AccountBankPanel.selectedTabID = data.ID
+                    break
+                end
+            end
+
+            if session.Warbank.Resolved >= session.Warbank.TotalCount then
+                addon.bags.Bank:Update()
+            end
+        end)
+
+        warbankButton.text = warbankButton:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+        warbankButton.text:SetPoint('CENTER')
+        warbankButton.text:SetText('Warbank')
+        warbankButton.text:SetJustifyH('CENTER')
+        warbankButton.text:SetTextColor(1, 1, 1)
+
+        togglerContainer.warbank = warbankButton
+    else
+        local text = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+        text:SetPoint('LEFT', header, 'LEFT', 12, 0)
+        text:SetWidth(140)
+        text:SetJustifyH('LEFT')
+        text:SetText(viewName)
+    end
 
     local close = CreateFrame('Button', nil, header)
-    close:SetSize(32, 32)
+    close:SetSize(24, 24)
     close:SetPoint('RIGHT', header, 'RIGHT', -6, 0)
     close:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Normal')
-    close:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Highlight')
-    close:SetPushedTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Pushed')
+    close:SetPushedTexture('Interface\\Addons\\ConsoleBags\\Media\\Close_Normal')
+    close:GetPushedTexture():SetVertexColor(1, 1, 0, 0.5)
+    close:SetScript('OnEnter', function()
+        close:GetNormalTexture():SetVertexColor(1, 1, 0, 1)
+    end)
+    close:SetScript('OnLeave', function()
+        close:GetNormalTexture():SetVertexColor(1, 1, 1, 1)
+    end)
     close:SetScript('OnClick', function()
         if inventoryType == enums.InventoryType.Inventory then
-            ---@diagnostic disable-next-line: undefined-field
             addon:ToggleAllBags()
         elseif inventoryType == enums.InventoryType.Bank then
-            ---@diagnostic disable-next-line: undefined-field
             addon:CloseBank()
         end
+
+        addon.status.visitingWarbank = false
     end)
 
     header:RegisterForDrag('LeftButton')
@@ -244,8 +337,6 @@ function view:Create(inventoryType)
     f.ListView = scrollChild
     f:Hide()
 
-    table.insert(UISpecialFrames, f:GetName())
-
     utils:CreateBorder(f)
 
     bags:Build(inventoryType, f)
@@ -261,7 +352,6 @@ function view:Create(inventoryType)
 end
 
 function view.proto:Update()
-    -- Empty up the current items
     for _, row in pairs(self.items) do
         row:Empty()
     end
@@ -281,9 +371,14 @@ function view.proto:Update()
 
     ---@type CategorizedItemSet[]
     local catTable = {}
+    local invType, bankType = enums.InventoryType, enums.BankType
+
     for _, slots in pairs(session.Items) do
         for _, item in pairs(slots) do
-            if item.location == self.type then
+            if (self.type == invType.Inventory and item.location == invType.Inventory) or
+                (self.type == invType.Bank and
+                    ((self.selectedBankType == bankType.Bank and item.location == self.type) or
+                        (self.selectedBankType == bankType.Warbank and item.location == invType.Shared))) then
                 utils.AddItemToCategory(item, catTable)
             end
         end
@@ -292,19 +387,16 @@ function view.proto:Update()
     items:SortItems(catTable, database:GetSortField(self.type))
 
     ---@type CategorizedItemSet[]
-    local allCategories = {}
-
-    ---@type CategorizedItemSet[]
-    local filteredCategories = {}
-
+    local allCategories, filteredCategories = {}, {}
     local iter = 1
+
     for key, value in pairs(catTable) do
         value.key = key
         value.order = enums.Categories[key].order
         value.name = enums.Categories[key].name
         allCategories[iter] = value
-        if (key == sessionFilter) or sessionFilter == nil then
-            tinsert(filteredCategories, value)
+        if not sessionFilter or key == sessionFilter then
+            table.insert(filteredCategories, value)
         end
         iter = iter + 1
     end
@@ -313,38 +405,34 @@ function view.proto:Update()
     table.sort(filteredCategories, function(a, b) return a.order < b.order end)
 
     ---@type CategorizedItemSet[]
-    local orderedCategories = {}
+    local orderedCategories, orderedAllCategories = {}, {}
+
     for i = 1, #filteredCategories do
         orderedCategories[i] = filteredCategories[i]
     end
 
-    ---@type CategorizedItemSet[]
-    local orderedAllCategories = {}
     for i = 1, #allCategories do
         orderedAllCategories[i] = allCategories[i]
     end
 
-    local offset = 1
-    local catIndex = 1
-    local itemIndex = 1
+    local offset, catIndex, itemIndex = 1, 1, 1
+
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
             local catFrame = Pool.FetchInactive(self.categoryPool, catIndex,
                 categoryHeaders.CreateCategoryHeaderPlaceholder)
             Pool.InsertActive(self.categoryPool, catFrame, catIndex)
-            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.frame.ListView,
-                sessionCats, function() self:Update() end)
+            categoryHeaders:BuildCategoryFrame(categoryData, offset, catFrame, self.frame.ListView, sessionCats,
+                function() self:Update() end)
 
             offset = offset + 1
             catIndex = catIndex + 1
-            if sessionCats[categoryData.key] ~= true then
+
+            if not sessionCats[categoryData.key] then
                 for _, item in ipairs(categoryData.items) do
-                    -- Fetch a frame that we already have, OR get a new one
-                    if self.items[itemIndex] then
-                        self.items[itemIndex]:Build(item, offset, self.frame.ListView)
-                    else
-                        local frame = itemFrame:Create()
-                        frame:Build(item, offset, self.frame.ListView)
+                    local frame = self.items[itemIndex] or itemFrame:Create()
+                    frame:Build(item, offset, self.frame.ListView)
+                    if not self.items[itemIndex] then
                         tinsert(self.items, frame)
                     end
 
@@ -357,7 +445,7 @@ function view.proto:Update()
 
     -- Cleanup Unused
     for index, row in pairs(self.items) do
-        if row.item == nil then
+        if not row.item then
             row:Clear()
             self.items[index] = nil
         end
@@ -374,7 +462,7 @@ function view.proto:Update()
     end
 
     self.filterContainer:Update(self.type, orderedAllCategories, onFilterSelectCallback)
-    bags:Update(self.frame, self.type)
+    bags:Update(self.frame, self.type, self.selectedBankType)
 end
 
 ---@return boolean
@@ -388,6 +476,10 @@ end
 
 function view.proto:Hide()
     self.frame:Hide()
+end
+
+function view.proto:GetName()
+    return self.frame:GetName()
 end
 
 function view.proto:UpdateCurrency()

@@ -12,6 +12,13 @@ enums.InventoryType = {
     Shared = 4
 }
 
+---@enum Enums.BankType
+enums.BankType = {
+    Bank = 1,
+    ReagentBank = 2,
+    Warbank = 3
+}
+
 enums.SortOrder = {
     Asc = 1,
     Desc = 2,

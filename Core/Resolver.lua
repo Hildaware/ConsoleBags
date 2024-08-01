@@ -33,16 +33,24 @@ resolver.GetInventoryType = function(link)
     return C_Item.GetItemInventoryTypeByID(link)
 end
 
+---@param itemLocation ItemLocationMixin
 ---@return boolean
-resolver.GetWarboundStatus = function(bindType, bag, slot)
-    local itemLoc = ItemLocation:CreateFromBagAndSlot(bag, slot)
+resolver.GetWarboundStatus = function(bindType, itemLocation)
     if bindType == 2 then -- Bind on equip
-        return C_Item.IsBoundToAccountUntilEquip(itemLoc)
+        return C_Item.IsBoundToAccountUntilEquip(itemLocation)
     else
-        return C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLoc)
+        return C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation)
     end
 end
 
+---@param itemLocation ItemLocationMixin
+---@return boolean
+resolver.IsAccountBankable = function(itemLocation)
+    return C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation)
+end
+
+---@param classId Enum.ItemClass
+---@return boolean
 resolver.IsEquippableItem = function(classId)
     return classId == Enum.ItemClass.Weapon or classId == Enum.ItemClass.Armor
 end

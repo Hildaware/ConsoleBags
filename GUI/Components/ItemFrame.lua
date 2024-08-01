@@ -1,4 +1,6 @@
 local addonName = ...
+
+---@class ConsoleBags: AceAddon
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
 ---@class ItemFrame: AceModule
@@ -39,6 +41,9 @@ function itemFrame:OnInitialize()
     end
 end
 
+---@param item Item
+---@param offset number
+---@param parent Frame
 function itemFrame.proto:Build(item, offset, parent)
     self.item = item
     local frame = self.widget
@@ -156,6 +161,12 @@ function itemFrame.proto:Build(item, offset, parent)
 
     frame.index = offset
 
+    if addon.status.visitingWarbank and not item.isAccountBankable then
+        frame.itemButton.Desaturate:Show()
+    else
+        frame.itemButton.Desaturate:Hide()
+    end
+
     self:Update(frame)
     frame:Show()
     frame.itemButton:Show()
@@ -241,6 +252,15 @@ function itemFrame:_DoCreate()
     new:SetVertexColor(1, 1, 0, 1)
     new:Hide()
     itemButton.NewTexture = new
+
+    local desaturate = itemButton:CreateTexture()
+    desaturate:SetDrawLayer('BACKGROUND')
+    desaturate:SetBlendMode('ADD')
+    desaturate:SetAllPoints()
+    desaturate:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Item_Highlight_Solid')
+    desaturate:SetVertexColor(1, 0, 0, 0.5)
+    desaturate:Hide()
+    itemButton.Desaturate = desaturate
 
     f.itemButton = itemButton
 

@@ -22,28 +22,23 @@ local session = addon:GetModule('Session')
 ---@class Database: AceModule
 local database = addon:GetModule('Database')
 
-local function GetItemData(bag, slot, inventoryLocation)
+
+---@param bag integer
+---@param slot integer
+---@param inventoryType? Enums.InventoryType
+---@return Item?
+local function GetItemData(bag, slot, inventoryType)
     local containerItem = resolver.GetContainerItemInfo(bag, slot)
     if containerItem ~= nil then
-        local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
         local itemInfo = resolver.GetItemInfo(containerItem.hyperlink)
-        local ilvl = resolver.GetEffectiveItemLevel(containerItem.hyperlink)
-        local invType = resolver.GetInventoryType(containerItem.hyperlink)
-        local isNew = C_NewItems.IsNewItem(bag, slot)
 
-        local warboundStatus = false
-        if resolver.IsEquippableItem(itemInfo.type) then
-            warboundStatus = resolver.GetWarboundStatus(itemInfo.bindType, bag, slot)
-        end
-
-        -- Create Item
-        local item = types.Item.new(containerItem, itemInfo, ilvl, bag, slot,
-            isNew, invType, questInfo, inventoryLocation, warboundStatus)
+        local item = types.Item.New(containerItem, itemInfo, inventoryType, bag, slot)
         return item
     end
     return nil
 end
 
+---@param item Item
 local function AddItemToSession(item)
     session.Items[utils.ReplaceBagSlot(item.bag)][item.slot] = item
 
@@ -51,14 +46,19 @@ local function AddItemToSession(item)
         session.Inventory.Resolved = session.Inventory.Resolved + 1
     elseif item.location == enums.InventoryType.Bank then
         session.Bank.Resolved = session.Bank.Resolved + 1
+    elseif item.location == enums.InventoryType.Shared then
+        session.Warbank.Resolved = session.Warbank.Resolved + 1
     end
 end
 
-local function CreateItem(bag, slot, inventoryLocation)
+---@param bag integer
+---@param slot integer
+---@param inventoryType Enums.InventoryType
+local function CreateItem(bag, slot, inventoryType)
     local i = Item:CreateFromBagAndSlot(bag, slot)
     if not i:IsItemEmpty() then
         if i:IsItemDataCached() then
-            local item = GetItemData(bag, slot, inventoryLocation)
+            local item = GetItemData(bag, slot, inventoryType)
             if item then
                 AddItemToSession(item)
                 return true
@@ -76,6 +76,8 @@ local function CreateItem(bag, slot, inventoryLocation)
     return false
 end
 
+---@param bag integer
+---@param inventoryType Enums.InventoryType
 local function CreateBagData(bag, inventoryType)
     local bagSize = C_Container.GetContainerNumSlots(bag)
     local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
@@ -90,6 +92,8 @@ local function CreateBagData(bag, inventoryType)
         end
     elseif inventoryType == enums.InventoryType.Bank then
         session.Bank.TotalCount = session.Bank.TotalCount + (bagSize - freeSlots)
+    elseif inventoryType == enums.InventoryType.Shared then
+        session.Warbank.TotalCount = session.Warbank.TotalCount + (bagSize - freeSlots)
     end
 
     session.Items[utils.ReplaceBagSlot(bag)] =
@@ -98,6 +102,9 @@ local function CreateBagData(bag, inventoryType)
     return bagSize
 end
 
+---@param bag integer
+---@param bagSize integer
+---@param slots table
 local function CleanupSessionItems(bag, bagSize, slots)
     for i = 1, bagSize do
         if slots[i] == false then
@@ -170,6 +177,28 @@ function items.BuildBankCache()
     CleanupSessionItems(utils.ReplaceBagSlot(REAGENTBANK_CONTAINER), reagentContainerSize, requiresCleanup)
 
     session.BuildingBankCache = false
+end
+
+function items.BuildWarbankCache()
+    session.BuildingWarbankCache = true
+    session.Warbank.TotalCount = 0
+    session.Warbank.Count = 0
+    session.Warbank.Resolved = 0
+
+    local invType = enums.InventoryType.Shared
+
+    for bag = Enum.BagIndex.AccountBankTab_1, Enum.BagIndex.AccountBankTab_5 do
+        local bagSize = CreateBagData(bag, invType)
+        local requiresCleanup = {}
+        for slot = 1, bagSize do
+            local created = CreateItem(bag, slot, invType)
+            requiresCleanup[slot] = created
+        end
+
+        CleanupSessionItems(bag, bagSize, requiresCleanup)
+    end
+
+    session.BuildingWarbankCache = false
 end
 
 ---@param categories CategorizedItemSet[]

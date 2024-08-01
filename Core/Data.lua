@@ -156,7 +156,7 @@ function database:SetViewPosition(inventoryType, x, y)
 end
 
 ---@param inventoryType Enums.InventoryType
----@return
+---@return SortField
 function database:GetSortField(inventoryType)
     if inventoryType == enums.InventoryType.Inventory then
         return database:GetInventorySortField()

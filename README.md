@@ -11,6 +11,13 @@ With ConsoleBags, you can:
 
 ConsoleBags is the perfect addon for controller users who want to have more control over their inventory and bank. Download it today and enjoy a new way of playing World of Warcraft!
 
+# 11.0
+- Banks
+    - See bug about moving items. It's probably something to do with the frame itself
+- Performance
+    - Opening bags, etc. can be slow. Can we use SendMessage to do this more async?
+    - Is there an event we can read specific to a slot changing? Can we forcibly handle this?
+
 # Post-MVP
 - Customization
     - Hiding Columns

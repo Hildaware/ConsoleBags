@@ -1,4 +1,6 @@
 local addonName = ...
+
+---@class ConsoleBags: AceAddon
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@cast addon +AceHook-3.0
 
@@ -21,16 +23,26 @@ local view = addon:GetModule('View')
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
 
-local backpackShouldOpen = false
-local backpackShouldClose = false
-local visitingBank = false
+---@class ConsoleBagsStatus
+---@field backpackShouldOpen boolean
+---@field backpackShouldClose boolean
+---@field visitingBank boolean
+---@field visitingWarbank boolean
+addon.status = {}
 
----@class ConsoleBags
+---@class Bags
 ---@field Inventory BagView
 ---@field Bank BagView
 addon.bags = {}
 
 function addon:OnInitialize()
+    addon.status = {
+        backpackShouldOpen = false,
+        backpackShouldClose = false,
+        visitingBank = false,
+        visitingWarbank = false
+    }
+
     local frame = CreateFrame('Frame')
     frame:RegisterEvent("PLAYER_LOGIN")
     frame:RegisterEvent("UPDATE_BINDINGS")
@@ -61,18 +73,21 @@ function addon:OnEnable()
     addon.bags.Inventory = view:Create(enums.InventoryType.Inventory)
     addon.bags.Bank = view:Create(enums.InventoryType.Bank)
 
+    table.insert(UISpecialFrames, addon.bags.Inventory:GetName())
+    table.insert(UISpecialFrames, addon.bags.Bank:GetName())
+
     self:SecureHook('ToggleAllBags')
     self:SecureHook('CloseSpecialWindows')
 
     ---@diagnostic disable-next-line: undefined-field
     events:RegisterEvent('BANKFRAME_OPENED', function()
-        visitingBank = true
+        addon.status.visitingBank = true
         events:Send('ConsoleBagsBankToggle')
     end)
 
     ---@diagnostic disable-next-line: undefined-field
     events:RegisterEvent('BANKFRAME_CLOSED', function()
-        visitingBank = false
+        addon.status.visitingBank = false
         events:Send('ConsoleBagsBankToggle')
     end)
 
@@ -81,7 +96,7 @@ function addon:OnEnable()
 end
 
 function addon.OnBankUpdate()
-    if not visitingBank then
+    if not addon.status.visitingBank then
         addon.bags.Bank:Hide()
 
         if addon.bags.Inventory:IsShown() then
@@ -110,7 +125,7 @@ function addon.OnBankUpdate()
 end
 
 function addon.OnUpdate()
-    if backpackShouldOpen then
+    if addon.status.backpackShouldOpen then
         if session.Settings.HideBags == true then return end
 
         if not session.BuildingCache then
@@ -118,8 +133,8 @@ function addon.OnUpdate()
         end
 
         if session.Inventory.Resolved >= session.Inventory.TotalCount then
-            backpackShouldOpen = false
-            backpackShouldClose = false
+            addon.status.backpackShouldOpen = false
+            addon.status.backpackShouldClose = false
 
             addon.bags.Inventory:UpdateCurrency()
             addon.bags.Inventory:Update()
@@ -127,8 +142,8 @@ function addon.OnUpdate()
             PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
             addon.bags.Inventory:Show()
         end
-    elseif backpackShouldClose then
-        backpackShouldClose = false
+    elseif addon.status.backpackShouldClose then
+        addon.status.backpackShouldClose = false
 
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
         addon.bags.Inventory:Hide()
@@ -139,16 +154,16 @@ end
 
 function addon:ToggleAllBags()
     if addon.bags.Inventory:IsShown() then
-        backpackShouldClose = true
+        addon.status.backpackShouldClose = true
     else
-        backpackShouldOpen = true
+        addon.status.backpackShouldOpen = true
     end
 
     events:Send('ConsoleBagsToggle')
 end
 
 function addon:CloseSpecialWindows()
-    backpackShouldClose = true
+    addon.status.backpackShouldClose = true
     addon.bags.Bank:Hide()
     if C_Bank then
         C_Bank.CloseBankFrame()
@@ -174,6 +189,13 @@ function events:BAG_CONTAINER_UPDATE()
     end
 end
 
+function events:BAG_UPDATE()
+    items.BuildItemCache()
+    if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
+        addon.bags.Inventory:Update()
+    end
+end
+
 function events:EQUIPMENT_SETS_CHANGED()
     items.BuildItemCache()
     if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
@@ -187,7 +209,12 @@ function events:PLAYER_REGEN_DISABLED()
     end
 end
 
-function events:PLAYERBANKBAGSLOTS_CHANGED()
+function events:PLAYERBANKSLOTS_CHANGED()
+    items.BuildBankCache()
+    addon.bags.Bank:Update()
+end
+
+function events:PLAYERREAGENTBANKSLOTS_CHANGED()
     items.BuildBankCache()
     addon.bags.Bank:Update()
 end

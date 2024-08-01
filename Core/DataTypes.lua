@@ -10,6 +10,10 @@ local utils = addon:GetModule('Utils')
 ---@class Enums: AceModule
 local enums = addon:GetModule('Enums')
 
+
+---@class Resolver: AceModule
+local resolver = addon:GetModule('Resolver')
+
 ---@class Item
 ---@field id number
 ---@field name string
@@ -22,7 +26,7 @@ local enums = addon:GetModule('Enums')
 ---@field type Enum.ItemClass
 ---@field subType number -- This is actually an Enum, but wrong?
 ---@field equipLocation Enum.InventoryType
----@field texture string
+---@field texture string|integer
 ---@field value number
 ---@field ilvl number
 ---@field bag number
@@ -34,14 +38,35 @@ local enums = addon:GetModule('Enums')
 ---@field isReadable boolean
 ---@field isFiltered boolean
 ---@field hasNoValue boolean
+---@field isAccountBankable boolean
 ---@field category number
 ---@field location Enums.InventoryType
----@field new function
----@field GetCategory function
 local Item = {}
 
-Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, questInfo, inventoryLocation, isWarbound)
+---@param containerItem ContainerItemInfo
+---@param itemInfo table
+---@param inventoryType Enums.InventoryType
+---@param bag integer
+---@param slot integer
+---@return Item
+Item.New = function(containerItem, itemInfo, inventoryType, bag, slot)
+    local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
+    local ilvl = resolver.GetEffectiveItemLevel(containerItem.hyperlink)
+    local invType = resolver.GetInventoryType(containerItem.hyperlink)
+    local isNew = C_NewItems.IsNewItem(bag, slot)
+
+    local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
+
+    local isWarbound = false
+    if resolver.IsEquippableItem(itemInfo.type) then
+        isWarbound = resolver.GetWarboundStatus(itemInfo.bindType, itemLocation)
+    end
+
+    local accountBankable = resolver.IsAccountBankable(itemLocation)
+
+    ---@type Item
     local self = setmetatable({}, { __index = Item })
+
     self.id = containerItem.itemID
     self.name = containerItem.itemName
     self.link = containerItem.hyperlink
@@ -65,13 +90,15 @@ Item.new = function(containerItem, itemInfo, ilvl, bag, slot, isNew, invType, qu
     self.isReadable = containerItem.isReadable
     self.isFiltered = containerItem.isFiltered
     self.hasNoValue = containerItem.hasNoValue
-    self.category = Item.GetCategory(self)
-    self.location = inventoryLocation
+    self.category = self:GetCategory()
+    self.location = inventoryType
+    self.isAccountBankable = accountBankable
 
     return self
 end
 
-function Item.GetCategory(self)
+---@return integer
+function Item:GetCategory()
     if utils.IsEquipmentUnbound(self) then
         return enums.CustomCategory.BindOnEquip
     elseif self.quality == Enum.ItemQuality.Heirloom then

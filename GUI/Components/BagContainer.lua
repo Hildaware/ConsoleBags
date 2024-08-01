@@ -51,24 +51,43 @@ function bags:Build(type, parent)
     parent.ItemCountText = itemCountText
 end
 
-function bags:Update(container, type)
+---@param container Frame
+---@param type Enums.InventoryType
+---@param bankType? Enums.BankType
+function bags:Update(container, type, bankType)
     if container == nil then return end
     if container.Bags.Container == nil then return end
 
     local bagStart = 1
     local bagEnd = NUM_TOTAL_EQUIPPED_BAG_SLOTS
     if type == enums.InventoryType.Bank then
-        local _, full = GetNumBankSlots()
-        if full then
+        if bankType == enums.BankType.Warbank then
+            -- TODO: Purchase Warbank Slots
             container.Bags.Container.purchase:Hide()
-        end
 
-        bagStart = ITEM_INVENTORY_BANK_BAG_OFFSET + 1
-        bagEnd = NUM_BANKBAGSLOTS + NUM_BAG_SLOTS + 1
+            bagStart = Enum.BagIndex.AccountBankTab_1
+            bagEnd = Enum.BagIndex.AccountBankTab_5
+        else
+            local _, full = GetNumBankSlots()
+            if full then
+                container.Bags.Container.purchase:Hide()
+            end
+
+            bagStart = ITEM_INVENTORY_BANK_BAG_OFFSET + 1
+            bagEnd = NUM_BANKBAGSLOTS + NUM_BAG_SLOTS + 1
+        end
     end
 
     -- TODO: Max needs to be variable based on Race / etc. Prob an API call we can make
-    local max = type == enums.InventoryType.Bank and 28 or 16
+    local max = 16
+    if type == enums.InventoryType.Bank then
+        if bankType == enums.BankType.Warbank then
+            max = 0
+        else
+            max = 28
+        end
+    end
+    -- local max = type == enums.InventoryType.Bank and 28 or 16
     local reagentCount = 0
 
     for bag = bagStart, bagEnd do
@@ -78,7 +97,7 @@ function bags:Update(container, type)
         local maxSlots = C_Container.GetContainerNumSlots(bag)
 
         local bagIndex = bag
-        if type == enums.InventoryType.Bank then
+        if type == enums.InventoryType.Bank and bankType == enums.BankType.Bank then
             bagIndex = bagIndex - ITEM_INVENTORY_BANK_BAG_OFFSET
         end
 
@@ -95,7 +114,7 @@ function bags:Update(container, type)
             link = link
         }
 
-        if type == enums.InventoryType.Bank then
+        if type == enums.InventoryType.Bank and bankType == enums.BankType.Bank then
             local numSlots, _ = GetNumBankSlots()
             bagData.isPurchased = bagIndex <= numSlots
         end
@@ -110,7 +129,11 @@ function bags:Update(container, type)
         end
         container.ItemCountText:SetText(invString)
     elseif type == enums.InventoryType.Bank then
-        container.ItemCountText:SetText(session.Bank.TotalCount .. '/' .. max)
+        if bankType == enums.BankType.Warbank then
+            container.ItemCountText:SetText(session.Warbank.TotalCount .. '/' .. max)
+        else
+            container.ItemCountText:SetText(session.Bank.TotalCount .. '/' .. max)
+        end
     end
 end
 
