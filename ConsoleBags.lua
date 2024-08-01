@@ -224,9 +224,15 @@ end
 
 if _G['Scrap'] then
     local original = _G['Scrap'].ToggleJunk
+    ---@param self any
+    ---@param id number
     _G['Scrap'].ToggleJunk = function(self, id)
         original(self, id)
-        -- Fetch the itemFrame we require (how da fuq)
-        itemFrame:Refresh(id)
+
+        for _, iFrame in pairs(addon.bags.Inventory.items) do
+            if iFrame.itemId == id then
+                iFrame:Update()
+            end
+        end
     end
 end

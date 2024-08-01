@@ -11,8 +11,41 @@ local session = addon:GetModule('Session')
 
 local Masque = LibStub('Masque', true)
 
+---@class ItemButton : Button
+---@field NewItemTexture Texture
+---@field BattlepayItemTexture Texture
+---@field NewTexture Texture
+---@field Desaturate Texture
+---@field SetHasItem function
+---@field SetItemButtonTexture function
+---@field SetMatchesSearch function
+---@field UpdateExtended function
+---@field UpdateQuestItem function
+---@field UpdateNewItem function
+---@field UpdateJunkItem function
+---@field UpdateItemContextMatching function
+---@field UpdateCooldown function
+---@field SetReadable function
+---@field CheckUpdateTooltip function
+
+---@class CanIMogItFrame : Frame
+---@field text FontString
+
+---@class ItemIconButton : ItemButton
+---@field frame Frame
+---@field upgrade Texture
+---@field canI CanIMogItFrame
+---@field scrap Frame
+
 ---@class ItemRow : Frame
----@field itemButton Frame
+---@field itemButton ItemButton
+---@field icon ItemIconButton
+---@field name FontString
+---@field ilvl FontString
+---@field reqlvl FontString
+---@field value FontString
+---@field isItem boolean
+---@field index number
 
 ---@class ListItem
 ---@field widget ItemRow
@@ -21,7 +54,6 @@ local Masque = LibStub('Masque', true)
 ---@field itemId number
 ---@field item Item
 ---@field Build function
----@field Update function
 ---@field Clear function
 itemFrame.proto = {}
 
@@ -167,7 +199,8 @@ function itemFrame.proto:Build(item, offset, parent)
         frame.itemButton.Desaturate:Hide()
     end
 
-    self:Update(frame)
+    self:Update()
+
     frame:Show()
     frame.itemButton:Show()
 end
@@ -210,9 +243,11 @@ function itemFrame:_DoCreate()
     local i = setmetatable({}, { __index = itemFrame.proto })
     local itemHeight = session.Settings.Defaults.Sections.ListItemHeight
 
-    local f = CreateFrame('Frame', nil, UIParent) -- Taint Killer
+    ---@class ItemRow
+    local f = CreateFrame('Frame', nil, UIParent)
     f:SetSize(600 - 24, itemHeight)
 
+    ---@class ItemButton
     local itemButton = CreateFrame('ItemButton', nil, f, 'ContainerFrameItemButtonTemplate')
     itemButton:SetAllPoints(f)
     itemButton:RegisterForClicks('LeftButtonUp', 'RightButtonUp')
@@ -271,6 +306,8 @@ function itemFrame:_DoCreate()
     local icon = CreateFrame('Frame', nil, iconSpace)
     icon:SetPoint('CENTER', iconSpace, 'CENTER')
     icon:SetSize(itemHeight - 6, itemHeight - 6)
+
+    ---@class ItemIconButton
     local iconTexture = CreateFrame('ItemButton', nil, icon, 'ContainerFrameItemButtonTemplate')
     iconTexture:SetAllPoints(icon)
 
@@ -284,6 +321,7 @@ function itemFrame:_DoCreate()
 
     iconTexture.upgrade = upgradeIcon
 
+    ---@class CanIMogItFrame
     local canIFrame = CreateFrame('Frame', nil, iconTexture)
     canIFrame:SetPoint('TOPRIGHT', iconTexture, 'TOPRIGHT', -2, -2)
     canIFrame:SetSize(14, 14)
@@ -388,16 +426,6 @@ end
 ---@return ListItem
 function itemFrame:Create()
     return self._pool:Acquire()
-end
-
--- TODO: This is broken. No longer holding the framesById in sesh
-function itemFrame:Refresh(itemId)
-    if not session.FramesByItemId[itemId] then
-        return
-    end
-    for _, frame in pairs(session.FramesByItemId[itemId]) do
-        frame:Update()
-    end
 end
 
 itemFrame:Enable()

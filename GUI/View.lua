@@ -39,11 +39,16 @@ local categoryHeaders = addon:GetModule('CategoryHeaders')
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
 
+---@class BagWidget: Frame
+---@field Header Frame
+---@field ListView Frame
+---@field gold FontString
+
 ---@class (exact) BagView
 ---@field items ListItem[]
 ---@field filterContainer FilterContainer
 ---@field categoryHeaders CategoryHeader[]
----@field frame Frame -- TODO: Better defined
+---@field widget BagWidget
 ---@field type Enums.InventoryType
 ---@field selectedBankType? Enums.BankType
 view.proto = {}
@@ -62,6 +67,7 @@ function view:Create(inventoryType)
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
+    ---@class BagWidget
     local f = CreateFrame('Frame', addonName .. viewName, UIParent)
     f:SetFrameStrata('HIGH')
     f:SetSize(600, database:GetViewHeight(inventoryType))
@@ -342,7 +348,7 @@ function view:Create(inventoryType)
         _G['ConsolePort']:AddInterfaceCursorFrame(f)
     end
 
-    i.frame = f
+    i.widget = f
     i.filterContainer = filterContainer
 
     return i
@@ -419,7 +425,7 @@ function view.proto:Update()
     for _, categoryData in ipairs(orderedCategories) do
         if #categoryData.items > 0 then
             local categoryFrame = categoryHeaders:Create()
-            categoryFrame:Build(categoryData, offset, self.frame.ListView, sessionCats,
+            categoryFrame:Build(categoryData, offset, self.widget.ListView, sessionCats,
                 function() self:Update() end)
             tinsert(self.categoryHeaders, categoryFrame)
 
@@ -429,7 +435,7 @@ function view.proto:Update()
             if not sessionCats[categoryData.key] then
                 for _, item in ipairs(categoryData.items) do
                     local frame = self.items[itemIndex] or itemFrame:Create()
-                    frame:Build(item, offset, self.frame.ListView)
+                    frame:Build(item, offset, self.widget.ListView)
                     if not self.items[itemIndex] then
                         tinsert(self.items, frame)
                     end
@@ -460,24 +466,24 @@ function view.proto:Update()
     end
 
     self.filterContainer:Update(self.type, orderedAllCategories, onFilterSelectCallback)
-    bags:Update(self.frame, self.type, self.selectedBankType)
+    bags:Update(self.widget, self.type, self.selectedBankType)
 end
 
 ---@return boolean
 function view.proto:IsShown()
-    return self.frame:IsShown()
+    return self.widget:IsShown()
 end
 
 function view.proto:Show()
-    self.frame:Show()
+    self.widget:Show()
 end
 
 function view.proto:Hide()
-    self.frame:Hide()
+    self.widget:Hide()
 end
 
 function view.proto:GetName()
-    return self.frame:GetName()
+    return self.widget:GetName()
 end
 
 function view.proto:UpdateCurrency()
@@ -485,7 +491,7 @@ function view.proto:UpdateCurrency()
     if money == nil then return end
     local str = GetCoinTextureString(money)
     if str == nil or str == '' then return end
-    self.frame.gold:SetText(str)
+    self.widget.gold:SetText(str)
 end
 
 view:Enable()

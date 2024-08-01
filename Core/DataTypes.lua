@@ -29,6 +29,7 @@ local resolver = addon:GetModule('Resolver')
 ---@field texture string|integer
 ---@field value number
 ---@field ilvl number
+---@field reqLvl number
 ---@field bag number
 ---@field slot number
 ---@field isNew boolean

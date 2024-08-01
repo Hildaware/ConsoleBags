@@ -299,7 +299,8 @@
         "FillLocalizedClassList",
         "EventUtil",
         "CharacterReagentBag0Slot",
-        "C_Bank"
+        "C_Bank",
+        "AccountBankPanel"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
