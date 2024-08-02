@@ -99,6 +99,8 @@ function addon.OnBankUpdate()
     if not addon.status.visitingBank then
         addon.bags.Bank:Hide()
 
+        addon.bags.Bank.widget.Header.Additions:SetAsBank()
+
         if addon.bags.Inventory:IsShown() then
             addon:ToggleAllBags()
         end
@@ -189,11 +191,36 @@ function events:BAG_CONTAINER_UPDATE()
     end
 end
 
+--- BAG_UPDATE is tricky. On LOGIN, it fires for every bag including the bank.
+--- On an actual change to the bag, it will only fire for Player Inventory AND Warbank.
+--- This event will not fire for normal Bank Updates.
 ---@param bagId number
 function events:BAG_UPDATE(_, bagId)
-    items.BuildItemCache(bagId)
-    if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
-        addon.bags.Inventory:Update()
+    -- Inventory
+    if enums.PlayerInventoryBagIndex[bagId] then
+        items.BuildItemCache(bagId)
+
+        if session.Inventory.Resolved < session.Inventory.TotalCount then
+            return
+        end
+
+        if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
+            addon.bags.Inventory:Update()
+        end
+        return
+    end
+
+    -- Warbank
+    if enums.WarbankBagIndex[bagId] then
+        items.BuildWarbankCache(bagId)
+
+        if session.Warbank.Resolved < session.Warbank.TotalCount then
+            return
+        end
+
+        if addon.bags.Bank and addon.bags.Bank:IsShown() then
+            addon.bags.Bank:Update()
+        end
     end
 end
 

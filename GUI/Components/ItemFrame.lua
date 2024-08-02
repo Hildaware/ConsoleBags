@@ -90,7 +90,6 @@ function itemFrame.proto:Build(item, offset, parent)
 
     frame.itemButton:SetHasItem(item.texture)
 
-    -- local r, g, b, _ = GetItemQualityColor(item.quality or 0)
     local r, g, b, _ = C_Item.GetItemQualityColor(item.quality or 0)
     frame.itemButton.HighlightTexture:SetVertexColor(r, g, b, 1)
 

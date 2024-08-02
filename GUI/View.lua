@@ -39,8 +39,15 @@ local categoryHeaders = addon:GetModule('CategoryHeaders')
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
 
+---@class BankHeader: AceModule
+local bankHeader = addon:GetModule('BankHeader')
+
+---@class Header: Frame
+---@field texture Texture
+---@field Additions BankHeaderFrame
+
 ---@class BagWidget: Frame
----@field Header Frame
+---@field Header Header
 ---@field ListView Frame
 ---@field gold FontString
 
@@ -128,6 +135,7 @@ function view:Create(inventoryType)
     end
 
     -- Frame Header
+    ---@class Header
     local header = CreateFrame('Frame', nil, f)
     header:SetSize(f:GetWidth(), session.Settings.Defaults.Sections.Header)
     header:SetPoint('TOPLEFT', f, 'TOPLEFT', 1, -1)
@@ -138,83 +146,7 @@ function view:Create(inventoryType)
     header.texture:SetColorTexture(0, 0, 0, 0.5)
 
     if inventoryType == enums.InventoryType.Bank then
-        local togglerContainer = CreateFrame('Frame', nil, header)
-        togglerContainer:SetPoint('LEFT', header, 'LEFT', 12, 0)
-        togglerContainer:SetSize(200, session.Settings.Defaults.Sections.Header)
-
-        local bankButton = CreateFrame('Button', nil, togglerContainer)
-        bankButton:SetPoint('LEFT')
-        bankButton:SetSize(60, session.Settings.Defaults.Sections.Header - 8)
-        bankButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Doubleline')
-        bankButton:SetScript('OnClick', function(btn)
-            btn.text:SetTextColor(1, 1, 0)
-            btn:GetParent().warbank.text:SetTextColor(1, 1, 1)
-
-            i.selectedBankType = enums.BankType.Bank
-            addon.status.visitingWarbank = false
-
-            if not session.BuildingBankCache then
-                items.BuildBankCache()
-            end
-
-            addon.bags.Inventory:Update()
-
-            BankFrame.selectedTab = 1
-            BankFrame.activeTabIndex = 1
-            AccountBankPanel.selectedTabID = nil
-
-            if session.Bank.Resolved >= session.Bank.TotalCount then
-                addon.bags.Bank:Update()
-            end
-        end)
-
-        bankButton.text = bankButton:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-        bankButton.text:SetPoint('CENTER')
-        bankButton.text:SetText('Bank')
-        bankButton.text:SetJustifyH('CENTER')
-        bankButton.text:SetTextColor(1, 1, 0)
-
-        togglerContainer.bank = bankButton
-
-        local warbankButton = CreateFrame('Button', nil, togglerContainer)
-        warbankButton:SetPoint('LEFT', bankButton, 'RIGHT', 4, 0)
-        warbankButton:SetSize(80, session.Settings.Defaults.Sections.Header - 8)
-        warbankButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Doubleline')
-        warbankButton:SetScript('OnClick', function(btn)
-            btn.text:SetTextColor(1, 1, 0)
-            btn:GetParent().bank.text:SetTextColor(1, 1, 1)
-
-            i.selectedBankType = enums.BankType.Warbank
-            addon.status.visitingWarbank = true
-
-            if not session.BuildingWarbankCache then
-                items.BuildWarbankCache()
-            end
-
-            addon.bags.Inventory:Update()
-
-            BankFrame.selectedTab = 1
-            BankFrame.activeTabIndex = 3
-            local tabData = C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
-            for _, data in pairs(tabData) do
-                if data.ID ~= nil then
-                    AccountBankPanel.selectedTabID = data.ID
-                    break
-                end
-            end
-
-            if session.Warbank.Resolved >= session.Warbank.TotalCount then
-                addon.bags.Bank:Update()
-            end
-        end)
-
-        warbankButton.text = warbankButton:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-        warbankButton.text:SetPoint('CENTER')
-        warbankButton.text:SetText('Warbank')
-        warbankButton.text:SetJustifyH('CENTER')
-        warbankButton.text:SetTextColor(1, 1, 1)
-
-        togglerContainer.warbank = warbankButton
+        header.Additions = bankHeader:CreateAdditions(i, header)
     else
         local text = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
         text:SetPoint('LEFT', header, 'LEFT', 12, 0)

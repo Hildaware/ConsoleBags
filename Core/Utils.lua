@@ -248,14 +248,17 @@ function utils.ReplaceBagSlot(bag)
     return bag
 end
 
-function utils:CreateBorder(self)
-    if not self.borders then
-        self.borders = {}
+---@param frame Frame
+---@param color ColorMixin?
+function utils:CreateBorder(frame, color)
+    if not frame.borders then
+        frame.borders = {}
         for i = 1, 4 do
-            self.borders[i] = self:CreateLine(nil, 'BACKGROUND', nil, 0)
-            local l = self.borders[i]
+            frame.borders[i] = frame:CreateLine(nil, 'BACKGROUND', nil, 0)
+            local l = frame.borders[i]
             l:SetThickness(1)
-            l:SetColorTexture(0, 0, 0, 1)
+            local c = color or { 0.2, 0.2, 0.2, 1 }
+            l:SetColorTexture(c[1], c[2], c[3], c[4])
             if i == 1 then
                 l:SetStartPoint('TOPLEFT')
                 l:SetEndPoint('TOPRIGHT')

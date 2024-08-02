@@ -191,7 +191,8 @@ function items.BuildBankCache()
     session.BuildingBankCache = false
 end
 
-function items.BuildWarbankCache()
+---@param bagId number?
+function items.BuildWarbankCache(bagId)
     session.BuildingWarbankCache = true
     session.Warbank.TotalCount = 0
     session.Warbank.Count = 0
@@ -199,15 +200,26 @@ function items.BuildWarbankCache()
 
     local invType = enums.InventoryType.Shared
 
-    for bag = Enum.BagIndex.AccountBankTab_1, Enum.BagIndex.AccountBankTab_5 do
-        local bagSize = CreateBagData(bag, invType)
+    if bagId == nil then
+        for bag = Enum.BagIndex.AccountBankTab_1, Enum.BagIndex.AccountBankTab_5 do
+            local bagSize = CreateBagData(bag, invType)
+            local requiresCleanup = {}
+            for slot = 1, bagSize do
+                local created = CreateItem(bag, slot, invType)
+                requiresCleanup[slot] = created
+            end
+
+            CleanupSessionItems(bag, bagSize, requiresCleanup)
+        end
+    else
+        local bagSize = CreateBagData(bagId, invType)
         local requiresCleanup = {}
         for slot = 1, bagSize do
-            local created = CreateItem(bag, slot, invType)
+            local created = CreateItem(bagId, slot, invType)
             requiresCleanup[slot] = created
         end
 
-        CleanupSessionItems(bag, bagSize, requiresCleanup)
+        CleanupSessionItems(bagId, bagSize, requiresCleanup)
     end
 
     session.BuildingWarbankCache = false

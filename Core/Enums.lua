@@ -4,6 +4,25 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Enums: AceModule
 local enums = addon:NewModule('Enums')
 
+---@enum Enums.PlayerInventoryBagIndex
+enums.PlayerInventoryBagIndex = {
+    [Enum.BagIndex.Backpack] = Enum.BagIndex.Backpack,
+    [Enum.BagIndex.Bag_1] = Enum.BagIndex.Bag_1,
+    [Enum.BagIndex.Bag_2] = Enum.BagIndex.Bag_2,
+    [Enum.BagIndex.Bag_3] = Enum.BagIndex.Bag_3,
+    [Enum.BagIndex.Bag_4] = Enum.BagIndex.Bag_4,
+    [Enum.BagIndex.ReagentBag] = Enum.BagIndex.ReagentBag
+}
+
+---@enum Enums.WarbankBagIndex
+enums.WarbankBagIndex = {
+    [Enum.BagIndex.AccountBankTab_1] = Enum.BagIndex.AccountBankTab_1,
+    [Enum.BagIndex.AccountBankTab_2] = Enum.BagIndex.AccountBankTab_2,
+    [Enum.BagIndex.AccountBankTab_3] = Enum.BagIndex.AccountBankTab_3,
+    [Enum.BagIndex.AccountBankTab_4] = Enum.BagIndex.AccountBankTab_4,
+    [Enum.BagIndex.AccountBankTab_5] = Enum.BagIndex.AccountBankTab_5
+}
+
 ---@enum Enums.InventoryType
 enums.InventoryType = {
     Inventory = 1,
