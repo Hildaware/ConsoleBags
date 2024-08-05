@@ -229,6 +229,11 @@ function events:PLAYERBANKSLOTS_CHANGED()
     addon.bags.Bank:Update()
 end
 
+function events:PLAYERBANKBAGSLOTS_CHANGED()
+    items.BuildBankCache()
+    addon.bags.Bank:Update()
+end
+
 function events:EQUIPMENT_SETS_CHANGED()
     items.BuildItemCache()
     if addon.bags.Inventory and addon.bags.Inventory:IsShown() then

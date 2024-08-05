@@ -22,7 +22,6 @@ local utils = addon:GetModule('Utils')
 ---@class Filter
 ---@field widget FilterItem
 ---@field categoryKey number
----@field Build function
 ---@field Clear function
 filtering.itemProto = {}
 
@@ -32,6 +31,8 @@ filtering.itemProto = {}
 ---@class SelectedFilterContainer: Frame
 ---@field texture Texture
 ---@field text FontString
+---@field prevText FontString
+---@field nextText FontString
 
 ---@class AnimatedTexture: Texture
 ---@field animation AnimationGroup
@@ -79,18 +80,19 @@ function filtering.itemProto:Build(view, inventoryType, categoryData, position, 
     self.widget:SetPoint('CENTER', view.widget.ButtonContainer, 'CENTER', position, 0)
 
     if isMain then
-        self.widget:SetScale(1.0)
-        self.widget.backgroundTexture:Hide()
+        self.widget:SetScale(1.1)
     else
-        self.widget:SetScale(0.75)
-        self.widget.backgroundTexture:Show()
+        self.widget:SetScale(0.9)
     end
 
     self.widget:RegisterForClicks('AnyDown')
     self.widget:RegisterForClicks('AnyUp')
 
     if categoryData.key == 999 then -- ALL
-        self.widget.texture:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Logo_Normal')
+        local texture = 'Interface\\ContainerFrame\\BagSlots2x'
+        local textureAtlas = 'bag-main'
+        self.widget.texture:SetTexture(texture)
+        self.widget.texture:SetAtlas(textureAtlas)
     else
         self.widget.texture:SetTexture(utils.GetCategoyIcon(categoryData.key))
     end
@@ -222,6 +224,8 @@ end
 function filtering.proto:Update(inventoryType, categories, callback)
     self.currentCategoryKey = self.currentCategoryKey or 999
 
+    local spacing = 8
+
     -- Update the categories
     self.currentCategories = {}
     tinsert(self.currentCategories, 999)
@@ -288,11 +292,15 @@ function filtering.proto:Update(inventoryType, categories, callback)
         end
 
         local leftFrame = filtering:Create()
-        leftFrame:Build(self, inventoryType, categories[leftIndex], (-32 * i) - 10, false, callback)
+        leftFrame:Build(self, inventoryType, categories[leftIndex], (-36 * i) - spacing, false, callback)
         self.widget.ButtonContainer.Children[currentIndex] = leftFrame
 
         if i > maxPerSideShown then
             leftFrame.widget:Hide()
+        end
+
+        if i == 1 then
+            self.widget.SelectedContainer.prevText:SetText(string.upper(categories[leftIndex].name))
         end
 
         currentIndex = currentIndex - 1
@@ -308,11 +316,15 @@ function filtering.proto:Update(inventoryType, categories, callback)
         end
 
         local rightFrame = filtering:Create()
-        rightFrame:Build(self, inventoryType, categories[rightIndex], (32 * i) + 10, false, callback)
+        rightFrame:Build(self, inventoryType, categories[rightIndex], (36 * i) + spacing, false, callback)
         self.widget.ButtonContainer.Children[currentIndex] = rightFrame
 
         if i > maxPerSideShown then
             rightFrame.widget:Hide()
+        end
+
+        if i == 1 then
+            self.widget.SelectedContainer.nextText:SetText(string.upper(categories[rightIndex].name))
         end
 
         currentIndex = currentIndex + 1
@@ -344,13 +356,20 @@ function filtering:BuildContainer(view, type)
     ---@type FilterContainer
     local i = setmetatable({}, { __index = filtering.proto })
 
+    local categoryNameHeight = 19
+    local height = session.Settings.Defaults.Sections.Filters + categoryNameHeight
+
     local filterContainer = CreateFrame('Frame', nil, view)
-    filterContainer:SetSize(view:GetWidth(), session.Settings.Defaults.Sections.Filters)
+    filterContainer:SetSize(view:GetWidth(), height)
     filterContainer:SetPoint('TOPLEFT', view, 'TOPLEFT', 0, -session.Settings.Defaults.Sections.Header)
 
+    local filterTex = filterContainer:CreateTexture(nil, 'BACKGROUND')
+    filterTex:SetAllPoints(filterContainer)
+    filterTex:SetColorTexture(0.25, 0.25, 0.25, 0.5)
+
     local buttonContainer = CreateFrame('Frame', nil, filterContainer)
-    buttonContainer:SetPoint('TOPLEFT', filterContainer, 'TOPLEFT', 34, 0)
-    buttonContainer:SetPoint('BOTTOMRIGHT', filterContainer, 'BOTTOMRIGHT', -34, 0)
+    buttonContainer:SetPoint('TOP', filterContainer, 'TOP', 0, -2)
+    buttonContainer:SetSize(view:GetWidth() - 68, session.Settings.Defaults.Sections.Filters)
 
     local selected = buttonContainer:CreateTexture(nil, 'ARTWORK')
     selected:SetPoint('TOP')
@@ -370,7 +389,7 @@ function filtering:BuildContainer(view, type)
     -- LEFT / RIGHT Buttons
     if _G['ConsolePort'] and type == enums.InventoryType.Inventory then
         local lTexture = filterContainer:CreateTexture(nil, 'ARTWORK')
-        lTexture:SetPoint('LEFT', filterContainer, 'LEFT', 6, 0)
+        lTexture:SetPoint('TOPLEFT', filterContainer, 'TOPLEFT', 6, -4)
         lTexture:SetSize(24, 24)
         lTexture:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\lb')
 
@@ -385,7 +404,7 @@ function filtering:BuildContainer(view, type)
         filterContainer.LeftButton = lTexture
 
         local rTexture = filterContainer:CreateTexture(nil, 'ARTWORK')
-        rTexture:SetPoint('RIGHT', filterContainer, 'RIGHT', -6, 0)
+        rTexture:SetPoint('TOPRIGHT', filterContainer, 'TOPRIGHT', -6, -4)
         rTexture:SetSize(24, 24)
         rTexture:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\rb')
 
@@ -402,7 +421,7 @@ function filtering:BuildContainer(view, type)
 
     local selectedContainer = CreateFrame('Frame', nil, filterContainer)
     selectedContainer:SetPoint('TOP', buttonContainer, 'BOTTOM', 0, 0)
-    selectedContainer:SetSize(view:GetWidth(), session.Settings.Defaults.Sections.Filters)
+    selectedContainer:SetSize(view:GetWidth(), categoryNameHeight)
 
     local selectedTex = selectedContainer:CreateTexture(nil, 'ARTWORK')
     selectedTex:SetAllPoints(selectedContainer)
@@ -410,13 +429,31 @@ function filtering:BuildContainer(view, type)
     selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
     local selectedText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    selectedText:SetPoint('CENTER', selectedContainer, 'CENTER', 0, 0)
+    selectedText:SetPoint('CENTER', selectedContainer, 'CENTER', 0, 2)
     selectedText:SetJustifyH('CENTER')
     selectedText:SetJustifyV('MIDDLE')
     selectedText:SetTextColor(1, 1, 0, 1)
     selectedText:SetText(string.upper('All'))
 
+    local prevText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    prevText:SetPoint('RIGHT', selectedText, 'LEFT', -10, 0)
+    prevText:SetJustifyH('RIGHT')
+    prevText:SetJustifyV('MIDDLE')
+    prevText:SetTextScale(0.8)
+    prevText:SetTextColor(0.5, 0.5, 0.5, 1)
+    prevText:SetText(string.upper('Previous'))
+
+    local nextText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    nextText:SetPoint('LEFT', selectedText, 'RIGHT', 10, 0)
+    nextText:SetJustifyH('LEFT')
+    nextText:SetJustifyV('MIDDLE')
+    nextText:SetTextScale(0.8)
+    nextText:SetTextColor(0.5, 0.5, 0.5, 1)
+    nextText:SetText(string.upper('Next'))
+
     selectedContainer.text = selectedText
+    selectedContainer.prevText = prevText
+    selectedContainer.nextText = nextText
 
     filterContainer.ButtonContainer = buttonContainer
     filterContainer.SelectedContainer = selectedContainer
@@ -435,29 +472,18 @@ end
 function filtering:_DoCreate()
     local i = setmetatable({}, { __index = filtering.itemProto })
 
+    local size = session.Settings.Defaults.Sections.Filters
+
     ---@type Button
     local f = CreateFrame('Button')
-    f:SetSize(28, session.Settings.Defaults.Sections.Filters)
+    f:SetSize(size, size)
 
-    local tex = f:CreateTexture(nil, 'ARTWORK')
-    tex:SetPoint('CENTER', 0, 'CENTER')
-    tex:SetSize(24, 24)
+    local tex = f:CreateTexture(nil, 'ARTWORK', nil, 1)
+    tex:SetAllPoints(f)
 
     f.texture = tex
     f:RegisterForClicks('AnyDown')
     f:RegisterForClicks('AnyUp')
-
-    local background = f:CreateTexture(nil, 'BACKGROUND')
-    background:SetAllPoints(f)
-    background:SetColorTexture(1, 1, 1, 0.1)
-
-    local mask = f:CreateMaskTexture()
-    mask:SetAllPoints(background)
-    mask:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\box', 'CLAMPTOBLACKADDITIVE',
-        'CLAMPTOBLACKADDITIVE')
-    background:AddMaskTexture(mask)
-
-    f.backgroundTexture = background
 
     local newTex = f:CreateTexture(nil, 'OVERLAY')
     newTex:SetPoint('TOPRIGHT', f, 'TOPRIGHT', 0, -4)

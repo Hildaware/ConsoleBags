@@ -10,6 +10,8 @@ local enums = addon:GetModule('Enums')
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
+---@param classId integer
+---@return string?
 utils.GetItemClass = function(classId)
     for i, v in pairs(Enum.ItemClass) do
         if classId == v then return i end
@@ -287,6 +289,26 @@ function utils:CreateBorder(frame, color)
                 l:SetStartPoint('BOTTOMLEFT')
                 l:SetEndPoint('TOPLEFT')
             end
+        end
+    end
+end
+
+---comment
+---@param frame Frame
+---@param anchorPoint AnchorPoint
+---@param color ColorMixin?
+function utils:CreateRegionalBorder(frame, anchorPoint, color)
+    if not frame.borders then
+        frame.borders = frame:CreateLine(nil, 'BACKGROUND', nil, 0)
+        frame.borders:SetThickness(1)
+        local c = color or { 0.2, 0.2, 0.2, 1 }
+        frame.borders:SetColorTexture(c[1], c[2], c[3], c[4])
+
+        if anchorPoint == 'BOTTOM' then
+            ---@diagnostic disable-next-line: missing-parameter
+            frame.borders:SetStartPoint('BOTTOMLEFT')
+            ---@diagnostic disable-next-line: missing-parameter
+            frame.borders:SetEndPoint('BOTTOMRIGHT')
         end
     end
 end

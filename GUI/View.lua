@@ -137,9 +137,11 @@ function view:Create(inventoryType)
     -- Frame Header
     ---@class Header
     local header = CreateFrame('Frame', nil, f)
-    header:SetSize(f:GetWidth(), session.Settings.Defaults.Sections.Header)
+    header:SetSize(f:GetWidth() - 2, session.Settings.Defaults.Sections.Header)
     header:SetPoint('TOPLEFT', f, 'TOPLEFT', 1, -1)
     header:EnableMouse(true)
+
+    utils:CreateRegionalBorder(header, 'BOTTOM')
 
     header.texture = header:CreateTexture(nil, 'BACKGROUND')
     header.texture:SetAllPoints(header)
@@ -196,7 +198,7 @@ function view:Create(inventoryType)
     sorting:Build(f, inventoryType, function() i:Update() end)
 
     local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
-    local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters * 2)
+    local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters + 20)
         + session.Settings.Defaults.Sections.ListViewHeader
     scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
     scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, session.Settings.Defaults.Sections.Footer + 2)
@@ -215,7 +217,7 @@ function view:Create(inventoryType)
     scrollChild:SetSize(scroller:GetWidth(), 1)
 
     local footer = CreateFrame('Frame', nil, f)
-    footer:SetSize(f:GetWidth(), session.Settings.Defaults.Sections.Footer)
+    footer:SetSize(f:GetWidth() - 2, session.Settings.Defaults.Sections.Footer)
     footer:SetPoint('BOTTOMLEFT', f, 'BOTTOMLEFT', 1, 1)
 
     footer.texture = footer:CreateTexture(nil, 'BACKGROUND')

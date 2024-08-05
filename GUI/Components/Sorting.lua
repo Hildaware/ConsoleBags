@@ -16,7 +16,7 @@ local database = addon:GetModule('Database')
 function sorting:Build(parent, type, onSelect)
     local hFrame = CreateFrame('Frame', nil, parent)
     hFrame:SetSize(parent:GetWidth(), session.Settings.Defaults.Sections.ListViewHeader)
-    local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters * 2)
+    local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters + 20)
     local addedOffset = 5
     hFrame:SetPoint('TOPLEFT', parent, 'TOPLEFT', 0, -(offset + addedOffset))
 
@@ -28,34 +28,42 @@ function sorting:Build(parent, type, onSelect)
     tex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Underline')
     tex:SetVertexColor(1, 1, 1, 0.5)
 
-    local icon = self:Create(hFrame, hFrame, '•', session.Settings.Defaults.Columns.Icon,
-        enums.SortFields.Icon, true, type, 'Rarity', onSelect)
+    local anchor = hFrame
+    for index, sortType in ipairs(enums.SortFields) do
+        local sortSize = session.Settings.Defaults.Columns[sortType.dbColumn]
+        local sortButton = self:Create(hFrame, anchor, sortType, sortSize, type, onSelect, index == 1)
 
-    local name = self:Create(hFrame, icon, 'name', session.Settings.Defaults.Columns.Name,
-        enums.SortFields.Name, false, type, 'Item Name', onSelect)
+        if index ~= #enums.SortFields then
+            local div = hFrame:CreateTexture(nil, 'BACKGROUND')
+            div:SetPoint('TOPLEFT', sortButton, 'TOPRIGHT', 0, 0)
+            div:SetSize(1, hFrame:GetHeight() - 9)
+            div:SetColorTexture(1, 1, 1, 0.5)
+        end
 
-    -- local category = CreateButton(hFrame, name, 'cat', session.Settings.Defaults.Columns.Category,
-    --     enums.SortFields.Category, false, type)
-
-    local ilvl = self:Create(hFrame, name, 'ilvl', session.Settings.Defaults.Columns.Ilvl,
-        enums.SortFields.Ilvl, false, type, 'Item Level', onSelect)
-
-    local reqlvl = self:Create(hFrame, ilvl, 'req', session.Settings.Defaults.Columns.ReqLvl,
-        enums.SortFields.ReqLvl, false, type, 'Required Level', onSelect)
-
-    local value = self:Create(hFrame, reqlvl, 'value', session.Settings.Defaults.Columns.Value,
-        enums.SortFields.Value, false, type, 'Gold Value', onSelect)
+        anchor = sortButton
+    end
 end
 
-function sorting:Create(parent, anchor, name, width, sortField, initial, type, friendlyName, onSelect)
+---@param parent Frame
+---@param anchor Frame
+---@param sortType SortType
+---@param width integer
+---@param type Enums.InventoryType
+---@param onSelect function
+---@param initial boolean?
+---@return table|Button
+function sorting:Create(parent, anchor, sortType, width, type, onSelect, initial)
     local frame = CreateFrame('Button', nil, parent)
     frame:SetSize(width, parent:GetHeight())
-    frame:SetPoint('LEFT', anchor, initial and 'LEFT' or 'RIGHT', initial and 3 or 0, 0)
+
+    local anchorPoint = initial == true and 'LEFT' or 'RIGHT'
+    local offset = initial == true and 3 or 0
+    frame:SetPoint('LEFT', anchor, anchorPoint, offset, 0)
 
     local text = frame:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     text:SetPoint('BOTTOM', frame, 'BOTTOM', 0, 12)
     text:SetJustifyH('CENTER')
-    text:SetText(name)
+    text:SetText(sortType.shortName)
     text:SetTextColor(1, 1, 1)
 
     local arrow = frame:CreateTexture('ARTWORK')
@@ -76,13 +84,13 @@ function sorting:Create(parent, anchor, name, width, sortField, initial, type, f
         arrow:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Arrow_Down')
     end
 
-    if sortData.Field ~= sortField then
+    if sortData.Field ~= sortType.id then
         arrow:Hide()
     end
 
     frame:SetScript('OnClick', function()
         local sortOrder = sortData.Sort
-        if sortData.Field == sortField then
+        if sortData.Field == sortType.id then
             if sortOrder == enums.SortOrder.Asc then
                 sortOrder = enums.SortOrder.Desc
             else
@@ -90,7 +98,7 @@ function sorting:Create(parent, anchor, name, width, sortField, initial, type, f
             end
         end
 
-        sortData.Field = sortField
+        sortData.Field = sortType.id
         sortData.Sort = sortOrder
 
         if sortData.Sort ~= enums.SortOrder.Desc then
@@ -103,8 +111,8 @@ function sorting:Create(parent, anchor, name, width, sortField, initial, type, f
         text:SetTextColor(1, 1, 0)
 
         -- Remove other arrows
-        for _, k in pairs(enums.SortFields) do
-            if k ~= sortField then
+        for _, k in pairs(enums.SortField) do
+            if k ~= sortType.id then
                 parent.fields[k].arrow:Hide()
                 parent.fields[k].text:SetTextColor(1, 1, 1)
             end
@@ -115,7 +123,7 @@ function sorting:Create(parent, anchor, name, width, sortField, initial, type, f
 
     frame:SetScript('OnEnter', function(self)
         GameTooltip:SetOwner(self, 'ANCHOR_TOPRIGHT')
-        GameTooltip:SetText('Sort By: ' .. friendlyName, 1, 1, 1, 1, true)
+        GameTooltip:SetText('Sort By: ' .. sortType.friendlyName, 1, 1, 1, 1, true)
         GameTooltip:Show()
     end)
 
@@ -123,7 +131,7 @@ function sorting:Create(parent, anchor, name, width, sortField, initial, type, f
         GameTooltip:Hide()
     end)
 
-    parent.fields[sortField] = frame
+    parent.fields[sortType.id] = frame
     frame.arrow = arrow
     frame.text = text
 

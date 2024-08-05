@@ -29,7 +29,7 @@ local defaults = {
                 Value = 110
             },
             SortField = { ---@type SortField
-                Field = enums.SortFields.Name,
+                Field = enums.SortField.Name,
                 Sort = enums.SortOrder.Desc
             }
         },
@@ -51,7 +51,7 @@ local defaults = {
                 Value = 110
             },
             SortField = { ---@type SortField
-                Field = enums.SortFields.Name,
+                Field = enums.SortField.Name,
                 Sort = enums.SortOrder.Desc
             }
         }

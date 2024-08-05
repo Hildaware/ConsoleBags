@@ -50,7 +50,7 @@ function session:OnInitialize()
             },
             Sections = {
                 Header = 32,
-                Filters = 28,
+                Filters = 32,
                 ListViewHeader = 28,
                 ListItemHeight = 28,
                 Footer = 32

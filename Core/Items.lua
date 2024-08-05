@@ -232,7 +232,7 @@ function items:SortItems(categories, sortField)
     local order = sortField.Sort
 
     for _, cat in pairs(categories) do
-        if type == enums.SortFields.COUNT then
+        if type == enums.SortField.COUNT then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then
@@ -243,7 +243,7 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortFields.Name then
+        if type == enums.SortField.Name then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then
@@ -254,7 +254,7 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortFields.Icon then
+        if type == enums.SortField.Icon then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then
@@ -265,7 +265,7 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortFields.Category then
+        if type == enums.SortField.Category then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then
@@ -276,7 +276,7 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortFields.Ilvl then
+        if type == enums.SortField.Ilvl then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then
@@ -287,7 +287,7 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortFields.ReqLvl then
+        if type == enums.SortField.ReqLvl then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then
@@ -298,7 +298,7 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortFields.Value then
+        if type == enums.SortField.Value then
             table.sort(cat.items,
                 function(a, b)
                     if order == enums.SortOrder.Desc then

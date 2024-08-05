@@ -43,13 +43,29 @@ enums.SortOrder = {
     Desc = 2,
 }
 
-enums.SortFields = {
+---@enum Enums.SortField
+enums.SortField = {
     Icon = 2,
     Name = 3,
     -- Category = 4,
     Ilvl = 5,
     ReqLvl = 6,
     Value = 7
+}
+
+---@class SortType
+---@field shortName string
+---@field friendlyName string
+---@field id Enums.SortField
+---@field dbColumn string
+
+---@type table<integer, SortType>
+enums.SortFields = {
+    [1] = { shortName = '•', friendlyName = 'Rarity', id = enums.SortField.Icon, dbColumn = 'Icon' },
+    [2] = { shortName = 'Name', friendlyName = 'Item Name', id = enums.SortField.Name, dbColumn = 'Name' },
+    [3] = { shortName = 'ilvl', friendlyName = 'Item Level', id = enums.SortField.Ilvl, dbColumn = 'Ilvl' },
+    [4] = { shortName = 'req', friendlyName = 'Required Level', id = enums.SortField.ReqLvl, dbColumn = 'ReqLvl' },
+    [5] = { shortName = 'Value', friendlyName = 'Gold Value', id = enums.SortField.Value, dbColumn = 'Value' }
 }
 
 enums.FilterFields = {
