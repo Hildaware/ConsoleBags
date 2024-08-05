@@ -1,4 +1,6 @@
 local addonName = ...
+
+---@class ConsoleBags: AceAddon
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
 ---@class Filtering: AceModule
@@ -117,7 +119,7 @@ function filtering.itemProto:Build(view, inventoryType, categoryData, position, 
             if inventoryType == enums.InventoryType.Inventory then
                 count = session.Inventory.Count
             elseif inventoryType == enums.InventoryType.Bank then
-                count = session.Bank.Count
+                count = session.Bank.TotalCount
             end
         end
 
@@ -275,7 +277,11 @@ function filtering.proto:Update(inventoryType, categories, callback)
         if inventoryType == enums.InventoryType.Inventory then
             count = session.Inventory.Count
         elseif inventoryType == enums.InventoryType.Bank then
-            count = session.Bank.Count
+            if addon.bags.Bank.selectedBankType == enums.BankType.Bank then
+                count = session.Bank.TotalCount
+            else
+                count = session.Warbank.TotalCount
+            end
         end
     end
     local catText = string.upper(newKeyCategory.name .. ' (' .. count .. ')')
@@ -387,7 +393,7 @@ function filtering:BuildContainer(view, type)
     buttonContainer.Children = {}
 
     -- LEFT / RIGHT Buttons
-    if _G['ConsolePort'] and type == enums.InventoryType.Inventory then
+    if _G['ConsolePort'] then
         local lTexture = filterContainer:CreateTexture(nil, 'ARTWORK')
         lTexture:SetPoint('TOPLEFT', filterContainer, 'TOPLEFT', 6, -4)
         lTexture:SetSize(24, 24)

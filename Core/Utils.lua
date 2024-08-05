@@ -10,6 +10,18 @@ local enums = addon:GetModule('Enums')
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
+
+---@param frame Frame
+---@return Frame?
+function utils:GetParentMostNode(frame)
+    if type(frame) ~= 'table' then return nil end
+    local parent = frame:GetParent()
+    if parent == UIParent then
+        return frame
+    end
+    return utils:GetParentMostNode(parent)
+end
+
 ---@param classId integer
 ---@return string?
 utils.GetItemClass = function(classId)

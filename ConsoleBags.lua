@@ -33,6 +33,7 @@ addon.status = {}
 ---@class Bags
 ---@field Inventory BagView
 ---@field Bank BagView
+---@field FocusedNode Enums.InventoryType?
 addon.bags = {}
 
 function addon:OnInitialize()
@@ -72,6 +73,7 @@ end
 function addon:OnEnable()
     addon.bags.Inventory = view:Create(enums.InventoryType.Inventory)
     addon.bags.Bank = view:Create(enums.InventoryType.Bank)
+    addon.bags.FocusedNode = nil
 
     table.insert(UISpecialFrames, addon.bags.Inventory:GetName())
     table.insert(UISpecialFrames, addon.bags.Bank:GetName())

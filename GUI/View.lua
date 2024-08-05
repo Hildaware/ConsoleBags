@@ -91,29 +91,29 @@ function view:Create(inventoryType)
     f.texture:SetAllPoints(f)
     f.texture:SetColorTexture(0, 0, 0, 0.75)
 
-    -- Input Handling for Inventory (todo: Bank?)
-    if inventoryType == enums.InventoryType.Inventory then
+    if _G['ConsolePort'] then
         -- Stop ConsolePort from reading buttons
-        f:SetScript('OnShow', function(self)
+        f:SetScript('OnShow', function(frame)
             if _G['ConsolePortInputHandler'] then
-                _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
-                _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', self, true, 'LeftButton', 'UIControl', nil)
+                _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', frame, true, 'LeftButton', 'UIControl', nil)
+                _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', frame, true, 'LeftButton', 'UIControl', nil)
 
                 if _G['Scrap'] then
-                    _G['ConsolePortInputHandler']:SetCommand('PAD3', self, true, 'LeftButton', 'UIControl', nil)
+                    _G['ConsolePortInputHandler']:SetCommand('PAD3', frame, true, 'LeftButton', 'UIControl', nil)
                 end
             end
         end)
 
         -- Re-allow ConsolePort Input handling
-        f:SetScript('OnHide', function(self)
+        f:SetScript('OnHide', function(frame)
             if _G['ConsolePortInputHandler'] then
-                _G['ConsolePortInputHandler']:Release(self)
+                _G['ConsolePortInputHandler']:Release(frame)
             end
         end)
 
         f:SetPropagateKeyboardInput(true)
-        f:SetScript('OnGamePadButtonDown', function(self, key)
+
+        f:SetScript('OnGamePadButtonDown', function(_, key)
             if InCombatLockdown() then return end
 
             if _G['Scrap'] and key == 'PAD3' then -- Square
@@ -123,6 +123,20 @@ function view:Create(inventoryType)
                 end
                 return
             end
+
+            -- set focus
+            local node = _G['ConsolePort'].GetCursorNode()
+            -- Get the most parented that isn't UIParent
+            if node ~= nil then
+                local parentest = utils:GetParentMostNode(node)
+                if parentest ~= nil then
+                    if parentest:GetName() == f:GetName() then
+                        addon.bags.FocusedNode = inventoryType
+                    end
+                end
+            end
+
+            if addon.bags.FocusedNode ~= inventoryType then return end
 
             if key ~= 'PADRSHOULDER' and key ~= 'PADLSHOULDER' then return end
 
