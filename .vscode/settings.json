@@ -302,11 +302,14 @@
         "C_Bank",
         "AccountBankPanel",
         "RegisterStateDriver",
-        "UnregisterStateDriver"
+        "UnregisterStateDriver",
+        "BANK_DEPOSIT_MONEY_BUTTON_LABEL",
+        "BANK_WITHDRAW_MONEY_BUTTON_LABEL"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
         "param-type-mismatch",
-        "duplicate-set-field"
+        "duplicate-set-field",
+        "cast-local-type"
     ]
 }

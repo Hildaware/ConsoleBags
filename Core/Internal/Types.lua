@@ -5,6 +5,9 @@
     It literally does nothing but make the squigglies go bye bye.
 ]]
 
+---@class Size
+---@field width number
+---@field height number
 
 --#region Bank Header
 
@@ -13,9 +16,10 @@
 ---@field warbank Button
 
 ---@class WarbankHeader: Frame
----@field purchase Button
----@field deposit Button
+---@field purchase SimpleButtonFrame
+---@field deposit SimpleButtonFrame
 ---@field reagentCheck CheckButton
+---@field money FontString
 
 ---@class BankHeaderFrame: Frame
 ---@field toggles BankHeaderToggles

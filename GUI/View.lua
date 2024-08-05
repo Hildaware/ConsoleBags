@@ -399,6 +399,10 @@ function view.proto:Update()
 
     self.filterContainer:Update(self.type, orderedAllCategories, onFilterSelectCallback)
     bags:Update(self.widget, self.type, self.selectedBankType)
+
+    if self.widget.Header.Additions then
+        self.widget.Header.Additions:Update()
+    end
 end
 
 ---@return boolean

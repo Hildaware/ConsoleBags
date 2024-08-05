@@ -18,6 +18,9 @@ local session = addon:GetModule('Session')
 ---@class Items: AceModule
 local items = addon:GetModule('Items')
 
+---@class SimpleButton: AceModule
+local button = addon:GetModule('SimpleButton')
+
 ---@class BankHeaderFrame
 header.proto = {}
 
@@ -80,7 +83,7 @@ function header:CreateAdditions(view, parent)
                 addon.bags.Bank:Update()
             end
 
-            i:Update(enums.BankType.Bank)
+            i:UpdateState(enums.BankType.Bank)
         end)
 
     local warbank = CreateBankButton(togglerContainer, enums.BankType.Warbank, 80,
@@ -111,7 +114,7 @@ function header:CreateAdditions(view, parent)
                 addon.bags.Bank:Update()
             end
 
-            i:Update(enums.BankType.Warbank)
+            i:UpdateState(enums.BankType.Warbank)
         end)
 
     togglerContainer.bank = bank
@@ -125,51 +128,46 @@ function header:CreateAdditions(view, parent)
     headerContainer:SetPoint('TOPLEFT', parent, 'TOPLEFT', 0, 0)
     headerContainer:SetPoint('BOTTOMRIGHT', parent, 'BOTTOMRIGHT', -200, 0)
 
-    -- if view.selectedBankType == enums.BankType.Warbank then
-    -- TODO: Only show if we have tabs to purchase
-    -- purchase tab button
-    local purchase = CreateFrame('Button', nil, headerContainer)
-    purchase:SetPoint('LEFT')
-    purchase:SetSize(30, 30)
-    purchase:SetNormalTexture('Interface\\Garrison\\GarrisonBuildingUI')
-    purchase:SetNormalAtlas('Garr_Building-AddFollowerPlus')
-    purchase:HookScript('OnEnter', function()
-        GameTooltip:SetOwner(purchase, 'ANCHOR_TOPRIGHT')
-        GameTooltip:SetText('Purchase a Warbank Tab for TODO amounts of monies?', 1, 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    purchase:HookScript('OnLeave', function()
-        GameTooltip:Hide()
-    end)
-    purchase:SetScript('OnClick', function()
+    --#region Actions
+
+    ---@type Size
+    local baseButtonSize = { width = 30, height = 30 }
+
+    local purchase = button:Create(headerContainer, 'Interface\\Garrison\\GarrisonBuildingUI',
+        'Garr_Building-AddFollowerPlus', baseButtonSize)
+
+    purchase:SetPoint('LEFT', headerContainer, 'LEFT', 8, 0)
+    purchase:OnClick(function()
         StaticPopup_Show("CONFIRM_BUY_BANK_TAB", nil, nil, { bankType = Enum.BankType.Account })
     end)
 
-    local deposit = CreateFrame('Button', nil, headerContainer)
-    deposit:SetPoint('LEFT', purchase, 'RIGHT', 8, 0)
-    deposit:SetSize(26, 30)
-    deposit:SetNormalTexture('Interface\\Minimap\\ObjectIconsAtlas')
-    deposit:SetNormalAtlas('poi-traveldirections-arrow2')
-    deposit:HookScript('OnEnter', function()
-        GameTooltip:SetOwner(deposit, 'ANCHOR_TOPRIGHT')
-        GameTooltip:SetText('Deposit All Warbound Items', 1, 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    deposit:HookScript('OnLeave', function()
-        GameTooltip:Hide()
-    end)
-    deposit:SetScript('OnClick', function()
+    local purchaseCost = utils.FormatMoney(C_Bank.FetchNextPurchasableBankTabCost(2))
+    purchase:SetTooltip(string.format('Purchase a Warbank Tab for %s', purchaseCost))
+
+    if C_Bank.HasMaxBankTabs(2) then
+        purchase.base:Hide()
+    end
+
+    local depositIconSize = { width = 20, height = 24 }
+    local deposit = button:Create(headerContainer, 'Interface\\Minimap\\ObjectIconsAtlas',
+        'poi-traveldirections-arrow2', baseButtonSize, depositIconSize)
+
+    local setPoint = purchase.base:IsShown() and purchase.base or headerContainer
+    local relativeTo = purchase.base:IsShown() and 'RIGHT' or 'LEFT'
+    deposit:SetPoint('LEFT', setPoint, relativeTo, 8, 0)
+    deposit:OnClick(function()
         C_Bank.AutoDepositItemsIntoBank(2)
     end)
+    deposit:SetTooltip('Deposit All Warbound Items')
 
     ---@class CheckButton
     local reagentCheck = CreateFrame('CheckButton', nil, headerContainer, 'UICheckButtonTemplate')
-    reagentCheck:SetPoint('LEFT', deposit, 'RIGHT', 8, 0)
-    reagentCheck:SetSize(26, 26)
+    reagentCheck:SetPoint('TOPLEFT', deposit.base, 'TOPRIGHT', 2, 0)
+    reagentCheck:SetSize(20, 20)
     reagentCheck:SetText('Include Reagents')
     reagentCheck:SetChecked(GetCVarBool('bankAutoDepositReagents'))
     reagentCheck:HookScript('OnEnter', function()
-        GameTooltip:SetOwner(deposit, 'ANCHOR_TOPRIGHT')
+        GameTooltip:SetOwner(reagentCheck, 'ANCHOR_TOPRIGHT')
         GameTooltip:SetText('Also include tradeable reagents', 1, 1, 1, 1, true)
         GameTooltip:Show()
     end)
@@ -180,10 +178,40 @@ function header:CreateAdditions(view, parent)
         SetCVar('bankAutoDepositReagents', reagentCheck:GetChecked())
     end)
 
-    -- end
+    --#endregion
+
+    --#region Money
+
+    local moneyDeposit = button:Create(headerContainer, 'Interface\\MainMenuBar\\MainMenuBar',
+        'hud-MainMenuBar-arrowdown-up', baseButtonSize)
+
+    moneyDeposit:SetPoint('LEFT', deposit.base, 'RIGHT', 120, 0)
+    moneyDeposit:OnClick(function()
+        StaticPopup_Show("BANK_MONEY_DEPOSIT", nil, nil, { bankType = 2 })
+    end)
+    moneyDeposit:SetTooltip(BANK_DEPOSIT_MONEY_BUTTON_LABEL)
+
+    local moneyWithdraw = button:Create(headerContainer, 'Interface\\MainMenuBar\\MainMenuBar',
+        'hud-MainMenuBar-arrowup-up', baseButtonSize)
+
+    moneyWithdraw:SetPoint('LEFT', moneyDeposit.base, 'RIGHT', 2, 0)
+    moneyWithdraw:OnClick(function()
+        StaticPopup_Show("BANK_MONEY_WITHDRAW", nil, nil, { bankType = 2 })
+    end)
+    moneyWithdraw:SetTooltip(BANK_WITHDRAW_MONEY_BUTTON_LABEL)
+
+    local goldView = headerContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    goldView:SetPoint('LEFT', moneyWithdraw.base, 'RIGHT', 8, 0)
+    goldView:SetWidth(140)
+    goldView:SetJustifyH('LEFT')
+    goldView:SetText(GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
+
+    --#endregion
+
     headerContainer.purchase = purchase
     headerContainer.deposit = deposit
     headerContainer.reagentCheck = reagentCheck
+    headerContainer.money = goldView
 
     headerContainer:Hide()
     i.warbankHeader = headerContainer
@@ -191,8 +219,24 @@ function header:CreateAdditions(view, parent)
     return i
 end
 
+function header.proto:Update()
+    if C_Bank.HasMaxBankTabs(2) then
+        local purchase = self.warbankHeader.purchase
+        purchase:Hide()
+
+        local setPoint = purchase.base:IsShown() and purchase.base or self.warbankHeader
+        local relativeTo = purchase.base:IsShown() and 'RIGHT' or 'LEFT'
+        self.warbankHeader.deposit:SetPoint('LEFT', setPoint, relativeTo, 8, 0)
+    else
+        local purchaseCost = utils.FormatMoney(C_Bank.FetchNextPurchasableBankTabCost(2))
+        self.warbankHeader.purchase:SetTooltip(string.format('Purchase a Warbank Tab for %s', purchaseCost))
+    end
+
+    self.warbankHeader.money:SetText(GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
+end
+
 ---@param bankType Enums.BankType
-function header.proto:Update(bankType)
+function header.proto:UpdateState(bankType)
     if bankType == enums.BankType.Bank then
         self.warbankHeader:Hide()
         return
@@ -210,11 +254,5 @@ function header.proto:SetAsBank()
     addon.status.visitingWarbank = false
     addon.bags.Inventory:Update()
 end
-
--- if i.selectedBankType == enums.BankType.Warbank then
--- # purchased tabs
--- Money Deposit / Withdraw
--- Show money
--- end
 
 header:Enable()

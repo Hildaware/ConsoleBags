@@ -103,7 +103,8 @@ function filtering.itemProto:Build(view, inventoryType, categoryData, position, 
     self.widget.OnSelect = function() OnFilterSelect(callback, categoryData.key) end
 
     self.widget:SetScript('OnClick', function()
-        OnFilterSelect(callback, categoryData.key)
+        view:OnClickCategory(categoryData.key, callback)
+        -- OnFilterSelect(callback, categoryData.key)
     end)
 
     self.widget:SetScript('OnEnter', function(_)
@@ -179,6 +180,25 @@ function filtering.proto:ScrollLeft()
     self:SelectCurrentCategory()
 end
 
+---@param category integer
+---@param callback function
+function filtering.proto:OnClickCategory(category, callback)
+    self.currentCategoryKey = category
+    self:SelectCurrentCategory()
+
+    if GameTooltip['shoppingTooltips'] then
+        for _, frame in pairs(GameTooltip['shoppingTooltips']) do
+            frame:Hide()
+        end
+    end
+
+    local key = nil
+    if category ~= 999 then
+        key = category
+    end
+    callback(key)
+end
+
 function filtering.proto:ScrollRight()
     local catIndex = self:GetCategoryIndex()
 
@@ -226,7 +246,14 @@ function filtering.proto:Update(inventoryType, categories, callback)
     local currentIndex = keyFrameIndex - 1
 
     ---@type CategorizedItemSet
-    local newKeyCategory = { key = 999, name = 'All', count = 0, hasNew = false, order = 0 }
+    local newKeyCategory = {
+        key = 999,
+        name = 'All',
+        count = 0,
+        hasNew = false,
+        order = 0,
+        items = {}
+    }
     local newCategoryIndex = 0
     for index, categoryData in pairs(categories) do
         if categoryData.key == self.currentCategoryKey then

@@ -10,5 +10,6 @@
 
 Libs/Libs.xml
 Core/Core.xml
+GUI/Components/BaseComponents/BaseComponents.xml
 GUI/GUI.xml
 ConsoleBags.lua

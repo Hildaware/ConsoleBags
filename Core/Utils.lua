@@ -97,6 +97,21 @@ utils.BuildBankCategoriesTable = function()
     return t
 end
 
+utils.FormatMoney = function(moneyValue)
+    if moneyValue < 100 then
+        return GetMoneyString(moneyValue)
+    elseif moneyValue < 10000 then
+        return GetMoneyString(math.floor(moneyValue / 100) * 100)
+    elseif moneyValue < 10000000 then
+        return GetMoneyString(math.floor(moneyValue / 10000) * 10000)
+    else
+        local n = math.floor(moneyValue / 10000000) * 10000
+        local s = "" .. n
+        n = GetMoneyString(n)
+        return n:sub(1, #s - 4) .. "K" .. n:sub(#s - 3)
+    end
+end
+
 -- Bag Killing
 local killableFramesParent = CreateFrame('FRAME', nil, UIParent)
 killableFramesParent:SetAllPoints()
