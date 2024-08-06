@@ -23,6 +23,19 @@ enums.WarbankBagIndex = {
     [Enum.BagIndex.AccountBankTab_5] = Enum.BagIndex.AccountBankTab_5
 }
 
+---@enum Enums.BankBagIndex
+enums.BankBagIndex = {
+    [Enum.BagIndex.Bank] = Enum.BagIndex.Bank,
+    [Enum.BagIndex.BankBag_1] = Enum.BagIndex.BankBag_1,
+    [Enum.BagIndex.BankBag_2] = Enum.BagIndex.BankBag_2,
+    [Enum.BagIndex.BankBag_3] = Enum.BagIndex.BankBag_3,
+    [Enum.BagIndex.BankBag_4] = Enum.BagIndex.BankBag_4,
+    [Enum.BagIndex.BankBag_5] = Enum.BagIndex.BankBag_5,
+    [Enum.BagIndex.BankBag_6] = Enum.BagIndex.BankBag_6,
+    [Enum.BagIndex.BankBag_7] = Enum.BagIndex.BankBag_7,
+    [Enum.BagIndex.Reagentbank] = Enum.BagIndex.Reagentbank
+}
+
 ---@enum Enums.InventoryType
 enums.InventoryType = {
     Inventory = 1,

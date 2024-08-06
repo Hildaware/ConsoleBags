@@ -4,29 +4,84 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Session: AceModule
 local session = addon:NewModule('Session')
 
+---@class Enums: AceModule
+local enums = addon:GetModule('Enums')
+
+---@class ViewData
+session.viewDataProto = {
+    TotalCount = 0,
+    Count = 0,
+    Resolved = 0
+}
+
+---@class BagData
+session.bagDataProto = {
+    TotalCount = 0,
+    Count = 0
+}
+
 function session:OnInitialize()
     ---@type table<number, table<number, Item>>
     self.Items = {}
 
-    self.Inventory = {
-        TotalCount = 0,
-        Count = 0,
-        ReagentCount = 0,
-        Resolved = 0
+    ---@type ViewData
+    self.Inventory = setmetatable({}, { __index = self.viewDataProto })
+    self.Inventory.Bags = {
+        [Enum.BagIndex.Backpack] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.Bag_1] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.Bag_2] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.Bag_3] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.Bag_4] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.ReagentBag] = setmetatable({}, { __index = self.bagDataProto })
     }
 
-    self.Bank = {
-        TotalCount = 0,
-        Count = 0,
-        ReagentCount = 0,
-        Resolved = 0
-    }
 
-    self.Warbank = {
-        TotalCount = 0,
-        Count = 0,
-        Resolved = 0
+    -- self.Inventory = {
+    --     Bags = {
+
+    --     },
+    --     TotalCount = 0,
+    --     Count = 0,
+    --     ReagentCount = 0,
+    --     Resolved = 0
+    -- }
+
+    ---@type ViewData
+    self.Bank = setmetatable({}, { __index = self.viewDataProto })
+    self.Bank.Bags = {
+        [99] = setmetatable({}, { __index = self.bagDataProto }), -- Enum.BagIndex.Bank
+        [Enum.BagIndex.BankBag_1] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.BankBag_2] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.BankBag_3] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.BankBag_4] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.BankBag_5] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.BankBag_6] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.BankBag_7] = setmetatable({}, { __index = self.bagDataProto }),
+        [98] = setmetatable({}, { __index = self.bagDataProto }) -- Enum.BagIndex.ReagentBank
     }
+    -- self.Bank = {
+    --     Bags = {},
+    --     TotalCount = 0,
+    --     Count = 0,
+    --     ReagentCount = 0,
+    --     Resolved = 0
+    -- }
+
+    ---@type ViewData
+    self.Warbank = setmetatable({}, { __index = self.viewDataProto })
+    self.Warbank.Bags = {
+        [Enum.BagIndex.AccountBankTab_1] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.AccountBankTab_2] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.AccountBankTab_3] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.AccountBankTab_4] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.AccountBankTab_5] = setmetatable({}, { __index = self.bagDataProto }),
+    }
+    -- self.Warbank = {
+    --     Bags = {},
+    --     TotalCount = 0,
+    --     Count = 0,
+    --     Resolved = 0
+    -- }
 
     self.InventoryFilter = nil
     self.BankFilter = nil
@@ -58,6 +113,22 @@ function session:OnInitialize()
         },
         HideBags = false
     }
+end
+
+---@param inventoryType Enums.InventoryType
+---@return ViewData
+function session:GetSessionViewDataByType(inventoryType)
+    if inventoryType == enums.InventoryType.Inventory then
+        return self.Inventory
+    end
+    if inventoryType == enums.InventoryType.Bank then
+        return self.Bank
+    end
+    if inventoryType == enums.InventoryType.Shared then
+        return self.Warbank
+    end
+
+    return self.Inventory
 end
 
 session:Enable()

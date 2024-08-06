@@ -9,6 +9,19 @@
 ---@field width number
 ---@field height number
 
+---#region Session
+
+---@class BagData
+---@field TotalCount number
+---@field Count number
+
+---@class ViewData: BagData
+---@field Resolved number
+---@field ReagentCount? number
+---@field Bags BagData[]
+
+---#endregion
+
 --#region Bank Header
 
 ---@class BankHeaderToggles: Frame

@@ -1,6 +1,7 @@
 local addonName = ...
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
+-- TODO: BagContainer needs a lot of love. It should be prettier
 ---@class BagContainer: AceModule
 local bags = addon:NewModule('BagContainer')
 
@@ -18,11 +19,12 @@ function bags:Build(type, parent)
     -- Bag Button
     local bagButton = CreateFrame('Button', nil, f)
     bagButton:SetPoint('RIGHT', 0, 'RIGHT')
-    bagButton:SetSize(30, 30)
+    bagButton:SetSize(28, 28)
 
     local btnTex = bagButton:CreateTexture(nil, 'ARTWORK')
     btnTex:SetAllPoints(bagButton)
-    btnTex:SetTexture(133633) -- Generic Bag
+    btnTex:SetTexture('Interface\\ContainerFrame\\BagSlots2x')
+    btnTex:SetAtlas('bag-main')
 
     CreateContainer(bagButton, type)
 
@@ -51,7 +53,7 @@ function bags:Build(type, parent)
     parent.ItemCountText = itemCountText
 end
 
----@param container Frame
+---@param container BagWidget
 ---@param type Enums.InventoryType
 ---@param bankType? Enums.BankType
 function bags:Update(container, type, bankType)
@@ -62,7 +64,6 @@ function bags:Update(container, type, bankType)
     local bagEnd = NUM_TOTAL_EQUIPPED_BAG_SLOTS
     if type == enums.InventoryType.Bank then
         if bankType == enums.BankType.Warbank then
-            -- TODO: Purchase Warbank Slots
             container.Bags.Container.purchase:Hide()
 
             bagStart = Enum.BagIndex.AccountBankTab_1
@@ -120,6 +121,12 @@ function bags:Update(container, type, bankType)
         end
 
         container.Bags.Container.Slots[bagIndex] = UpdateBagSlot(container.Bags.Container.Slots[bagIndex], bagData)
+    end
+
+    if bankType == enums.BankType.Warbank then
+        container.Bags:SetEnabled(false)
+    else
+        container.Bags:SetEnabled(true)
     end
 
     if type == enums.InventoryType.Inventory then
@@ -199,9 +206,11 @@ function CreateContainer(parent, type)
 
         purchaseBagButton:SetScript('OnClick', function()
             local _, fullBank = GetNumBankSlots()
-            if not fullBank then
-                PurchaseSlot()
-            end
+            if fullBank then return end
+            local cost = GetBankSlotCost(fullBank)
+            BankFrame.nextSlotCost = cost
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
+            StaticPopup_Show('CONFIRM_BUY_BANK_SLOT')
         end)
 
         container:SetWidth(container:GetWidth() + 40)

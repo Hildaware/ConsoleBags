@@ -439,11 +439,19 @@ function view.proto:GetName()
 end
 
 function view.proto:UpdateCurrency()
-    local money = GetMoney()
-    if money == nil then return end
-    local str = GetCoinTextureString(money)
-    if str == nil or str == '' then return end
-    self.widget.gold:SetText(str)
+    if self.type == enums.InventoryType.Inventory then
+        local money = GetMoney()
+        if money == nil then return end
+        local str = GetCoinTextureString(money)
+        if str == nil or str == '' then return end
+        self.widget.gold:SetText(str)
+        return
+    end
+
+    if self.type == enums.InventoryType.Bank and
+        self.selectedBankType == enums.BankType.Warbank then
+        self.widget.Header.Additions:Update()
+    end
 end
 
 view:Enable()

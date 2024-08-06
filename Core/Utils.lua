@@ -277,6 +277,21 @@ function utils.ReplaceBagSlot(bag)
     return bag
 end
 
+---@param bagId integer
+---@return Enums.InventoryType?
+function utils:GetBagType(bagId)
+    if enums.PlayerInventoryBagIndex[bagId] then
+        return enums.InventoryType.Inventory
+    end
+    if enums.BankBagIndex[bagId] then
+        return enums.InventoryType.Bank
+    end
+    if enums.WarbankBagIndex[bagId] then
+        return enums.InventoryType.Shared
+    end
+    return nil
+end
+
 ---@param frame Frame
 ---@param color ColorMixin?
 function utils:CreateBorder(frame, color)
@@ -311,18 +326,27 @@ end
 ---@param color ColorMixin?
 function utils:CreateRegionalBorder(frame, anchorPoint, color)
     if not frame.borders then
-        frame.borders = frame:CreateLine(nil, 'BACKGROUND', nil, 0)
-        frame.borders:SetThickness(1)
-        local c = color or { 0.2, 0.2, 0.2, 1 }
-        frame.borders:SetColorTexture(c[1], c[2], c[3], c[4])
-
-        if anchorPoint == 'BOTTOM' then
-            ---@diagnostic disable-next-line: missing-parameter
-            frame.borders:SetStartPoint('BOTTOMLEFT')
-            ---@diagnostic disable-next-line: missing-parameter
-            frame.borders:SetEndPoint('BOTTOMRIGHT')
-        end
+        frame.borders = {}
     end
+
+    local border = frame:CreateLine(nil, 'BACKGROUND', nil, 0)
+    border:SetThickness(1)
+    local c = color or { 0.2, 0.2, 0.2, 1 }
+    border:SetColorTexture(c[1], c[2], c[3], c[4])
+
+    if anchorPoint == 'BOTTOM' then
+        ---@diagnostic disable-next-line: missing-parameter
+        border:SetStartPoint('BOTTOMLEFT')
+        ---@diagnostic disable-next-line: missing-parameter
+        border:SetEndPoint('BOTTOMRIGHT')
+    elseif anchorPoint == 'TOP' then
+        ---@diagnostic disable-next-line: missing-parameter
+        border:SetStartPoint('TOPLEFT')
+        ---@diagnostic disable-next-line: missing-parameter
+        border:SetEndPoint('TOPRIGHT')
+    end
+
+    tinsert(frame.borders, border)
 end
 
 utils:Enable()

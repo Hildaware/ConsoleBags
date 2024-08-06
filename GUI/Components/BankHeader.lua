@@ -29,24 +29,26 @@ header.proto = {}
 ---@param width number
 ---@param onClick function
 local function CreateBankButton(parent, type, width, onClick)
-    local button = CreateFrame('Button', nil, parent)
-    button:SetPoint(type == enums.BankType.Bank and 'LEFT' or 'RIGHT')
-    button:SetSize(width, session.Settings.Defaults.Sections.Header - 8)
-    button:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\rectangle')
-    button:GetNormalTexture():SetVertexColor(0, 0, 0, 0.75)
-    button:SetScript('OnClick', onClick)
+    local btn = CreateFrame('Button', nil, parent)
+    btn:SetPoint(type == enums.BankType.Bank and 'LEFT' or 'RIGHT')
+    btn:SetSize(width, session.Settings.Defaults.Sections.Header - 8)
+    btn:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\rectangle')
+    btn:GetNormalTexture():SetVertexColor(0, 0, 0, 0.75)
+    btn:SetScript('OnClick', onClick)
 
-    button.text = button:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    button.text:SetPoint('CENTER')
-    button.text:SetText(type == enums.BankType.Bank and 'Bank' or 'Warbank')
-    button.text:SetJustifyH('CENTER')
+    btn.text = btn:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    btn.text:SetPoint('CENTER')
+    btn.text:SetText(type == enums.BankType.Bank and 'Bank' or 'Warbank')
+    btn.text:SetJustifyH('CENTER')
 
     local textColor = type == enums.BankType.Bank and { 1, 1, 0 } or { 1, 1, 1 }
-    button.text:SetTextColor(unpack(textColor))
+    btn.text:SetTextColor(unpack(textColor))
 
-    utils:CreateBorder(button)
+    -- utils:CreateBorder(btn)
+    utils:CreateRegionalBorder(btn, 'TOP', { 1, 1, 1, 1 })
+    utils:CreateRegionalBorder(btn, 'BOTTOM', { 1, 1, 1, 1 })
 
-    return button
+    return btn
 end
 
 

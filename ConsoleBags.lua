@@ -13,12 +13,14 @@ local enums = addon:GetModule('Enums')
 ---@class Events: AceModule
 local events = addon:GetModule('Events')
 
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
 ---@class Items: AceModule
 local items = addon:GetModule('Items')
 
 ---@class View: AceModule
 local view = addon:GetModule('View')
-
 
 ---@class ItemFrame: AceModule
 local itemFrame = addon:GetModule('ItemFrame')
@@ -186,6 +188,10 @@ function events:PLAYER_MONEY()
     addon.bags.Inventory:UpdateCurrency()
 end
 
+function events:ACCOUNT_MONEY()
+    addon.bags.Bank:UpdateCurrency()
+end
+
 function events:BAG_CONTAINER_UPDATE()
     items.BuildItemCache()
     if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
@@ -193,36 +199,21 @@ function events:BAG_CONTAINER_UPDATE()
     end
 end
 
---- BAG_UPDATE is tricky. On LOGIN, it fires for every bag including the bank.
---- On an actual change to the bag, it will only fire for Player Inventory AND Warbank.
---- This event will not fire for normal Bank Updates.
 ---@param bagId number
 function events:BAG_UPDATE(_, bagId)
-    -- Inventory
-    if enums.PlayerInventoryBagIndex[bagId] then
-        items.BuildItemCache(bagId)
+    local bagType = utils:GetBagType(bagId)
+    if bagType == nil then return end
 
-        if session.Inventory.Resolved < session.Inventory.TotalCount then
-            return
-        end
-
-        if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
-            addon.bags.Inventory:Update()
-        end
+    local sessionData = items:UpdateBag(bagId, bagType)
+    if sessionData.Resolved < sessionData.TotalCount then
         return
     end
 
-    -- Warbank
-    if enums.WarbankBagIndex[bagId] then
-        items.BuildWarbankCache(bagId)
+    local bag = bagType == enums.InventoryType.Inventory and
+        addon.bags.Inventory or addon.bags.Bank
 
-        if session.Warbank.Resolved < session.Warbank.TotalCount then
-            return
-        end
-
-        if addon.bags.Bank and addon.bags.Bank:IsShown() then
-            addon.bags.Bank:Update()
-        end
+    if bag and bag:IsShown() then
+        bag:Update()
     end
 end
 
