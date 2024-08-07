@@ -262,7 +262,6 @@
         "pairs",
         "ipairs",
         "tinsert",
-        "GetCoinTextureString",
         "GameTooltip",
         "GetMoney",
         "GenerateClosure",
@@ -296,7 +295,6 @@
         "GameFontNormalSmall",
         "SELECTED_CHAT_FRAME",
         "NOT_BOUND",
-        "FillLocalizedClassList",
         "EventUtil",
         "CharacterReagentBag0Slot",
         "C_Bank",
@@ -332,7 +330,6 @@
         "SetOverrideBinding",
         "C_NewItems",
         "ItemLocation",
-        "GetDetailedItemLevelInfo",
         "C_Item",
         "GetCVarBool",
         "SetCVar",
@@ -343,5 +340,20 @@
         "param-type-mismatch",
         "duplicate-set-field",
         "cast-local-type"
+    ],
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.builtin": {
+        "basic": "disable",
+        "debug": "disable",
+        "io": "disable",
+        "math": "disable",
+        "os": "disable",
+        "package": "disable",
+        "string": "disable",
+        "table": "disable",
+        "utf8": "disable"
+    },
+    "Lua.workspace.library": [
+        "/Users/bferrari/.vscode/extensions/ketho.wow-api-0.15.4/Annotations"
     ]
 }
