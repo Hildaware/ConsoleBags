@@ -27,12 +27,17 @@ local database = addon:GetModule('Database')
 ---@param slot integer
 ---@param inventoryType? Enums.InventoryType
 ---@return Item?
-local function GetItemData(bag, slot, inventoryType)
+local function GetItemData(bag, slot, inventoryType, equipmentSetItems)
     local containerItem = resolver.GetContainerItemInfo(bag, slot)
     if containerItem ~= nil then
         local itemInfo = resolver.GetItemInfo(containerItem.hyperlink)
 
-        local item = types.Item.New(containerItem, itemInfo, inventoryType, bag, slot)
+        local setName = ''
+        if equipmentSetItems then
+            setName = equipmentSetItems[containerItem.itemID] or ''
+        end
+
+        local item = types.Item.New(containerItem, itemInfo, inventoryType, bag, slot, setName)
         return item
     end
     return nil
@@ -49,18 +54,18 @@ end
 ---@param slot integer
 ---@param inventoryType Enums.InventoryType
 ---@param sessionData ViewData
-local function CreateItem(bag, slot, inventoryType, sessionData)
+local function CreateItem(bag, slot, inventoryType, sessionData, equipmentSetItems)
     local i = Item:CreateFromBagAndSlot(bag, slot)
     if not i:IsItemEmpty() then
         if i:IsItemDataCached() then
-            local item = GetItemData(bag, slot, inventoryType)
+            local item = GetItemData(bag, slot, inventoryType, equipmentSetItems)
             if item then
                 AddItemToSession(item, sessionData)
                 return true
             end
         else
             i:ContinueOnItemLoad(function()
-                local item = GetItemData(bag, slot)
+                local item = GetItemData(bag, slot, nil, equipmentSetItems)
                 if item then
                     AddItemToSession(item, sessionData)
                     return true
@@ -114,6 +119,17 @@ function items.BuildItemCache()
     session.Inventory.ReagentCount = 0
     session.Inventory.Resolved = 0
 
+    session.EquipmentSetItems = {}
+
+    -- TODO: Add to bank?
+    local setData = resolver.GetEquipmentSets()
+    for _, setId in pairs(setData) do
+        local itemIds = resolver.GetItemIdsInEquipmentSet(setId)
+        for _, itemId in pairs(itemIds) do
+            session.EquipmentSetItems[itemId] = resolver.GetEquimentSetName(setId)
+        end
+    end
+
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         session.Inventory.Bags[bag].TotalCount = 0
         session.Inventory.Bags[bag].Count = 0
@@ -121,7 +137,7 @@ function items.BuildItemCache()
         local bagSize = CreateBagData(bag, session.Inventory)
         local requiresCleanup = {}
         for slot = 1, bagSize do
-            local created = CreateItem(bag, slot, invType, session.Inventory)
+            local created = CreateItem(bag, slot, invType, session.Inventory, session.EquipmentSetItems)
             requiresCleanup[slot] = created
         end
 

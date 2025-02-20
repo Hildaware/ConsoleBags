@@ -13,6 +13,9 @@ local enums = addon:GetModule('Enums')
 ---@class Utils: AceModule
 local utils = addon:GetModule('Utils')
 
+---@class Database: AceModule
+local database = addon:GetModule('Database')
+
 ---@class CategoryHeaderItem: Button
 ---@field type Texture
 ---@field name FontString
@@ -51,7 +54,7 @@ function categoryHeaders.itemProto:Build(data, offset, parent, collapsedCategori
     local frame = self.widget
 
     frame:SetParent(parent)
-    frame:SetPoint('TOP', 0, -((offset - 1) * session.Settings.Defaults.Sections.ListItemHeight))
+    frame:SetPoint('TOP', 0, -((offset - 1) * database:GetItemViewHeight()))
 
     if collapsedCategories[data.key] then
         frame:GetNormalTexture():SetVertexColor(1, 0, 0, 1)
@@ -94,9 +97,17 @@ end
 function categoryHeaders:_DoCreate()
     local i = setmetatable({}, { __index = categoryHeaders.itemProto })
 
+    local font = database:GetFont()
+    local itemHeight = database:GetItemViewHeight()
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
+
     ---@type CategoryHeaderItem|Button
     local f = CreateFrame('Button')
-    f:SetSize(600 - 24, session.Settings.Defaults.Sections.ListItemHeight)
+    f:SetSize(itemWidth, itemHeight)
 
     f:RegisterForClicks('LeftButtonUp')
 
@@ -108,8 +119,8 @@ function categoryHeaders:_DoCreate()
     -- type
     local type = CreateFrame('Frame', nil, f)
     type:SetPoint('LEFT', f, 'LEFT', 8, 0)
-    type:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
-    type:SetWidth(32)
+    type:SetHeight(itemHeight)
+    type:SetWidth(session.Settings.Defaults.Columns.Icon * columnScale)
 
     local typeTex = type:CreateTexture(nil, 'ARTWORK')
     typeTex:SetPoint('CENTER', type, 'CENTER')
@@ -120,11 +131,12 @@ function categoryHeaders:_DoCreate()
     -- Name
     local name = CreateFrame('Frame', nil, f)
     name:SetPoint('LEFT', type, 'RIGHT', 8, 0)
-    name:SetHeight(session.Settings.Defaults.Sections.ListItemHeight)
-    name:SetWidth(300)
+    name:SetHeight(itemHeight)
+    name:SetWidth(session.Settings.Defaults.Columns.Name * columnScale)
     local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     nameText:SetAllPoints(name)
     nameText:SetJustifyH('LEFT')
+    nameText:SetFont(font.path, fontSize)
 
     f.name = nameText
 

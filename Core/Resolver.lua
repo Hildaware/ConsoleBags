@@ -55,4 +55,22 @@ resolver.IsEquippableItem = function(classId)
     return classId == Enum.ItemClass.Weapon or classId == Enum.ItemClass.Armor
 end
 
+---@return integer[]
+resolver.GetEquipmentSets = function()
+    return C_EquipmentSet.GetEquipmentSetIDs()
+end
+
+---@param setId integer
+---@return string
+resolver.GetEquimentSetName = function(setId)
+    local name = C_EquipmentSet.GetEquipmentSetInfo(setId)
+    return name
+end
+
+---@param setId integer
+---@return integer[]
+resolver.GetItemIdsInEquipmentSet = function(setId)
+    return C_EquipmentSet.GetItemIDs(setId)
+end
+
 resolver:Enable()

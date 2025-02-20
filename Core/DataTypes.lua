@@ -42,6 +42,7 @@ local resolver = addon:GetModule('Resolver')
 ---@field isAccountBankable boolean
 ---@field category number
 ---@field location Enums.InventoryType
+---@field setName string
 local Item = {}
 
 ---@param containerItem ContainerItemInfo
@@ -50,7 +51,7 @@ local Item = {}
 ---@param bag integer
 ---@param slot integer
 ---@return Item
-Item.New = function(containerItem, itemInfo, inventoryType, bag, slot)
+Item.New = function(containerItem, itemInfo, inventoryType, bag, slot, setName)
     local questInfo = C_Container.GetContainerItemQuestInfo(bag, slot)
     local ilvl = resolver.GetEffectiveItemLevel(containerItem.hyperlink)
     local invType = resolver.GetInventoryType(containerItem.hyperlink)
@@ -94,6 +95,7 @@ Item.New = function(containerItem, itemInfo, inventoryType, bag, slot)
     self.category = self:GetCategory()
     self.location = inventoryType
     self.isAccountBankable = accountBankable
+    self.setName = setName
 
     return self
 end
@@ -104,7 +106,7 @@ function Item:GetCategory()
         return enums.CustomCategory.BindOnEquip
     elseif self.quality == Enum.ItemQuality.Heirloom then
         return enums.CustomCategory.BindOnAccount
-    elseif self.isWarbound then
+    elseif self.isWarbound and not self.bound then
         return enums.CustomCategory.Warbound
     elseif utils.IsJewelry(self) then
         return enums.CustomCategory.Jewelry

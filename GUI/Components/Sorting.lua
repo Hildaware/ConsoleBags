@@ -29,8 +29,12 @@ function sorting:Build(parent, type, onSelect)
     tex:SetVertexColor(1, 1, 1, 0.5)
 
     local anchor = hFrame
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local columnScale = itemWidth / defaultWidth
+
     for index, sortType in ipairs(enums.SortFields) do
-        local sortSize = session.Settings.Defaults.Columns[sortType.dbColumn]
+        local sortSize = session.Settings.Defaults.Columns[sortType.dbColumn] * columnScale
         local sortButton = self:Create(hFrame, anchor, sortType, sortSize, type, onSelect, index == 1)
 
         if index ~= #enums.SortFields then
@@ -53,6 +57,13 @@ end
 ---@param initial boolean?
 ---@return table|Button
 function sorting:Create(parent, anchor, sortType, width, type, onSelect, initial)
+    local font = database:GetFont()
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
+
     local frame = CreateFrame('Button', nil, parent)
     frame:SetSize(width, parent:GetHeight())
 
@@ -65,6 +76,7 @@ function sorting:Create(parent, anchor, sortType, width, type, onSelect, initial
     text:SetJustifyH('CENTER')
     text:SetText(sortType.shortName)
     text:SetTextColor(1, 1, 1)
+    text:SetFont(font.path, fontSize)
 
     local arrow = frame:CreateTexture('ARTWORK')
     arrow:SetPoint('LEFT', text, 'RIGHT', 2, 0)

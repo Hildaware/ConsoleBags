@@ -160,11 +160,14 @@ end
 
 function addon:ToggleAllBags()
     if addon.bags.Inventory:IsShown() then
+        print('toggle off')
         addon.status.backpackShouldClose = true
     else
+        print('toggle open')
         addon.status.backpackShouldOpen = true
     end
 
+    print('toggle')
     events:Send('ConsoleBagsToggle')
 end
 

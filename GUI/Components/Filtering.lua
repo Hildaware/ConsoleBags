@@ -15,6 +15,9 @@ local enums = addon:GetModule('Enums')
 ---@class Utils: AceModule
 local utils = addon:GetModule('Utils')
 
+---@class Database: AceModule
+local database = addon:GetModule('Database')
+
 ---@class FilterItem: Button
 ---@field texture Texture
 ---@field backgroundTexture Texture
@@ -337,6 +340,13 @@ function filtering.proto:Update(inventoryType, categories, callback)
     end
 end
 
+function filtering.proto:OnSearch(callback)
+    self.currentCategoryKey = 999
+    self:SelectCurrentCategory()
+
+    callback()
+end
+
 --#endregion
 
 function filtering:OnInitialize()
@@ -434,17 +444,26 @@ function filtering:BuildContainer(view, type)
     selectedTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Underline')
     selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
+    local font = database:GetFont()
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 8
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
+
     local selectedText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     selectedText:SetPoint('CENTER', selectedContainer, 'CENTER', 0, 2)
     selectedText:SetJustifyH('CENTER')
     selectedText:SetJustifyV('MIDDLE')
     selectedText:SetTextColor(1, 1, 0, 1)
+    selectedText:SetFont(font.path, fontSize)
     selectedText:SetText(string.upper('All'))
 
     local prevText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     prevText:SetPoint('RIGHT', selectedText, 'LEFT', -10, 0)
     prevText:SetJustifyH('RIGHT')
     prevText:SetJustifyV('MIDDLE')
+    prevText:SetFont(font.path, fontSize)
     prevText:SetTextScale(0.8)
     prevText:SetTextColor(0.5, 0.5, 0.5, 1)
     prevText:SetText(string.upper('Previous'))
@@ -453,6 +472,7 @@ function filtering:BuildContainer(view, type)
     nextText:SetPoint('LEFT', selectedText, 'RIGHT', 10, 0)
     nextText:SetJustifyH('LEFT')
     nextText:SetJustifyV('MIDDLE')
+    nextText:SetFont(font.path, fontSize)
     nextText:SetTextScale(0.8)
     nextText:SetTextColor(0.5, 0.5, 0.5, 1)
     nextText:SetText(string.upper('Next'))

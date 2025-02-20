@@ -11,6 +11,12 @@ local enums = addon:GetModule('Enums')
 local defaults = {
     global = {
         Characters = {},
+        ViewType = 'compact',
+        Font = {
+            Name = 'Accidental Presidency',
+            Path = 'Interface\\AddOns\\ConsoleBags\\Fonts\\AccidentalPresidency.ttf',
+            Size = 12
+        },
         InventoryFrame = {
             Size = {
                 X = 600,
@@ -22,12 +28,13 @@ local defaults = {
             },
             Columns = {
                 Icon = 32,
-                Name = 280,
+                Name = 320,
                 Category = 40,
                 Ilvl = 50,
                 ReqLvl = 50,
                 Value = 110
             },
+            ItemHeight = 28,
             SortField = { ---@type SortField
                 Field = enums.SortField.Name,
                 Sort = enums.SortOrder.Desc
@@ -90,6 +97,50 @@ end
 
 function database:SetInventoryViewHeight(height)
     database.internal.global.InventoryFrame.Size.Y = height
+    -- TODO: Refresh View
+end
+
+function database:SetInventoryViewWidth(width)
+    database.internal.global.InventoryFrame.Size.X = width
+    -- TODO: Refresh View
+end
+
+function database:GetInventoryViewWidth()
+    return database.internal.global.InventoryFrame.Size.X or 600
+end
+
+function database:GetItemViewHeight()
+    return database.internal.global.InventoryFrame.ItemHeight or 28
+end
+
+function database:SetItemViewHeight(height)
+    database.internal.global.InventoryFrame.ItemHeight = height
+    -- TODO: Refresh View
+end
+
+---@return { name: string, path: string, size: number }
+function database:GetFont()
+    local font = database.internal.global.Font
+    return { name = font.Name, path = font.Path, size = font.Size }
+end
+
+---@param name string
+---@param path string
+function database:SetFont(name, path)
+    local font = database.internal.global.Font
+    font.Name = name
+    font.Path = path
+
+    -- TODO: Set Font
+end
+
+function database:GetFontSize()
+    return database.internal.global.Font.Size or 12
+end
+
+function database:SetFontSize(size)
+    database.internal.global.Font.Size = size
+    -- TODO: Set Font Size
 end
 
 function database:GetBankViewPositionY()
@@ -163,6 +214,14 @@ function database:GetSortField(inventoryType)
     elseif inventoryType == enums.InventoryType.Bank then
         return database:GetBankSortField()
     end
+end
+
+function database:GetViewType()
+    return database.internal.global.ViewType
+end
+
+function database:SetViewType(type)
+    database.internal.global.ViewType = type
 end
 
 database:Enable()

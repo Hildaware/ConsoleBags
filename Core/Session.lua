@@ -97,7 +97,7 @@ function session:OnInitialize()
         Defaults = {
             Columns = {
                 Icon = 32,
-                Name = 320, -- was 280 before removing cats
+                Name = 320,
                 Category = 40,
                 Ilvl = 50,
                 ReqLvl = 50,
@@ -129,6 +129,16 @@ function session:GetSessionViewDataByType(inventoryType)
     end
 
     return self.Inventory
+end
+
+---@return number
+function session:GetItemWidth()
+    return self.Settings.Defaults.Columns.Name +
+        self.Settings.Defaults.Columns.Icon +
+        self.Settings.Defaults.Columns.Category +
+        self.Settings.Defaults.Columns.Ilvl +
+        self.Settings.Defaults.Columns.ReqLvl +
+        self.Settings.Defaults.Columns.Value
 end
 
 session:Enable()

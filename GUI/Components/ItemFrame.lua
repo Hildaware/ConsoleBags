@@ -9,6 +9,9 @@ local itemFrame = addon:NewModule('ItemFrame')
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
+---@class Database: AceModule
+local database = addon:GetModule('Database')
+
 local Masque = LibStub('Masque', true)
 
 ---@class ItemButton : Button
@@ -81,7 +84,7 @@ function itemFrame.proto:Build(item, offset, parent)
     local frame = self.widget
 
     frame:SetParent(parent)
-    frame:SetPoint('TOP', 0, -((offset - 1) * session.Settings.Defaults.Sections.ListItemHeight))
+    frame:SetPoint('TOP', 0, -((offset - 1) * database:GetItemViewHeight()))
 
     local tooltipOwner = GameTooltip:GetOwner()
 
@@ -99,6 +102,7 @@ function itemFrame.proto:Build(item, offset, parent)
     frame.itemButton:HookScript('OnLeave', function(s)
         s.HighlightTexture:Hide()
         s.NewTexture:Hide()
+        s.NewIcon:Hide()
         if self.item ~= nil then
             self.item.isNew = false
         end
@@ -164,10 +168,23 @@ function itemFrame.proto:Build(item, offset, parent)
     if stackString then
         nameString = nameString .. ' ' .. stackString
     end
-    frame.name:SetText(nameString)
 
-    -- Color
-    frame.name:SetTextColor(r, g, b)
+    if item.setName ~= '' then
+        frame.nameWithSet:Show()
+        frame.nameWithSet:SetText(nameString)
+        frame.nameWithSet:SetTextColor(r, g, b)
+        frame.setText:Show()
+        frame.setText:SetText('Set: ' .. item.setName)
+
+        frame.name:Hide()
+    else
+        frame.nameWithSet:Hide()
+        frame.setText:Hide()
+        frame.name:Show()
+
+        frame.name:SetText(nameString)
+        frame.name:SetTextColor(r, g, b)
+    end
 
     -- frame.type:SetTexture(CB.U.GetCategoyIcon(item.type))
 
@@ -216,8 +233,10 @@ function itemFrame.proto:Update()
 
     if self.item.isNew == true then
         self.widget.itemButton.NewTexture:Show()
+        self.widget.itemButton.NewIcon:Show()
     else
         self.widget.itemButton.NewTexture:Hide()
+        self.widget.itemButton.NewIcon:Hide()
     end
 end
 
@@ -236,15 +255,21 @@ function itemFrame.proto:Clear()
     end
 end
 
--- TODO: SetSize will eventually need to be set based on the View
 ---@return ListItem
 function itemFrame:_DoCreate()
     local i = setmetatable({}, { __index = itemFrame.proto })
-    local itemHeight = session.Settings.Defaults.Sections.ListItemHeight
+
+    local font = database:GetFont()
+    local itemHeight = database:GetItemViewHeight()
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
 
     ---@class ItemRow
     local f = CreateFrame('Frame', nil, UIParent)
-    f:SetSize(600 - 24, itemHeight)
+    f:SetSize(itemWidth, itemHeight)
 
     ---@class ItemButton
     local itemButton = CreateFrame('ItemButton', nil, f, 'ContainerFrameItemButtonTemplate')
@@ -298,10 +323,10 @@ function itemFrame:_DoCreate()
 
     f.itemButton = itemButton
 
-    -- Icon
+    --#region Icon
     local iconSpace = CreateFrame('Frame', nil, f)
     iconSpace:SetPoint('LEFT', f, 'LEFT', 4, 0)
-    iconSpace:SetSize(session.Settings.Defaults.Columns.Icon, itemHeight)
+    iconSpace:SetSize(session.Settings.Defaults.Columns.Icon * columnScale, itemHeight)
     local icon = CreateFrame('Frame', nil, iconSpace)
     icon:SetPoint('CENTER', iconSpace, 'CENTER')
     icon:SetSize(itemHeight - 6, itemHeight - 6)
@@ -350,16 +375,44 @@ function itemFrame:_DoCreate()
 
     f.icon = iconTexture
 
-    -- Name
+    --#endregion
+
+    --#region  Name
+
     local name = CreateFrame('Frame', nil, f)
     name:SetPoint('LEFT', iconSpace, 'RIGHT', 8, 0)
     name:SetHeight(itemHeight)
-    name:SetWidth(session.Settings.Defaults.Columns.Name)
-    local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    nameText:SetAllPoints(name)
-    nameText:SetJustifyH('LEFT')
+    name:SetWidth(session.Settings.Defaults.Columns.Name * columnScale)
 
-    f.name = nameText
+    local newIcon = name:CreateTexture(nil, 'OVERLAY')
+    newIcon:SetTexture('Interface\\CharacterCreate\\CharacterCreateClassTrial')
+    newIcon:SetAtlas('CharacterCreate-NewLabel')
+    newIcon:SetPoint('TOPRIGHT', name, 'TOPRIGHT', -6, 2)
+    newIcon:SetSize(54 * columnScale, 34 * columnScale)
+    newIcon:Hide()
+
+    f.itemButton.NewIcon = newIcon
+
+    local nameOnlyText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    nameOnlyText:SetAllPoints(name)
+    nameOnlyText:SetJustifyH('LEFT')
+    nameOnlyText:SetFont(font.path, fontSize)
+
+    local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    nameText:SetPoint('TOPLEFT', name, 'TOPLEFT', 0, -5)
+    nameText:SetJustifyH('LEFT')
+    nameText:SetFont(font.path, fontSize)
+
+    local setText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+    setText:SetPoint('BOTTOMLEFT', name, 'BOTTOMLEFT', 0, 5)
+    setText:SetJustifyH('LEFT')
+    setText:SetFont(font.path, fontSize)
+
+    f.name = nameOnlyText
+    f.setText = setText
+    f.nameWithSet = nameText
+
+    --#endregion
 
     -- type
     -- local type = CreateFrame('Frame', nil, f)
@@ -377,10 +430,11 @@ function itemFrame:_DoCreate()
     local ilvl = CreateFrame('Frame', nil, f)
     ilvl:SetPoint('LEFT', name, 'RIGHT')
     ilvl:SetHeight(itemHeight)
-    ilvl:SetWidth(session.Settings.Defaults.Columns.Ilvl)
+    ilvl:SetWidth(session.Settings.Defaults.Columns.Ilvl * columnScale)
     local ilvlText = ilvl:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     ilvlText:SetAllPoints(ilvl)
     ilvlText:SetJustifyH('CENTER')
+    ilvlText:SetFont(font.path, fontSize)
 
     f.ilvl = ilvlText
 
@@ -388,10 +442,11 @@ function itemFrame:_DoCreate()
     local reqlvl = CreateFrame('Frame', nil, f)
     reqlvl:SetPoint('LEFT', ilvl, 'RIGHT')
     reqlvl:SetHeight(itemHeight)
-    reqlvl:SetWidth(session.Settings.Defaults.Columns.ReqLvl)
+    reqlvl:SetWidth(session.Settings.Defaults.Columns.ReqLvl * columnScale)
     local reqlvlText = reqlvl:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     reqlvlText:SetAllPoints(reqlvl)
     reqlvlText:SetJustifyH('CENTER')
+    reqlvlText:SetFont(font.path, fontSize)
 
     f.reqlvl = reqlvlText
 
@@ -399,10 +454,11 @@ function itemFrame:_DoCreate()
     local value = CreateFrame('Frame', nil, f)
     value:SetPoint('LEFT', reqlvl, 'RIGHT')
     value:SetHeight(itemHeight)
-    value:SetWidth(session.Settings.Defaults.Columns.Value)
+    value:SetWidth(session.Settings.Defaults.Columns.Value * columnScale)
     local valueText = value:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     valueText:SetAllPoints(value)
     valueText:SetJustifyH('RIGHT')
+    valueText:SetFont(font.path, fontSize)
 
     f.value = valueText
 

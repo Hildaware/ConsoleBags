@@ -74,18 +74,48 @@ function view:Create(inventoryType)
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
+    local viewType = database:GetViewType()
+    local fullHeight = math.floor(GetScreenHeight())
+    local width = database:GetInventoryViewWidth()
+    local scale = 100
+
+    -- TODO: Test use scale
+    if GetCVar('useUiScale') == '1' then
+        scale = math.floor(UIParent:GetEffectiveScale() * 100)
+    end
+
+    print('Full Height: ' .. fullHeight .. ' Scale: ' .. scale)
+
+    if not _G['CPContainerMixin'] then
+        print('No Mixin')
+        return i
+    end
+
+    local font = database:GetFont()
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
+
     ---@class BagWidget
     local f = CreateFrame('Frame', addonName .. viewName, UIParent)
     f:SetFrameStrata('HIGH')
-    f:SetSize(600, database:GetViewHeight(inventoryType))
 
-    local position = database:GetViewPosition(inventoryType)
-    f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', position.x, position.y)
+    if (viewType == 'full') then
+        f:SetSize(width, fullHeight)
+        f:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT')
+    else
+        f:SetSize(width, database:GetViewHeight(inventoryType))
+        local position = database:GetViewPosition(inventoryType)
+        f:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', position.x, position.y)
+    end
+
     f:SetMovable(true)
     f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetResizable(true)
-    f:SetResizeBounds(600, 436, 600, 2000)
+    f:SetResizeBounds(600, 436, 1200, 2000)
 
     f.texture = f:CreateTexture(nil, 'BACKGROUND')
     f.texture:SetAllPoints(f)
@@ -94,6 +124,7 @@ function view:Create(inventoryType)
     if _G['ConsolePort'] then
         -- Stop ConsolePort from reading buttons
         f:SetScript('OnShow', function(frame)
+            if InCombatLockdown() then return end
             if _G['ConsolePortInputHandler'] then
                 _G['ConsolePortInputHandler']:SetCommand('PADRSHOULDER', frame, true, 'LeftButton', 'UIControl', nil)
                 _G['ConsolePortInputHandler']:SetCommand('PADLSHOULDER', frame, true, 'LeftButton', 'UIControl', nil)
@@ -166,9 +197,24 @@ function view:Create(inventoryType)
     else
         local text = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
         text:SetPoint('LEFT', header, 'LEFT', 12, 0)
-        text:SetWidth(140)
         text:SetJustifyH('LEFT')
         text:SetText(viewName)
+        text:SetFont(font.path, fontSize)
+
+        local searchBox = CreateFrame('EditBox', nil, header, 'SearchBoxTemplate')
+        searchBox:SetPoint('LEFT', text, 'RIGHT', 24, 0)
+        searchBox:SetSize(200, 16)
+        searchBox:SetAutoFocus(false)
+        searchBox:SetFrameLevel(5)
+        searchBox:HookScript('OnTextChanged', function()
+            local searchText = searchBox:GetText()
+
+            local cb = function()
+                i:Update(searchText)
+            end
+
+            i.filterContainer:OnSearch(cb)
+        end)
     end
 
     local close = CreateFrame('Button', nil, header)
@@ -211,11 +257,13 @@ function view:Create(inventoryType)
 
     sorting:Build(f, inventoryType, function() i:Update() end)
 
-    local scroller = CreateFrame('ScrollFrame', nil, f, 'UIPanelScrollFrameTemplate')
     local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters + 20)
         + session.Settings.Defaults.Sections.ListViewHeader
+
+    local scrollType = _G['ConsolePort'] and 'CPSmoothScrollTemplate' or 'UIPanelScrollFrameTemplate'
+    local scroller = CreateFrame('ScrollFrame', nil, f, scrollType)
     scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
-    scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', -24, session.Settings.Defaults.Sections.Footer + 2)
+    scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', 0, session.Settings.Defaults.Sections.Footer + 2)
     scroller:SetWidth(f:GetWidth())
 
     -- Disable targetting the scrollbar for CP users
@@ -226,7 +274,7 @@ function view:Create(inventoryType)
         end
     end
 
-    local scrollChild = CreateFrame('Frame')
+    local scrollChild = CreateFrame('Frame', nil, scroller)
     scroller:SetScrollChild(scrollChild)
     scrollChild:SetSize(scroller:GetWidth(), 1)
 
@@ -241,49 +289,32 @@ function view:Create(inventoryType)
     if inventoryType == enums.InventoryType.Inventory then
         local goldView = footer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
         goldView:SetPoint('LEFT', footer, 'LEFT', 12, 0)
-        goldView:SetWidth(140)
         goldView:SetJustifyH('LEFT')
-        goldView:SetText(GetCoinTextureString(GetMoney()))
+        goldView:SetText(C_CurrencyInfo.GetCoinTextureString(GetMoney(), fontSize))
+        goldView:SetFont(font.path, fontSize)
 
         f.gold = goldView
-
-        local defaultButton = CreateFrame('Button', nil, footer)
-        defaultButton:SetSize(28, 28)
-        defaultButton:SetPoint('RIGHT', footer, 'RIGHT', -6, 0)
-        defaultButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Back_Normal')
-        defaultButton:SetHighlightTexture('Interface\\Addons\\ConsoleBags\\Media\\Back_Highlight')
-        defaultButton:HookScript('OnEnter', function(self)
-            GameTooltip:SetOwner(self, 'ANCHOR_TOPRIGHT')
-            GameTooltip:SetText('Show Default bags temporarily. ', 1, 1, 1, 1, true)
-            GameTooltip:Show()
-        end)
-        defaultButton:HookScript('OnLeave', function(self)
-            GameTooltip:Hide()
-        end)
-        defaultButton:SetScript('OnClick', function(self, button, down)
-            utils.RestoreDefaultBags()
-            f:Hide()
-            OpenAllBags()
-        end)
     end
 
     -- Drag Bar
-    local drag = CreateFrame('Button', nil, f)
-    drag:SetSize(64, 12)
-    drag:SetPoint('BOTTOM', f, 'BOTTOM', 0, -6)
+    if viewType == 'compact' then
+        local drag = CreateFrame('Button', nil, f)
+        drag:SetSize(64, 12)
+        drag:SetPoint('BOTTOM', f, 'BOTTOM', 0, -6)
 
-    drag:SetScript('OnMouseDown', function(self)
-        self:GetParent():StartSizing('BOTTOM')
-    end)
+        drag:SetScript('OnMouseDown', function(self)
+            self:GetParent():StartSizing('BOTTOM')
+        end)
 
-    drag:SetScript('OnMouseUp', function(self)
-        self:GetParent():StopMovingOrSizing('BOTTOM')
-        database:SetViewHeight(inventoryType, self:GetParent():GetHeight())
-    end)
+        drag:SetScript('OnMouseUp', function(self)
+            self:GetParent():StopMovingOrSizing('BOTTOM')
+            database:SetViewHeight(inventoryType, self:GetParent():GetHeight())
+        end)
 
-    local dragTex = drag:CreateTexture(nil, 'BACKGROUND')
-    dragTex:SetAllPoints(drag)
-    dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
+        local dragTex = drag:CreateTexture(nil, 'BACKGROUND')
+        dragTex:SetAllPoints(drag)
+        dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
+    end
 
     f.ListView = scrollChild
     f:Hide()
@@ -302,7 +333,7 @@ function view:Create(inventoryType)
     return i
 end
 
-function view.proto:Update()
+function view.proto:Update(searchText)
     for _, row in pairs(self.items) do
         row:Empty()
     end
@@ -332,7 +363,13 @@ function view.proto:Update()
                 (self.type == invType.Bank and
                     ((self.selectedBankType == bankType.Bank and item.location == self.type) or
                         (self.selectedBankType == bankType.Warbank and item.location == invType.Shared))) then
-                utils.AddItemToCategory(item, catTable)
+                if searchText ~= nil and searchText ~= '' then
+                    if item.name:lower():find(searchText:lower(), 1, true) then
+                        utils.AddItemToCategory(item, catTable)
+                    end
+                else
+                    utils.AddItemToCategory(item, catTable)
+                end
             end
         end
     end
@@ -426,11 +463,14 @@ function view.proto:IsShown()
     return self.widget:IsShown()
 end
 
-function view.proto:Show()
+function view.proto:Show(animate)
     self.widget:Show()
 end
 
-function view.proto:Hide()
+function view.proto:Hide(animate)
+    if animate then
+        self.widget.animationOut:Play()
+    end
     self.widget:Hide()
 end
 
