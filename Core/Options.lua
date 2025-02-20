@@ -25,12 +25,13 @@ local settings = {
             args = {
                 viewType = {
                     name = 'View Type',
-                    desc = 'The view to use for the widget.',
+                    desc =
+                    "'Compact' allows you to move the frame, resize it, etc. 'Full' is a more Console-like experience with docked windows.",
                     type = 'select',
                     order = 1,
                     values = {
-                        ['compact'] = 'Compact',
-                        ['full'] = 'Full',
+                        [1] = 'Compact',
+                        [2] = 'Full',
                     },
                     get = function() return database:GetViewType() end,
                     set = function(_, value) database:SetViewType(value) end
@@ -38,6 +39,7 @@ local settings = {
                 font = {
                     name = 'Font',
                     desc = 'The font to use for the view.',
+                    order = 2,
                     type = 'select',
                     dialogControl = 'LSM30_Font',
                     values = LSM:HashTable(LSM.MediaType.FONT),
@@ -47,16 +49,6 @@ local settings = {
                     set = function(_, font)
                         database:SetFont(font, LSM:HashTable(LSM.MediaType.FONT)[font])
                     end
-                },
-                fontSize = {
-                    name = 'Font Size',
-                    desc = 'The font size to use for the view.',
-                    type = 'range',
-                    min = 10,
-                    max = 100,
-                    step = 1,
-                    get = function() return database:GetFontSize() end,
-                    set = function(_, value) database:SetFontSize(value) end
                 },
                 itemWidth = {
                     name = 'Item Width',
@@ -87,33 +79,10 @@ function options:OnInitialize()
     LibStub("AceConfig-3.0"):RegisterOptionsTable(addonName, settings)
     self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(addonName, 'Console Bags')
 
-    addon:RegisterChatCommand('consolebags', 'SlashCommand')
-    addon:RegisterChatCommand('cb', 'SlashCommand')
-end
-
----@param key string
----@param aceOptions AceConfig.OptionsTable
-function options:AddSettings(key, aceOptions)
-    settings.args[key] = aceOptions
-
-    LibStub("AceConfig-3.0"):RegisterOptionsTable(addonName, settings)
-end
-
----@param msg string
-function addon:SlashCommand(msg)
-    LibStub("AceConfigDialog-3.0"):Open(addonName)
-    -- if msg == '' then
-    --     LibStub("AceConfigDialog-3.0"):Open(addonName)
-    --     return
-    -- end
-
-    -- if msg == 'debug' then
-    --     ---@class Debug: AceModule
-    --     local debug = addon:GetModule('Debug')
-    --     debug:Enable()
-    --     debug:Show()
-    --     return
-    -- end
+    LibStub('AceConsole-3.0'):RegisterChatCommand('cb',
+        function() LibStub("AceConfigDialog-3.0"):Open(addonName) end)
+    LibStub('AceConsole-3.0'):RegisterChatCommand('consolebags',
+        function() LibStub("AceConfigDialog-3.0"):Open(addonName) end)
 end
 
 options:Enable()

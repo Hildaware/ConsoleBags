@@ -44,6 +44,12 @@ enums.InventoryType = {
     Shared = 4
 }
 
+---@enum Enums.ViewType
+enums.ViewType = {
+    Compact = 1,
+    Full = 2
+}
+
 ---@enum Enums.BankType
 enums.BankType = {
     Bank = 1,

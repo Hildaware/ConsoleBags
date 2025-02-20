@@ -13,11 +13,21 @@ local session = addon:GetModule('Session')
 ---@class Database: AceModule
 local database = addon:GetModule('Database')
 
+---@class SortContainerFrame: Frame
+
+---@class SortContainer: Frame
+---@field widget SortContainerFrame
+---@field Update function
+sorting.proto = {}
+
 function sorting:Build(parent, type, onSelect)
+    ---@type SortContainer
+    local i = setmetatable({}, { __index = sorting.proto })
+
     local hFrame = CreateFrame('Frame', nil, parent)
     hFrame:SetSize(parent:GetWidth(), session.Settings.Defaults.Sections.ListViewHeader)
     local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters + 20)
-    local addedOffset = 5
+    local addedOffset = 2
     hFrame:SetPoint('TOPLEFT', parent, 'TOPLEFT', 0, -(offset + addedOffset))
 
     hFrame.fields = {}
@@ -40,12 +50,16 @@ function sorting:Build(parent, type, onSelect)
         if index ~= #enums.SortFields then
             local div = hFrame:CreateTexture(nil, 'BACKGROUND')
             div:SetPoint('TOPLEFT', sortButton, 'TOPRIGHT', 0, 0)
-            div:SetSize(1, hFrame:GetHeight() - 9)
+            div:SetSize(1, hFrame:GetHeight() - 5)
             div:SetColorTexture(1, 1, 1, 0.5)
         end
 
         anchor = sortButton
     end
+
+    i.widget = hFrame --[[@as SortContainerFrame]]
+
+    return i
 end
 
 ---@param parent Frame
@@ -72,7 +86,7 @@ function sorting:Create(parent, anchor, sortType, width, type, onSelect, initial
     frame:SetPoint('LEFT', anchor, anchorPoint, offset, 0)
 
     local text = frame:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    text:SetPoint('BOTTOM', frame, 'BOTTOM', 0, 12)
+    text:SetPoint('CENTER', frame, 'CENTER', 0, 0)
     text:SetJustifyH('CENTER')
     text:SetText(sortType.shortName)
     text:SetTextColor(1, 1, 1)

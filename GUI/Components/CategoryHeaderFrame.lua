@@ -53,8 +53,18 @@ end
 function categoryHeaders.itemProto:Build(data, offset, parent, collapsedCategories, callback)
     local frame = self.widget
 
+    local font = database:GetFont()
+    local itemHeight = database:GetItemViewHeight()
+    local itemWidth = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
+
     frame:SetParent(parent)
-    frame:SetPoint('TOP', 0, -((offset - 1) * database:GetItemViewHeight()))
+    frame:SetSize(itemWidth, itemHeight)
+    frame:ClearAllPoints()
+    frame:SetPoint('TOP', 0, -((offset - 1) * itemHeight))
 
     if collapsedCategories[data.key] then
         frame:GetNormalTexture():SetVertexColor(1, 0, 0, 1)
@@ -62,8 +72,13 @@ function categoryHeaders.itemProto:Build(data, offset, parent, collapsedCategori
         frame:GetNormalTexture():SetVertexColor(1, 1, 1, 0.35)
     end
 
+    frame.typeContainer:SetSize(session.Settings.Defaults.Columns.Icon * columnScale, itemHeight)
     frame.type:SetTexture(utils.GetCategoyIcon(data.key))
+    frame.type:SetSize(24 * columnScale, 24 * columnScale)
+
+    frame.nameContainer:SetSize(session.Settings.Defaults.Columns.Name * columnScale, itemHeight)
     frame.name:SetText(data.name .. ' (' .. data.count .. ')')
+    frame.name:SetFont(font.path, fontSize)
 
     frame:SetScript('OnClick', function(self, button, down)
         if button == 'LeftButton' then
@@ -124,8 +139,9 @@ function categoryHeaders:_DoCreate()
 
     local typeTex = type:CreateTexture(nil, 'ARTWORK')
     typeTex:SetPoint('CENTER', type, 'CENTER')
-    typeTex:SetSize(24, 24)
+    typeTex:SetSize(24 * columnScale, 24 * columnScale)
 
+    f.typeContainer = type
     f.type = typeTex
 
     -- Name
@@ -138,6 +154,7 @@ function categoryHeaders:_DoCreate()
     nameText:SetJustifyH('LEFT')
     nameText:SetFont(font.path, fontSize)
 
+    f.nameContainer = name
     f.name = nameText
 
     f.isHeader = true

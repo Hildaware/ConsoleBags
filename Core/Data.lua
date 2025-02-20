@@ -1,4 +1,6 @@
 local addonName = ...
+
+---@class ConsoleBags: AceAddon
 local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 
 ---@class Database: AceModule
@@ -11,7 +13,7 @@ local enums = addon:GetModule('Enums')
 local defaults = {
     global = {
         Characters = {},
-        ViewType = 'compact',
+        ViewType = enums.ViewType.Compact,
         Font = {
             Name = 'Accidental Presidency',
             Path = 'Interface\\AddOns\\ConsoleBags\\Fonts\\AccidentalPresidency.ttf',
@@ -97,12 +99,12 @@ end
 
 function database:SetInventoryViewHeight(height)
     database.internal.global.InventoryFrame.Size.Y = height
-    -- TODO: Refresh View
+    addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
 end
 
 function database:SetInventoryViewWidth(width)
     database.internal.global.InventoryFrame.Size.X = width
-    -- TODO: Refresh View
+    addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
 end
 
 function database:GetInventoryViewWidth()
@@ -115,7 +117,7 @@ end
 
 function database:SetItemViewHeight(height)
     database.internal.global.InventoryFrame.ItemHeight = height
-    -- TODO: Refresh View
+    addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
 end
 
 ---@return { name: string, path: string, size: number }
@@ -131,16 +133,8 @@ function database:SetFont(name, path)
     font.Name = name
     font.Path = path
 
-    -- TODO: Set Font
-end
-
-function database:GetFontSize()
-    return database.internal.global.Font.Size or 12
-end
-
-function database:SetFontSize(size)
-    database.internal.global.Font.Size = size
-    -- TODO: Set Font Size
+    addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
+    addon.bags.Bank:UpdateGUI(enums.InventoryType.Bank)
 end
 
 function database:GetBankViewPositionY()
@@ -216,12 +210,15 @@ function database:GetSortField(inventoryType)
     end
 end
 
+---@return Enums.ViewType
 function database:GetViewType()
     return database.internal.global.ViewType
 end
 
+---@param type Enums.ViewType
 function database:SetViewType(type)
     database.internal.global.ViewType = type
+    addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
 end
 
 database:Enable()

@@ -121,7 +121,6 @@ function items.BuildItemCache()
 
     session.EquipmentSetItems = {}
 
-    -- TODO: Add to bank?
     local setData = resolver.GetEquipmentSets()
     for _, setId in pairs(setData) do
         local itemIds = resolver.GetItemIdsInEquipmentSet(setId)
@@ -174,7 +173,7 @@ function items.BuildBankCache()
     local bagSize = CreateBagData(BANK_CONTAINER, session.Bank)
     local requiresCleanup = {}
     for slot = 1, bagSize do
-        local created = CreateItem(BANK_CONTAINER, slot, invType, session.Bank)
+        local created = CreateItem(BANK_CONTAINER, slot, invType, session.Bank, session.EquipmentSetItems)
         requiresCleanup[slot] = created
     end
 
@@ -188,7 +187,7 @@ function items.BuildBankCache()
         local bankBagSize = CreateBagData(bag, session.Bank)
         requiresCleanup = {}
         for slot = 1, bankBagSize do
-            local created = CreateItem(bag, slot, invType, session.Bank)
+            local created = CreateItem(bag, slot, invType, session.Bank, session.EquipmentSetItems)
             requiresCleanup[slot] = created
         end
 

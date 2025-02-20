@@ -54,9 +54,11 @@ local bankHeader = addon:GetModule('BankHeader')
 ---@class (exact) BagView
 ---@field items ListItem[]
 ---@field filterContainer FilterContainer
+---@field sortContainer SortContainer
 ---@field categoryHeaders CategoryHeader[]
 ---@field widget BagWidget
 ---@field type Enums.InventoryType
+---@field viewType Enums.ViewType
 ---@field selectedBankType? Enums.BankType
 view.proto = {}
 
@@ -68,13 +70,15 @@ function view:Create(inventoryType)
     i.categoryHeaders = {}
     i.type = inventoryType
 
+    local viewType = database:GetViewType()
+    i.viewType = viewType
+
     if i.type == enums.InventoryType.Bank then
         i.selectedBankType = enums.BankType.Bank
     end
 
     local viewName = (inventoryType == enums.InventoryType.Inventory and 'Inventory') or 'Bank'
 
-    local viewType = database:GetViewType()
     local fullHeight = math.floor(GetScreenHeight())
     local width = database:GetInventoryViewWidth()
     local scale = 100
@@ -86,11 +90,6 @@ function view:Create(inventoryType)
 
     print('Full Height: ' .. fullHeight .. ' Scale: ' .. scale)
 
-    if not _G['CPContainerMixin'] then
-        print('No Mixin')
-        return i
-    end
-
     local font = database:GetFont()
     local itemWidth = database:GetInventoryViewWidth()
     local defaultWidth = 600
@@ -98,11 +97,13 @@ function view:Create(inventoryType)
     local columnScale = itemWidth / defaultWidth
     local fontSize = defaultFontSize * columnScale
 
+    local isFullInventory = viewType == enums.ViewType.Full and inventoryType == enums.InventoryType.Inventory
+
     ---@class BagWidget
     local f = CreateFrame('Frame', addonName .. viewName, UIParent)
     f:SetFrameStrata('HIGH')
 
-    if (viewType == 'full') then
+    if isFullInventory then
         f:SetSize(width, fullHeight)
         f:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT')
     else
@@ -201,6 +202,8 @@ function view:Create(inventoryType)
         text:SetText(viewName)
         text:SetFont(font.path, fontSize)
 
+        header.label = text
+
         local searchBox = CreateFrame('EditBox', nil, header, 'SearchBoxTemplate')
         searchBox:SetPoint('LEFT', text, 'RIGHT', 24, 0)
         searchBox:SetSize(200, 16)
@@ -239,23 +242,35 @@ function view:Create(inventoryType)
         addon.status.visitingWarbank = false
     end)
 
-    header:RegisterForDrag('LeftButton')
-    header:SetScript('OnDragStart', function(self, button)
-        self:GetParent():StartMoving()
-    end)
-    header:SetScript('OnDragStop', function(self)
-        self:GetParent():StopMovingOrSizing()
-        local x = self:GetParent():GetLeft()
-        local y = self:GetParent():GetTop()
-        database:SetViewPosition(inventoryType, x, y)
-    end)
+    if not isFullInventory then
+        header:RegisterForDrag('LeftButton')
+        header:SetScript('OnDragStart', function(self, button)
+            self:GetParent():StartMoving()
+        end)
+        header:SetScript('OnDragStop', function(self)
+            self:GetParent():StopMovingOrSizing()
+            local x = self:GetParent():GetLeft()
+            local y = self:GetParent():GetTop()
+            database:SetViewPosition(inventoryType, x, y)
+        end)
+    end
+
+    header.UpdateGUI = function()
+        local updatedFont = database:GetFont()
+        local updatedItemWidth = database:GetInventoryViewWidth()
+        local updatedColumnScale = updatedItemWidth / defaultWidth
+        local updatedFontSize = defaultFontSize * updatedColumnScale
+        f.Header:SetWidth(updatedItemWidth)
+        f.Header.label:SetFont(updatedFont.path, updatedFontSize)
+        f.ItemCountText:SetFont(updatedFont.path, updatedFontSize)
+    end
 
     f.Header = header
 
     -- Filters
     local filterContainer = filtering:BuildContainer(f, inventoryType)
 
-    sorting:Build(f, inventoryType, function() i:Update() end)
+    local sortContainer = sorting:Build(f, inventoryType, function() i:Update() end)
 
     local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters + 20)
         + session.Settings.Defaults.Sections.ListViewHeader
@@ -297,7 +312,7 @@ function view:Create(inventoryType)
     end
 
     -- Drag Bar
-    if viewType == 'compact' then
+    if viewType == enums.ViewType.Compact then
         local drag = CreateFrame('Button', nil, f)
         drag:SetSize(64, 12)
         drag:SetPoint('BOTTOM', f, 'BOTTOM', 0, -6)
@@ -314,9 +329,13 @@ function view:Create(inventoryType)
         local dragTex = drag:CreateTexture(nil, 'BACKGROUND')
         dragTex:SetAllPoints(drag)
         dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
+
+        f.DragBag = drag
     end
 
+    f.scroller = scroller
     f.ListView = scrollChild
+    f.footer = footer
     f:Hide()
 
     utils:CreateBorder(f)
@@ -329,6 +348,7 @@ function view:Create(inventoryType)
 
     i.widget = f
     i.filterContainer = filterContainer
+    i.sortContainer = sortContainer
 
     return i
 end
@@ -458,19 +478,113 @@ function view.proto:Update(searchText)
     end
 end
 
+---@param inventoryType Enums.InventoryType
+function view.proto:UpdateGUI(inventoryType)
+    local viewType = database:GetViewType()
+
+    local width = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = width / defaultWidth
+    local font = database:GetFont()
+    local fontSize = defaultFontSize * columnScale
+
+    self.viewType = viewType
+
+    if viewType == enums.ViewType.Full then
+        local fullHeight = math.floor(GetScreenHeight())
+        local scale = 100
+
+        -- TODO: Test use scale
+        if GetCVar('useUiScale') == '1' then
+            scale = math.floor(UIParent:GetEffectiveScale() * 100)
+        end
+
+        if inventoryType == enums.InventoryType.Inventory then
+            -- Sizing
+            self.widget:SetSize(width, fullHeight)
+            self.widget:ClearAllPoints()
+            self.widget:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT', 0, 0)
+
+            -- Remove Drag Handlers
+            self.widget.Header:SetScript('OnDragStart', function() end)
+            self.widget.Header:SetScript('OnDragStop', function() end)
+
+            -- Hide vertical Drag Bar
+            if self.widget.DragBag then
+                self.widget.DragBag:Hide()
+            end
+        end
+    else -- Compact
+        local viewHeight = database:GetViewHeight(inventoryType)
+        -- Sizing
+        self.widget:SetSize(width, viewHeight)
+        local position = database:GetViewPosition(inventoryType)
+        self.widget:ClearAllPoints()
+        self.widget:SetPoint('TOPLEFT', UIParent, 'BOTTOMLEFT', position.x, position.y)
+
+        -- Add Drag Handlers
+        self.widget.Header:RegisterForDrag('LeftButton')
+        self.widget.Header:SetScript('OnDragStart', function(self)
+            self:GetParent():StartMoving()
+        end)
+        self.widget.Header:SetScript('OnDragStop', function(self)
+            self:GetParent():StopMovingOrSizing()
+            local x = self:GetParent():GetLeft()
+            local y = self:GetParent():GetTop()
+            database:SetViewPosition(inventoryType, x, y)
+        end)
+
+        -- Show vertical Drag Bar
+        if self.widget.DragBag then
+            self.widget.DragBag:Show()
+        else
+            local drag = CreateFrame('Button', nil, self.widget)
+            drag:SetSize(64, 12)
+            drag:SetPoint('BOTTOM', self.widget, 'BOTTOM', 0, -6)
+
+            drag:SetScript('OnMouseDown', function(self)
+                self:GetParent():StartSizing('BOTTOM')
+            end)
+
+            drag:SetScript('OnMouseUp', function(self)
+                self:GetParent():StopMovingOrSizing('BOTTOM')
+                database:SetViewHeight(inventoryType, self:GetParent():GetHeight())
+            end)
+
+            local dragTex = drag:CreateTexture(nil, 'BACKGROUND')
+            dragTex:SetAllPoints(drag)
+            dragTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Handlebar')
+
+            self.widget.DragBag = drag
+        end
+    end
+
+    -- Update the width of the rest of the elements
+    self.widget.Header:UpdateGUI()
+    self.filterContainer:UpdateGUI()
+
+    self.sortContainer.widget:Hide()
+    self.sortContainer.widget:SetParent(nil)
+    self.sortContainer = sorting:Build(self.widget, inventoryType, function() self:Update() end)
+
+    self.widget.scroller:SetWidth(width)
+    self.widget.ListView:SetWidth(width)
+    self.widget.footer:SetWidth(width - 2)
+    self.widget.gold:SetFont(font.path, fontSize)
+    self:Update()
+end
+
 ---@return boolean
 function view.proto:IsShown()
     return self.widget:IsShown()
 end
 
-function view.proto:Show(animate)
+function view.proto:Show()
     self.widget:Show()
 end
 
-function view.proto:Hide(animate)
-    if animate then
-        self.widget.animationOut:Play()
-    end
+function view.proto:Hide()
     self.widget:Hide()
 end
 
@@ -482,7 +596,7 @@ function view.proto:UpdateCurrency()
     if self.type == enums.InventoryType.Inventory then
         local money = GetMoney()
         if money == nil then return end
-        local str = GetCoinTextureString(money)
+        local str = C_CurrencyInfo.GetCoinTextureString(money)
         if str == nil or str == '' then return end
         self.widget.gold:SetText(str)
         return

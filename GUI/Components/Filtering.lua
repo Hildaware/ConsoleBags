@@ -347,6 +347,23 @@ function filtering.proto:OnSearch(callback)
     callback()
 end
 
+function filtering.proto:UpdateGUI()
+    local width = database:GetInventoryViewWidth()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = width / defaultWidth
+    local font = database:GetFont()
+    local fontSize = defaultFontSize * columnScale
+
+    self.widget:SetWidth(width)
+    self.widget.SelectedContainer:SetWidth(width)
+    self.widget.SelectedContainer.text:SetFont(font.path, fontSize)
+    self.widget.SelectedContainer.prevText:SetFont(font.path, fontSize)
+    self.widget.SelectedContainer.prevText:SetScale(0.8)
+    self.widget.SelectedContainer.nextText:SetFont(font.path, fontSize)
+    self.widget.SelectedContainer.nextText:SetScale(0.8)
+end
+
 --#endregion
 
 function filtering:OnInitialize()

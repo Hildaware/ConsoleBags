@@ -83,8 +83,18 @@ function itemFrame.proto:Build(item, offset, parent)
     self.item = item
     local frame = self.widget
 
+    local font = database:GetFont()
+    local itemWidth = database:GetInventoryViewWidth()
+    local itemHeight = database:GetItemViewHeight()
+    local defaultWidth = 600
+    local defaultFontSize = 11
+    local columnScale = itemWidth / defaultWidth
+    local fontSize = defaultFontSize * columnScale
+
     frame:SetParent(parent)
-    frame:SetPoint('TOP', 0, -((offset - 1) * database:GetItemViewHeight()))
+    frame:SetSize(itemWidth, itemHeight)
+    frame:ClearAllPoints()
+    frame:SetPoint('TOP', 0, -((offset - 1) * itemHeight))
 
     local tooltipOwner = GameTooltip:GetOwner()
 
@@ -163,18 +173,28 @@ function itemFrame.proto:Build(item, offset, parent)
         cBags:AddButton(frame.icon)
     end
 
+    local iconSize = itemHeight - 6
+    frame.iconContainer:SetSize(session.Settings.Defaults.Columns.Icon * columnScale, iconSize)
+    frame.icon.frame:SetSize(iconSize, iconSize)
+    frame.icon:SetAllPoints(frame.icon.frame)
+    frame.icon:SetSize(iconSize, iconSize)
+
     local stackString = (item.stackCount and item.stackCount > 1) and '(' .. item.stackCount .. ')' or nil
     local nameString = item.name
     if stackString then
         nameString = nameString .. ' ' .. stackString
     end
 
+    frame.nameContainer:SetSize(session.Settings.Defaults.Columns.Name * columnScale, itemHeight)
+
     if item.setName ~= '' then
         frame.nameWithSet:Show()
         frame.nameWithSet:SetText(nameString)
         frame.nameWithSet:SetTextColor(r, g, b)
+        frame.nameWithSet:SetFont(font.path, fontSize)
         frame.setText:Show()
         frame.setText:SetText('Set: ' .. item.setName)
+        frame.setText:SetFont(font.path, fontSize)
 
         frame.name:Hide()
     else
@@ -184,25 +204,32 @@ function itemFrame.proto:Build(item, offset, parent)
 
         frame.name:SetText(nameString)
         frame.name:SetTextColor(r, g, b)
+        frame.name:SetFont(font.path, fontSize)
     end
 
     -- frame.type:SetTexture(CB.U.GetCategoyIcon(item.type))
 
+    frame.ilvlContainer:SetSize(session.Settings.Defaults.Columns.Ilvl * columnScale, itemHeight)
     if item.type == Enum.ItemClass.Armor or item.type == Enum.ItemClass.Weapon
         or item.category == Enum.ItemClass.Battlepet then
         frame.ilvl:SetText(item.ilvl)
+        frame.ilvl:SetFont(font.path, fontSize)
     else
         frame.ilvl:SetText('')
     end
 
+    frame.reqlvlContainer:SetSize(session.Settings.Defaults.Columns.ReqLvl * columnScale, itemHeight)
     if item.reqLvl and item.reqLvl > 1 then
         frame.reqlvl:SetText(item.reqLvl)
+        frame.reqlvl:SetFont(font.path, fontSize)
     else
         frame.reqlvl:SetText('')
     end
 
+    frame.valueContainer:SetSize(session.Settings.Defaults.Columns.Value * columnScale, itemHeight)
     if item.value and item.value > 1 then
-        frame.value:SetText(GetCoinTextureString(item.value))
+        frame.value:SetText(C_CurrencyInfo.GetCoinTextureString(item.value, fontSize))
+        frame.value:SetFont(font.path, fontSize)
     else
         frame.value:SetText('')
     end
@@ -326,7 +353,7 @@ function itemFrame:_DoCreate()
     --#region Icon
     local iconSpace = CreateFrame('Frame', nil, f)
     iconSpace:SetPoint('LEFT', f, 'LEFT', 4, 0)
-    iconSpace:SetSize(session.Settings.Defaults.Columns.Icon * columnScale, itemHeight)
+    iconSpace:SetSize(session.Settings.Defaults.Columns.Icon * columnScale, itemHeight - 6)
     local icon = CreateFrame('Frame', nil, iconSpace)
     icon:SetPoint('CENTER', iconSpace, 'CENTER')
     icon:SetSize(itemHeight - 6, itemHeight - 6)
@@ -373,6 +400,7 @@ function itemFrame:_DoCreate()
     scrapFrame:Hide()
     iconTexture.scrap = scrapFrame
 
+    f.iconContainer = iconSpace
     f.icon = iconTexture
 
     --#endregion
@@ -408,6 +436,7 @@ function itemFrame:_DoCreate()
     setText:SetJustifyH('LEFT')
     setText:SetFont(font.path, fontSize)
 
+    f.nameContainer = name
     f.name = nameOnlyText
     f.setText = setText
     f.nameWithSet = nameText
@@ -436,6 +465,7 @@ function itemFrame:_DoCreate()
     ilvlText:SetJustifyH('CENTER')
     ilvlText:SetFont(font.path, fontSize)
 
+    f.ilvlContainer = ilvl
     f.ilvl = ilvlText
 
     -- reqlvl
@@ -448,6 +478,7 @@ function itemFrame:_DoCreate()
     reqlvlText:SetJustifyH('CENTER')
     reqlvlText:SetFont(font.path, fontSize)
 
+    f.reqlvlContainer = reqlvl
     f.reqlvl = reqlvlText
 
     -- value
@@ -460,6 +491,7 @@ function itemFrame:_DoCreate()
     valueText:SetJustifyH('RIGHT')
     valueText:SetFont(font.path, fontSize)
 
+    f.valueContainer = value
     f.value = valueText
 
     f.isItem = true
