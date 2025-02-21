@@ -35,17 +35,6 @@ function session:OnInitialize()
         [Enum.BagIndex.ReagentBag] = setmetatable({}, { __index = self.bagDataProto })
     }
 
-
-    -- self.Inventory = {
-    --     Bags = {
-
-    --     },
-    --     TotalCount = 0,
-    --     Count = 0,
-    --     ReagentCount = 0,
-    --     Resolved = 0
-    -- }
-
     ---@type ViewData
     self.Bank = setmetatable({}, { __index = self.viewDataProto })
     self.Bank.Bags = {
@@ -59,13 +48,6 @@ function session:OnInitialize()
         [Enum.BagIndex.BankBag_7] = setmetatable({}, { __index = self.bagDataProto }),
         [98] = setmetatable({}, { __index = self.bagDataProto }) -- Enum.BagIndex.ReagentBank
     }
-    -- self.Bank = {
-    --     Bags = {},
-    --     TotalCount = 0,
-    --     Count = 0,
-    --     ReagentCount = 0,
-    --     Resolved = 0
-    -- }
 
     ---@type ViewData
     self.Warbank = setmetatable({}, { __index = self.viewDataProto })
@@ -76,12 +58,10 @@ function session:OnInitialize()
         [Enum.BagIndex.AccountBankTab_4] = setmetatable({}, { __index = self.bagDataProto }),
         [Enum.BagIndex.AccountBankTab_5] = setmetatable({}, { __index = self.bagDataProto }),
     }
-    -- self.Warbank = {
-    --     Bags = {},
-    --     TotalCount = 0,
-    --     Count = 0,
-    --     Resolved = 0
-    -- }
+
+    ---@type table<number, string>
+    self.EquipmentSetItems = {}
+    self.ShouldBuildEquipmentSetCache = true
 
     self.InventoryFilter = nil
     self.BankFilter = nil

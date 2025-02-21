@@ -111,16 +111,9 @@ local function CleanupSessionItems(bag, bagSize, slots)
     end
 end
 
-function items.BuildItemCache()
-    local invType = enums.InventoryType.Inventory
-    session.BuildingCache = true
-    session.Inventory.TotalCount = 0
-    session.Inventory.Count = 0
-    session.Inventory.ReagentCount = 0
-    session.Inventory.Resolved = 0
-
+function items.GetEquipmentSetData()
+    if not session.ShouldBuildEquipmentSetCache then return end
     session.EquipmentSetItems = {}
-
     local setData = resolver.GetEquipmentSets()
     for _, setId in pairs(setData) do
         local itemIds = resolver.GetItemIdsInEquipmentSet(setId)
@@ -128,6 +121,16 @@ function items.BuildItemCache()
             session.EquipmentSetItems[itemId] = resolver.GetEquimentSetName(setId)
         end
     end
+    session.ShouldBuildEquipmentSetCache = false
+end
+
+function items.BuildItemCache()
+    local invType = enums.InventoryType.Inventory
+    session.BuildingCache = true
+    session.Inventory.TotalCount = 0
+    session.Inventory.Count = 0
+    session.Inventory.ReagentCount = 0
+    session.Inventory.Resolved = 0
 
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         session.Inventory.Bags[bag].TotalCount = 0

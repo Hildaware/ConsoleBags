@@ -82,6 +82,8 @@ function addon:OnEnable()
 
     self:SecureHook('ToggleAllBags')
     self:SecureHook('CloseSpecialWindows')
+    self:SecureHook('OpenAllBags')
+    self:SecureHook('CloseAllBags')
 
     ---@diagnostic disable-next-line: undefined-field
     events:RegisterEvent('BANKFRAME_OPENED', function()
@@ -116,23 +118,29 @@ function addon.OnBankUpdate()
 
     if session.Settings.HideBags == true then return end
 
-    if not addon.bags.Inventory:IsShown() then
-        addon:ToggleAllBags()
-    end
+    items.GetEquipmentSetData()
 
     if not session.BuildingBankCache then
         items.BuildBankCache()
     end
 
+    if not addon.bags.Inventory:IsShown() then
+        addon:ToggleAllBags()
+    end
+
     if session.Bank.Resolved >= session.Bank.TotalCount then
         addon.bags.Bank:Update()
         addon.bags.Bank:Show()
+    else
+        C_Timer.After(0.1, addon.OnBankUpdate)
     end
 end
 
 function addon.OnUpdate()
     if addon.status.backpackShouldOpen then
         if session.Settings.HideBags == true then return end
+
+        items.GetEquipmentSetData()
 
         if not session.BuildingCache then
             items.BuildItemCache()
@@ -164,6 +172,20 @@ function addon:ToggleAllBags()
     else
         addon.status.backpackShouldOpen = true
     end
+
+    events:Send('ConsoleBagsToggle')
+end
+
+function addon:OpenAllBags()
+    if addon.bags.Inventory:IsShown() then return end
+    addon.status.backpackShouldOpen = true
+
+    events:Send('ConsoleBagsToggle')
+end
+
+function addon:CloseAllBags()
+    if not addon.bags.Inventory:IsShown() then return end
+    addon.status.backpackShouldClose = true
 
     events:Send('ConsoleBagsToggle')
 end
@@ -202,7 +224,9 @@ end
 ---@param bagId number
 function events:BAG_UPDATE(_, bagId)
     local bagType = utils:GetBagType(bagId)
-    if bagType == nil then return end
+    if bagType == nil then
+        return
+    end
 
     local sessionData = items:UpdateBag(bagId, bagType)
     if sessionData.Resolved < sessionData.TotalCount then
@@ -213,6 +237,7 @@ function events:BAG_UPDATE(_, bagId)
         addon.bags.Inventory or addon.bags.Bank
 
     if bag and bag:IsShown() then
+        items.BuildItemCache()
         bag:Update()
     end
 end
@@ -220,16 +245,22 @@ end
 function events:PLAYERBANKSLOTS_CHANGED()
     items.BuildBankCache()
     addon.bags.Bank:Update()
+    items.BuildItemCache()
+    addon.bags.Inventory:Update()
 end
 
 function events:PLAYERBANKBAGSLOTS_CHANGED()
     items.BuildBankCache()
     addon.bags.Bank:Update()
+    items.BuildItemCache()
+    addon.bags.Inventory:Update()
 end
 
 function events:EQUIPMENT_SETS_CHANGED()
-    items.BuildItemCache()
+    session.ShouldBuildEquipmentSetCache = true
+    items.GetEquipmentSetData()
     if addon.bags.Inventory and addon.bags.Inventory:IsShown() then
+        items.BuildItemCache()
         addon.bags.Inventory:Update()
     end
 end
