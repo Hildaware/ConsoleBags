@@ -24,16 +24,20 @@ local button = addon:GetModule('SimpleButton')
 ---@class Database: AceModule
 local database = addon:GetModule('Database')
 
----@class BankHeaderFrame
+---@class BankButton: Button
+---@field text FontString
+
 header.proto = {}
 
 ---@param parent Frame
 ---@param type Enums.BankType
 ---@param width number
 ---@param onClick function
+---@return BankButton|Button
 local function CreateBankButton(parent, type, width, onClick)
     local font = database:GetFont()
 
+    ---@type BankButton|Button
     local btn = CreateFrame('Button', nil, parent)
     btn:SetPoint(type == enums.BankType.Bank and 'LEFT' or 'RIGHT')
     btn:SetSize(width, session.Settings.Defaults.Sections.Header - 8)
@@ -50,8 +54,9 @@ local function CreateBankButton(parent, type, width, onClick)
     local textColor = type == enums.BankType.Bank and { 1, 1, 0 } or { 1, 1, 1 }
     btn.text:SetTextColor(unpack(textColor))
 
-    -- utils:CreateBorder(btn)
+    ---@diagnostic disable-next-line: missing-fields
     utils:CreateRegionalBorder(btn, 'TOP', { 1, 1, 1, 1 })
+    ---@diagnostic disable-next-line: missing-fields
     utils:CreateRegionalBorder(btn, 'BOTTOM', { 1, 1, 1, 1 })
 
     return btn
@@ -60,7 +65,7 @@ end
 
 ---@param view BagView
 ---@param parent Frame
----@return BankHeaderFrame
+---@return BankHeader
 function header:CreateAdditions(view, parent)
     local i = setmetatable({}, { __index = header.proto })
 
@@ -227,7 +232,7 @@ function header:CreateAdditions(view, parent)
     goldView:SetPoint('LEFT', moneyWithdraw.base, 'RIGHT', 8, 0)
     goldView:SetWidth(140)
     goldView:SetJustifyH('LEFT')
-    goldView:SetText(GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
+    goldView:SetText(C_CurrencyInfo.GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
 
     --#endregion
 
@@ -255,7 +260,7 @@ function header.proto:Update()
         self.warbankHeader.purchase:SetTooltip(string.format('Purchase a Warbank Tab for %s', purchaseCost))
     end
 
-    self.warbankHeader.money:SetText(GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
+    self.warbankHeader.money:SetText(C_CurrencyInfo.GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
 end
 
 ---@param bankType Enums.BankType

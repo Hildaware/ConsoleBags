@@ -14,17 +14,16 @@ local session = addon:GetModule('Session')
 ---@class Database: AceModule
 local database = addon:GetModule('Database')
 
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
 function bags:Build(type, parent)
     local f = CreateFrame('Frame', nil, parent.Header)
     f:SetSize(32, 32)
     f:SetPoint('RIGHT', parent.Header, 'RIGHT', -40, 0)
 
     local font = database:GetFont()
-    local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local fontSize = utils:GetFontScale()
 
     -- Bag Button
     local bagButton = CreateFrame('Button', nil, f)

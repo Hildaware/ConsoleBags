@@ -18,11 +18,13 @@ local database = addon:GetModule('Database')
 
 ---@class CategoryHeaderItem: Button
 ---@field type Texture
+---@field typeContainer Frame
 ---@field name FontString
+---@field nameContainer Frame
 ---@field isHeader boolean
 
 ---@class CategoryHeader
----@field widget CategoryHeaderItem
+---@field widget CategoryHeaderItem|Button
 categoryHeaders.itemProto = {}
 
 function categoryHeaders:OnInitialize()
@@ -31,7 +33,7 @@ function categoryHeaders:OnInitialize()
         self._pool:SetResetDisallowedIfNew()
     end
 
-    ---@type
+    ---@type CategoryHeader[]
     local frames = {}
     for i = 1, 100 do
         frames[i] = self:Create()
@@ -56,10 +58,8 @@ function categoryHeaders.itemProto:Build(data, offset, parent, collapsedCategori
     local font = database:GetFont()
     local itemHeight = database:GetItemViewHeight()
     local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local columnScale = utils:GetColumnScale()
+    local fontSize = utils:GetFontScale()
 
     frame:SetParent(parent)
     frame:SetSize(itemWidth, itemHeight)
@@ -115,10 +115,8 @@ function categoryHeaders:_DoCreate()
     local font = database:GetFont()
     local itemHeight = database:GetItemViewHeight()
     local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local columnScale = utils:GetColumnScale()
+    local fontSize = utils:GetFontScale()
 
     ---@type CategoryHeaderItem|Button
     local f = CreateFrame('Button')

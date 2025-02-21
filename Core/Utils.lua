@@ -10,6 +10,34 @@ local enums = addon:GetModule('Enums')
 ---@class Session: AceModule
 local session = addon:GetModule('Session')
 
+---@class Database: AceModule
+local database = addon:GetModule('Database')
+
+---@return number
+function utils:GetFontScale()
+    local defaultFontSize = 12
+    local defaultWidth = 600
+    local defaultHeight = 28
+
+    local itemWidth = database:GetInventoryViewWidth()
+    local itemHeight = database:GetItemViewHeight()
+
+    local widthScale = itemWidth / defaultWidth
+    local heightScale = itemHeight / defaultHeight
+
+    -- Use the smaller scale to ensure text fits in both dimensions
+    local scale = math.min(widthScale, heightScale)
+    local fontSize = defaultFontSize * scale
+
+    return fontSize
+end
+
+function utils:GetColumnScale()
+    local defaultWidth = 600
+
+    local itemWidth = database:GetInventoryViewWidth()
+    return itemWidth / defaultWidth
+end
 
 ---@param frame Frame
 ---@return Frame?

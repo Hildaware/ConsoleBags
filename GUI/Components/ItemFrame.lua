@@ -12,6 +12,9 @@ local session = addon:GetModule('Session')
 ---@class Database: AceModule
 local database = addon:GetModule('Database')
 
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
 local Masque = LibStub('Masque', true)
 
 ---@class ItemButton : Button
@@ -86,10 +89,8 @@ function itemFrame.proto:Build(item, offset, parent)
     local font = database:GetFont()
     local itemWidth = database:GetInventoryViewWidth()
     local itemHeight = database:GetItemViewHeight()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local columnScale = utils:GetColumnScale()
+    local fontSize = utils:GetFontScale()
 
     frame:SetParent(parent)
     frame:SetSize(itemWidth, itemHeight)
@@ -112,7 +113,6 @@ function itemFrame.proto:Build(item, offset, parent)
     frame.itemButton:HookScript('OnLeave', function(s)
         s.HighlightTexture:Hide()
         s.NewTexture:Hide()
-        s.NewIcon:Hide()
         if self.item ~= nil then
             self.item.isNew = false
         end
@@ -260,10 +260,8 @@ function itemFrame.proto:Update()
 
     if self.item.isNew == true then
         self.widget.itemButton.NewTexture:Show()
-        self.widget.itemButton.NewIcon:Show()
     else
         self.widget.itemButton.NewTexture:Hide()
-        self.widget.itemButton.NewIcon:Hide()
     end
 end
 
@@ -289,10 +287,8 @@ function itemFrame:_DoCreate()
     local font = database:GetFont()
     local itemHeight = database:GetItemViewHeight()
     local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local columnScale = utils:GetColumnScale()
+    local fontSize = utils:GetFontScale()
 
     ---@class ItemRow
     local f = CreateFrame('Frame', nil, UIParent)
@@ -405,21 +401,12 @@ function itemFrame:_DoCreate()
 
     --#endregion
 
-    --#region  Name
+    --#region Name
 
     local name = CreateFrame('Frame', nil, f)
     name:SetPoint('LEFT', iconSpace, 'RIGHT', 8, 0)
     name:SetHeight(itemHeight)
     name:SetWidth(session.Settings.Defaults.Columns.Name * columnScale)
-
-    local newIcon = name:CreateTexture(nil, 'OVERLAY')
-    newIcon:SetTexture('Interface\\CharacterCreate\\CharacterCreateClassTrial')
-    newIcon:SetAtlas('CharacterCreate-NewLabel')
-    newIcon:SetPoint('TOPRIGHT', name, 'TOPRIGHT', -6, 2)
-    newIcon:SetSize(54 * columnScale, 34 * columnScale)
-    newIcon:Hide()
-
-    f.itemButton.NewIcon = newIcon
 
     local nameOnlyText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
     nameOnlyText:SetAllPoints(name)
@@ -427,12 +414,12 @@ function itemFrame:_DoCreate()
     nameOnlyText:SetFont(font.path, fontSize)
 
     local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    nameText:SetPoint('TOPLEFT', name, 'TOPLEFT', 0, -5)
+    nameText:SetPoint('TOPLEFT', name, 'TOPLEFT', 0, -2)
     nameText:SetJustifyH('LEFT')
     nameText:SetFont(font.path, fontSize)
 
     local setText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    setText:SetPoint('BOTTOMLEFT', name, 'BOTTOMLEFT', 0, 5)
+    setText:SetPoint('BOTTOMLEFT', name, 'BOTTOMLEFT', 0, 2)
     setText:SetJustifyH('LEFT')
     setText:SetFont(font.path, fontSize)
 

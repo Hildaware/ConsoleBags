@@ -13,7 +13,11 @@ local session = addon:GetModule('Session')
 ---@class Database: AceModule
 local database = addon:GetModule('Database')
 
+---@class Utils: AceModule
+local utils = addon:GetModule('Utils')
+
 ---@class SortContainerFrame: Frame
+---@field fields table<number, table|Button>
 
 ---@class SortContainer: Frame
 ---@field widget SortContainerFrame
@@ -62,7 +66,7 @@ function sorting:Build(parent, type, onSelect)
     return i
 end
 
----@param parent Frame
+---@param parent SortContainerFrame
 ---@param anchor Frame
 ---@param sortType SortType
 ---@param width integer
@@ -72,11 +76,7 @@ end
 ---@return table|Button
 function sorting:Create(parent, anchor, sortType, width, type, onSelect, initial)
     local font = database:GetFont()
-    local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local fontSize = utils:GetFontScale()
 
     local frame = CreateFrame('Button', nil, parent)
     frame:SetSize(width, parent:GetHeight())
@@ -147,13 +147,13 @@ function sorting:Create(parent, anchor, sortType, width, type, onSelect, initial
         onSelect()
     end)
 
-    frame:SetScript('OnEnter', function(self)
-        GameTooltip:SetOwner(self, 'ANCHOR_TOPRIGHT')
+    frame:SetScript('OnEnter', function(button)
+        GameTooltip:SetOwner(button, 'ANCHOR_TOPRIGHT')
         GameTooltip:SetText('Sort By: ' .. sortType.friendlyName, 1, 1, 1, 1, true)
         GameTooltip:Show()
     end)
 
-    frame:SetScript('OnLeave', function(self)
+    frame:SetScript('OnLeave', function(_)
         GameTooltip:Hide()
     end)
 

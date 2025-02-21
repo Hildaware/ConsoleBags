@@ -348,17 +348,6 @@ function items:SortItems(categories, sortField)
                 end)
         end
 
-        if type == enums.SortField.Category then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.type > b.type
-                    else
-                        return a.type < b.type
-                    end
-                end)
-        end
-
         if type == enums.SortField.Ilvl then
             table.sort(cat.items,
                 function(a, b)

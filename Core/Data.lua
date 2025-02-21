@@ -204,10 +204,10 @@ end
 ---@param inventoryType Enums.InventoryType
 ---@return SortField
 function database:GetSortField(inventoryType)
-    if inventoryType == enums.InventoryType.Inventory then
-        return database:GetInventorySortField()
-    elseif inventoryType == enums.InventoryType.Bank then
+    if inventoryType == enums.InventoryType.Bank then
         return database:GetBankSortField()
+    else
+        return database:GetInventorySortField()
     end
 end
 

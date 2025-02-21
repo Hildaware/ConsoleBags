@@ -81,21 +81,9 @@ function view:Create(inventoryType)
 
     local fullHeight = math.floor(GetScreenHeight())
     local width = database:GetInventoryViewWidth()
-    local scale = 100
-
-    -- TODO: Test use scale
-    if GetCVar('useUiScale') == '1' then
-        scale = math.floor(UIParent:GetEffectiveScale() * 100)
-    end
-
-    print('Full Height: ' .. fullHeight .. ' Scale: ' .. scale)
 
     local font = database:GetFont()
-    local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local fontSize = utils:GetFontScale()
 
     ---@class BagWidget
     local f = CreateFrame('Frame', addonName .. viewName, UIParent)
@@ -275,9 +263,8 @@ function view:Create(inventoryType)
 
     header.UpdateGUI = function()
         local updatedFont = database:GetFont()
+        local updatedFontSize = utils:GetFontScale()
         local updatedItemWidth = database:GetInventoryViewWidth()
-        local updatedColumnScale = updatedItemWidth / defaultWidth
-        local updatedFontSize = defaultFontSize * updatedColumnScale
         f.Header:SetWidth(updatedItemWidth)
         f.Header.label:SetFont(updatedFont.path, updatedFontSize)
         f.ItemCountText:SetFont(updatedFont.path, updatedFontSize)
@@ -501,11 +488,8 @@ function view.proto:UpdateGUI(inventoryType)
     local viewType = database:GetViewType()
 
     local width = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = width / defaultWidth
     local font = database:GetFont()
-    local fontSize = defaultFontSize * columnScale
+    local fontSize = utils:GetFontScale()
 
     self.viewType = viewType
 

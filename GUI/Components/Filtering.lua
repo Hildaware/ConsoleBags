@@ -248,7 +248,8 @@ function filtering.proto:Update(inventoryType, categories, callback)
     -- Insert 'All' before any others
     table.insert(categories, 1, { key = 999, name = 'All', count = 0, order = 0 })
 
-    local maxItemsShown = math.min(#categories, 17) -- TODO: Variable based on width?
+    local width = database:GetInventoryViewWidth() - 48
+    local maxItemsShown = math.min(#categories, math.floor(width / 32))
     local maxPerSide = math.ceil(#categories / 2) - 1
     local maxPerSideShown = math.floor(maxItemsShown / 2)
     local keyFrameIndex = math.ceil(maxItemsShown / 2)
@@ -349,11 +350,8 @@ end
 
 function filtering.proto:UpdateGUI()
     local width = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 11
-    local columnScale = width / defaultWidth
     local font = database:GetFont()
-    local fontSize = defaultFontSize * columnScale
+    local fontSize = utils:GetFontScale()
 
     self.widget:SetWidth(width)
     self.widget.SelectedContainer:SetWidth(width)
@@ -462,14 +460,10 @@ function filtering:BuildContainer(view, type)
     selectedTex:SetVertexColor(1, 1, 1, 0.5)
 
     local font = database:GetFont()
-    local itemWidth = database:GetInventoryViewWidth()
-    local defaultWidth = 600
-    local defaultFontSize = 8
-    local columnScale = itemWidth / defaultWidth
-    local fontSize = defaultFontSize * columnScale
+    local fontSize = utils:GetFontScale() - 3
 
     local selectedText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    selectedText:SetPoint('CENTER', selectedContainer, 'CENTER', 0, 2)
+    selectedText:SetPoint('BOTTOM', selectedContainer, 'BOTTOM', 0, 2)
     selectedText:SetJustifyH('CENTER')
     selectedText:SetJustifyV('MIDDLE')
     selectedText:SetTextColor(1, 1, 0, 1)
@@ -482,7 +476,7 @@ function filtering:BuildContainer(view, type)
     prevText:SetJustifyV('MIDDLE')
     prevText:SetFont(font.path, fontSize)
     prevText:SetTextScale(0.8)
-    prevText:SetTextColor(0.5, 0.5, 0.5, 1)
+    prevText:SetTextColor(1, 1, 1, 1)
     prevText:SetText(string.upper('Previous'))
 
     local nextText = selectedContainer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
@@ -491,7 +485,7 @@ function filtering:BuildContainer(view, type)
     nextText:SetJustifyV('MIDDLE')
     nextText:SetFont(font.path, fontSize)
     nextText:SetTextScale(0.8)
-    nextText:SetTextColor(0.5, 0.5, 0.5, 1)
+    nextText:SetTextColor(1, 1, 1, 1)
     nextText:SetText(string.upper('Next'))
 
     selectedContainer.text = selectedText
@@ -529,9 +523,10 @@ function filtering:_DoCreate()
     f:RegisterForClicks('AnyUp')
 
     local newTex = f:CreateTexture(nil, 'OVERLAY')
-    newTex:SetPoint('TOPRIGHT', f, 'TOPRIGHT', 0, -4)
-    newTex:SetSize(12, 12)
-    newTex:SetTexture('Interface\\Addons\\ConsoleBags\\Media\\Exclamation')
+    newTex:SetPoint('TOPRIGHT', f, 'TOPRIGHT', 6, 4)
+    newTex:SetSize(24, 24)
+    newTex:SetTexture('Interface\\Minimap\\ObjectIconsAtlas')
+    newTex:SetAtlas('QuestNormal')
     newTex:Hide()
 
     f.newTexture = newTex

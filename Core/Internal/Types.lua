@@ -35,6 +35,7 @@
 ---@field money FontString
 
 ---@class BankHeaderFrame: Frame
+---@field Update function
 ---@field toggles BankHeaderToggles
 ---@field warbankHeader WarbankHeader
 
