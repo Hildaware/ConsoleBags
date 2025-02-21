@@ -55,25 +55,28 @@ end
 ---@param inventoryType Enums.InventoryType
 ---@param sessionData ViewData
 local function CreateItem(bag, slot, inventoryType, sessionData, equipmentSetItems)
-    local i = Item:CreateFromBagAndSlot(bag, slot)
-    if not i:IsItemEmpty() then
-        if i:IsItemDataCached() then
-            local item = GetItemData(bag, slot, inventoryType, equipmentSetItems)
-            if item then
-                AddItemToSession(item, sessionData)
-                return true
-            end
-        else
-            i:ContinueOnItemLoad(function()
-                local item = GetItemData(bag, slot, nil, equipmentSetItems)
-                if item then
-                    AddItemToSession(item, sessionData)
-                    return true
-                end
-            end)
-        end
+    local itemObj = Item:CreateFromBagAndSlot(bag, slot)
+    if itemObj:IsItemEmpty() then
+        return false
     end
-    return false
+
+    local function processItem()
+        local item = GetItemData(bag, slot, inventoryType, equipmentSetItems)
+        if item then
+            AddItemToSession(item, sessionData)
+            return true
+        end
+        return false
+    end
+
+    if itemObj:IsItemDataCached() then
+        return processItem()
+    else
+        itemObj:ContinueOnItemLoad(function()
+            processItem()
+        end)
+        return false
+    end
 end
 
 ---@param bag integer
@@ -81,21 +84,28 @@ end
 local function CreateBagData(bag, sessionData)
     local bagSize = C_Container.GetContainerNumSlots(bag)
     local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
+    local itemCount = bagSize - freeSlots
 
     local replacedBagSlot = utils.ReplaceBagSlot(bag)
-
     local sessionBag = sessionData.Bags[replacedBagSlot]
-    sessionBag.TotalCount = bagSize - freeSlots
 
+    -- Set total count once
+    sessionBag.TotalCount = itemCount
+
+    -- Check inventory bag type once
     if enums.PlayerInventoryBagIndex[bag] then
-        if bag == Enum.BagIndex.ReagentBag then
-            sessionBag.ReagentCount = bagSize - freeSlots
+        -- Use direct comparison instead of table lookup for ReagentBag
+        if bag == REAGENTBANK_CONTAINER then
+            sessionBag.ReagentCount = itemCount
         else
-            sessionBag.Count = bagSize - freeSlots
+            sessionBag.Count = itemCount
         end
     end
 
-    session.Items[replacedBagSlot] = session.Items[replacedBagSlot] or {}
+    -- Use direct table assignment instead of or operator
+    if not session.Items[replacedBagSlot] then
+        session.Items[replacedBagSlot] = {}
+    end
 
     return bagSize
 end
@@ -222,33 +232,42 @@ function items.BuildBankCache()
 end
 
 function items.BuildWarbankCache()
+    -- Cache frequently accessed values
+    local warbank = session.Warbank
     local invType = enums.InventoryType.Shared
+    local equipmentSetItems = session.EquipmentSetItems
 
     session.BuildingWarbankCache = true
-    session.Warbank.TotalCount = 0
-    session.Warbank.Count = 0
-    session.Warbank.Resolved = 0
 
+    -- Initialize counters once
+    warbank.TotalCount = 0
+    warbank.Count = 0
+    warbank.Resolved = 0
+
+    -- Pre-cache warbank bags reference
+    local warbankBags = warbank.Bags
+    local totalCount = 0
+
+    -- Process warbank tabs
     for bag = Enum.BagIndex.AccountBankTab_1, Enum.BagIndex.AccountBankTab_5 do
-        session.Warbank.Bags[bag].TotalCount = 0
-        session.Warbank.Bags[bag].Count = 0
+        local currentBag = warbankBags[bag]
+        currentBag.TotalCount = 0
+        currentBag.Count = 0
 
-        local bagSize = CreateBagData(bag, session.Warbank)
+        local bagSize = CreateBagData(bag, warbank)
         local requiresCleanup = {}
         for slot = 1, bagSize do
-            local created = CreateItem(bag, slot, invType, session.Warbank)
-            requiresCleanup[slot] = created
+            requiresCleanup[slot] = CreateItem(bag, slot, invType, warbank, equipmentSetItems)
         end
 
         CleanupSessionItems(bag, bagSize, requiresCleanup)
+        totalCount = totalCount + currentBag.TotalCount
     end
 
-    -- Recalculate totals
-    for _, bag in pairs(session.Warbank.Bags) do
-        session.Warbank.TotalCount = session.Warbank.TotalCount + bag.TotalCount
-        session.Warbank.Count = session.Warbank.Count + bag.Count
-        session.Warbank.Resolved = session.Warbank.Resolved + bag.Count
-    end
+    -- Set final totals (for warbank, TotalCount = Count)
+    warbank.TotalCount = totalCount
+    warbank.Count = totalCount
+    warbank.Resolved = totalCount
 
     session.BuildingWarbankCache = false
 end
@@ -257,53 +276,64 @@ end
 ---@param inventoryType Enums.InventoryType
 ---@return ViewData
 function items:UpdateBag(bagId, inventoryType)
+    -- Cache frequently accessed values
+    local buildingFlag
     if inventoryType == enums.InventoryType.Inventory then
-        session.BuildingCache = true
+        buildingFlag = 'BuildingCache'
     elseif inventoryType == enums.InventoryType.Bank then
-        session.BuildingBankCache = true
-    elseif inventoryType == enums.InventoryType.Shared then
-        session.BuildingWarbankCache = true
+        buildingFlag = 'BuildingBankCache'
+    else
+        buildingFlag = 'BuildingWarbankCache'
     end
+    session[buildingFlag] = true
 
+    -- Get and cache session data
     local sessionData = session:GetSessionViewDataByType(inventoryType)
+    local equipmentSetItems = session.EquipmentSetItems
 
+    -- Initialize counters
     sessionData.TotalCount = 0
     sessionData.Count = 0
     sessionData.ReagentCount = 0
     sessionData.Resolved = 0
 
+    -- Process bag
     local replacedBagSlot = utils.ReplaceBagSlot(bagId)
-
-    sessionData.Bags[replacedBagSlot].TotalCount = 0
-    sessionData.Bags[replacedBagSlot].Count = 0
+    local currentBag = sessionData.Bags[replacedBagSlot]
+    currentBag.TotalCount = 0
+    currentBag.Count = 0
 
     local bagSize = CreateBagData(bagId, sessionData)
     local requiresCleanup = {}
+
+    -- Process slots
     for slot = 1, bagSize do
-        local created = CreateItem(bagId, slot, inventoryType, sessionData)
-        requiresCleanup[slot] = created
+        requiresCleanup[slot] = CreateItem(bagId, slot, inventoryType, sessionData, equipmentSetItems)
     end
 
     CleanupSessionItems(replacedBagSlot, bagSize, requiresCleanup)
 
-    -- Recalculate totals
+    -- Calculate totals during bag processing
+    local totalCount = 0
+    local regularCount = 0
     for index, bag in pairs(sessionData.Bags) do
-        sessionData.TotalCount = sessionData.TotalCount + bag.TotalCount
-        sessionData.Count = sessionData.Count + bag.Count
-        sessionData.Resolved = sessionData.Resolved + bag.TotalCount
+        local bagTotal = bag.TotalCount
+        totalCount = totalCount + bagTotal
 
-        if index == Enum.BagIndex.ReagentBag then
-            sessionData.ReagentCount = bag.TotalCount
+        if index == REAGENTBANK_CONTAINER then
+            sessionData.ReagentCount = bagTotal
+        else
+            regularCount = regularCount + bag.Count
         end
     end
 
-    if inventoryType == enums.InventoryType.Inventory then
-        session.BuildingCache = false
-    elseif inventoryType == enums.InventoryType.Bank then
-        session.BuildingBankCache = false
-    elseif inventoryType == enums.InventoryType.Shared then
-        session.BuildingWarbankCache = false
-    end
+    -- Set final totals
+    sessionData.TotalCount = totalCount
+    sessionData.Count = regularCount
+    sessionData.Resolved = totalCount
+
+    -- Reset building flag
+    session[buildingFlag] = false
 
     return sessionData
 end
@@ -314,79 +344,31 @@ function items:SortItems(categories, sortField)
     local type = sortField.Field
     local order = sortField.Sort
 
-    for _, cat in pairs(categories) do
-        if type == enums.SortField.COUNT then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.stackCount > b.stackCount
-                    else
-                        return a.stackCount < b.stackCount
-                    end
-                end)
-        end
+    local comparators = {
+        [enums.SortField.Name] = 'name',
+        [enums.SortField.Icon] = 'quality',
+        [enums.SortField.Ilvl] = 'ilvl',
+        [enums.SortField.ReqLvl] = 'reqLvl',
+        [enums.SortField.Value] = 'value',
+    }
 
-        if type == enums.SortField.Name then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.name < b.name
-                    else
-                        return a.name > b.name
-                    end
-                end)
-        end
-
-        if type == enums.SortField.Icon then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.quality > b.quality
-                    else
-                        return a.quality < b.quality
-                    end
-                end)
-        end
-
-        if type == enums.SortField.Ilvl then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.ilvl > b.ilvl
-                    else
-                        return a.ilvl < b.ilvl
-                    end
-                end)
-        end
-
-        if type == enums.SortField.ReqLvl then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.reqLvl > b.reqLvl
-                    else
-                        return a.reqLvl < b.reqLvl
-                    end
-                end)
-        end
-
-        if type == enums.SortField.Value then
-            table.sort(cat.items,
-                function(a, b)
-                    if order == enums.SortOrder.Desc then
-                        return a.value > b.value
-                    else
-                        return a.value < b.value
-                    end
-                end)
-        end
-
-        -- Always put new on top
-        for index, item in ipairs(cat.items) do
-            if item.isNew == true then
-                table.insert(cat.items, 1, table.remove(cat.items, index))
+    local function Sort(itemSet, comparator, sortOrder)
+        table.sort(itemSet, function(a, b)
+            if a.isNew ~= b.isNew then
+                return a.isNew
             end
-        end
+
+            if sortOrder == enums.SortOrder.Desc then
+                return a[comparator] > b[comparator]
+            else
+                return a[comparator] < b[comparator]
+            end
+        end)
+    end
+
+
+    for _, cat in pairs(categories) do
+        Sort(cat.items, comparators[type], order)
     end
 end
 

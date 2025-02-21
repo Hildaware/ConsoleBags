@@ -356,10 +356,26 @@ function view:Create(inventoryType)
     i.filterContainer = filterContainer
     i.sortContainer = sortContainer
 
+    -- Reusable tables at class level
+    if not view.proto._catTable then
+        view.proto._catTable = {}
+        view.proto._allCategories = {}
+        view.proto._filteredCategories = {}
+        view.proto._orderedCategories = {}
+        view.proto._orderedAllCategories = {}
+    end
+
     return i
 end
 
 function view.proto:Update(searchText)
+    -- Clear existing tables instead of recreating
+    wipe(self._catTable)
+    wipe(self._allCategories)
+    wipe(self._filteredCategories)
+    wipe(self._orderedCategories)
+    wipe(self._orderedAllCategories)
+
     for _, row in pairs(self.items) do
         row:Empty()
     end
@@ -379,9 +395,8 @@ function view.proto:Update(searchText)
         sessionCats = session.BankCollapsedCategories
     end
 
-    ---@type CategorizedItemSet[]
-    local catTable = {}
     local invType, bankType = enums.InventoryType, enums.BankType
+    local searchTextLower = searchText and searchText:lower() or nil
 
     for _, slots in pairs(session.Items) do
         for _, item in pairs(slots) do
@@ -389,51 +404,50 @@ function view.proto:Update(searchText)
                 (self.type == invType.Bank and
                     ((self.selectedBankType == bankType.Bank and item.location == self.type) or
                         (self.selectedBankType == bankType.Warbank and item.location == invType.Shared))) then
-                if searchText ~= nil and searchText ~= '' then
-                    if item.name:lower():find(searchText:lower(), 1, true) then
-                        utils.AddItemToCategory(item, catTable)
+                if searchTextLower then
+                    if item.name:lower():find(searchTextLower, 1, true) then
+                        utils.AddItemToCategory(item, self._catTable)
                     end
                 else
-                    utils.AddItemToCategory(item, catTable)
+                    utils.AddItemToCategory(item, self._catTable)
                 end
             end
         end
     end
 
-    items:SortItems(catTable, database:GetSortField(self.type))
+    items:SortItems(self._catTable, database:GetSortField(self.type))
 
-    ---@type CategorizedItemSet[]
-    local allCategories, filteredCategories = {}, {}
     local iter = 1
-
-    for key, value in pairs(catTable) do
+    for key, value in pairs(self._catTable) do
         value.key = key
         value.order = enums.Categories[key].order
         value.name = enums.Categories[key].name
-        allCategories[iter] = value
+        self._allCategories[iter] = value
         if not sessionFilter or key == sessionFilter then
-            table.insert(filteredCategories, value)
+            self._filteredCategories[#self._filteredCategories + 1] = value
         end
         iter = iter + 1
     end
 
-    table.sort(allCategories, function(a, b) return a.order < b.order end)
-    table.sort(filteredCategories, function(a, b) return a.order < b.order end)
-
-    ---@type CategorizedItemSet[]
-    local orderedCategories, orderedAllCategories = {}, {}
-
-    for i = 1, #filteredCategories do
-        orderedCategories[i] = filteredCategories[i]
+    -- Single sort pass for filtered categories
+    if #self._filteredCategories > 0 then
+        table.sort(self._filteredCategories, function(a, b) return a.order < b.order end)
+        for i = 1, #self._filteredCategories do
+            self._orderedCategories[i] = self._filteredCategories[i]
+        end
     end
 
-    for i = 1, #allCategories do
-        orderedAllCategories[i] = allCategories[i]
+    -- Single sort pass for all categories
+    if #self._allCategories > 0 then
+        table.sort(self._allCategories, function(a, b) return a.order < b.order end)
+        for i = 1, #self._allCategories do
+            self._orderedAllCategories[i] = self._allCategories[i]
+        end
     end
 
     local offset, catIndex, itemIndex = 1, 1, 1
 
-    for _, categoryData in ipairs(orderedCategories) do
+    for _, categoryData in ipairs(self._orderedCategories) do
         if #categoryData.items > 0 then
             local categoryFrame = categoryHeaders:Create()
             categoryFrame:Build(categoryData, offset, self.widget.ListView, sessionCats,
@@ -476,7 +490,7 @@ function view.proto:Update(searchText)
         self:Update()
     end
 
-    self.filterContainer:Update(self.type, orderedAllCategories, onFilterSelectCallback)
+    self.filterContainer:Update(self.type, self._orderedAllCategories, onFilterSelectCallback)
     bags:Update(self.widget, self.type, self.selectedBankType)
 
     if self.widget.Header.Additions then

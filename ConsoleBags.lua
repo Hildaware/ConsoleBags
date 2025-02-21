@@ -131,6 +131,8 @@ function addon.OnBankUpdate()
     if session.Bank.Resolved >= session.Bank.TotalCount then
         addon.bags.Bank:Update()
         addon.bags.Bank:Show()
+
+        items.BuildWarbankCache()
     else
         C_Timer.After(0.1, addon.OnBankUpdate)
     end

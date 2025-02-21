@@ -71,7 +71,7 @@ function itemFrame:OnInitialize()
 
     ---@type ListItem[]
     local frames = {}
-    for i = 1, 700 do
+    for i = 1, 300 do
         frames[i] = self:Create()
     end
     for _, frame in pairs(frames) do
