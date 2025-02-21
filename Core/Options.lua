@@ -79,8 +79,17 @@ local settings = {
                     step = 0.01,
                     get = function() return database:GetBackgroundOpacity() end,
                     set = function(_, value) database:SetBackgroundOpacity(value) end
+                },
+                reload = {
+                    name = 'Reload UI',
+                    desc =
+                    'Some textures/elements may be a bit off after changing some options. Reload the UI to apply changes.',
+                    type = 'execute',
+                    order = 100,
+                    func = function() ReloadUI() end
                 }
             }
+            -- TODO: Add a reset button
         }
     }
 }

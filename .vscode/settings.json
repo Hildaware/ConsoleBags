@@ -309,7 +309,8 @@
         "GetCVarBool",
         "SetCVar",
         "CONFIRM_BUY_BANK_SLOT",
-        "RATED_BG_BLITZ_SIZE"
+        "RATED_BG_BLITZ_SIZE",
+        "ReloadUI"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
