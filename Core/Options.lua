@@ -69,6 +69,16 @@ local settings = {
                     step = 1,
                     get = function() return database:GetItemViewHeight() end,
                     set = function(_, value) database:SetItemViewHeight(value) end
+                },
+                backgroundOpacity = {
+                    name = 'Background Opacity',
+                    desc = 'The opacity of the background.',
+                    type = 'range',
+                    min = 0,
+                    max = 1,
+                    step = 0.01,
+                    get = function() return database:GetBackgroundOpacity() end,
+                    set = function(_, value) database:SetBackgroundOpacity(value) end
                 }
             }
         }

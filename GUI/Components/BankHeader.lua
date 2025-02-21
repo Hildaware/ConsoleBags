@@ -21,6 +21,9 @@ local items = addon:GetModule('Items')
 ---@class SimpleButton: AceModule
 local button = addon:GetModule('SimpleButton')
 
+---@class Database: AceModule
+local database = addon:GetModule('Database')
+
 ---@class BankHeaderFrame
 header.proto = {}
 
@@ -29,6 +32,8 @@ header.proto = {}
 ---@param width number
 ---@param onClick function
 local function CreateBankButton(parent, type, width, onClick)
+    local font = database:GetFont()
+
     local btn = CreateFrame('Button', nil, parent)
     btn:SetPoint(type == enums.BankType.Bank and 'LEFT' or 'RIGHT')
     btn:SetSize(width, session.Settings.Defaults.Sections.Header - 8)
@@ -40,6 +45,7 @@ local function CreateBankButton(parent, type, width, onClick)
     btn.text:SetPoint('CENTER')
     btn.text:SetText(type == enums.BankType.Bank and 'Bank' or 'Warbank')
     btn.text:SetJustifyH('CENTER')
+    btn.text:SetFont(font.path, 14)
 
     local textColor = type == enums.BankType.Bank and { 1, 1, 0 } or { 1, 1, 1 }
     btn.text:SetTextColor(unpack(textColor))
@@ -60,8 +66,8 @@ function header:CreateAdditions(view, parent)
 
     ---@class BankHeaderToggles
     local togglerContainer = CreateFrame('Frame', nil, parent)
-    togglerContainer:SetPoint('BOTTOMLEFT', parent, 'TOPLEFT', 8, -3)
-    togglerContainer:SetSize(146, session.Settings.Defaults.Sections.Header)
+    togglerContainer:SetPoint('TOPLEFT', parent, 'TOPLEFT', 12, 0)
+    togglerContainer:SetSize(150, session.Settings.Defaults.Sections.Header)
 
     local bank = CreateBankButton(togglerContainer, enums.BankType.Bank, 60,
         function(btn)
@@ -124,10 +130,25 @@ function header:CreateAdditions(view, parent)
 
     i.toggles = togglerContainer
 
+    local searchBox = CreateFrame('EditBox', nil, parent, 'SearchBoxTemplate')
+    searchBox:SetPoint('LEFT', togglerContainer, 'RIGHT', 8, 0)
+    searchBox:SetSize(120, 16)
+    searchBox:SetAutoFocus(false)
+    searchBox:SetFrameLevel(5)
+    searchBox:HookScript('OnTextChanged', function()
+        local searchText = searchBox:GetText()
+
+        local cb = function()
+            addon.bags.Bank:Update(searchText)
+        end
+
+        addon.bags.Bank.filterContainer:OnSearch(cb)
+    end)
+
     -- TODO: # purchased tabs should go in the bag info shit
     ---@class WarbankHeader
     local headerContainer = CreateFrame('Frame', nil, parent)
-    headerContainer:SetPoint('TOPLEFT', parent, 'TOPLEFT', 0, 0)
+    headerContainer:SetPoint('TOPLEFT', searchBox, 'TOPRIGHT', 0, 8)
     headerContainer:SetPoint('BOTTOMRIGHT', parent, 'BOTTOMRIGHT', -200, 0)
 
     --#region Actions
@@ -187,7 +208,7 @@ function header:CreateAdditions(view, parent)
     local moneyDeposit = button:Create(headerContainer, 'Interface\\MainMenuBar\\MainMenuBar',
         'hud-MainMenuBar-arrowdown-up', baseButtonSize)
 
-    moneyDeposit:SetPoint('LEFT', deposit.base, 'RIGHT', 120, 0)
+    moneyDeposit:SetPoint('TOPLEFT', reagentCheck, 'TOPRIGHT', 8, 0)
     moneyDeposit:OnClick(function()
         StaticPopup_Show("BANK_MONEY_DEPOSIT", nil, nil, { bankType = 2 })
     end)

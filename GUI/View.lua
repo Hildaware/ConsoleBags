@@ -97,15 +97,15 @@ function view:Create(inventoryType)
     local columnScale = itemWidth / defaultWidth
     local fontSize = defaultFontSize * columnScale
 
-    local isFullInventory = viewType == enums.ViewType.Full and inventoryType == enums.InventoryType.Inventory
-
     ---@class BagWidget
     local f = CreateFrame('Frame', addonName .. viewName, UIParent)
     f:SetFrameStrata('HIGH')
 
-    if isFullInventory then
+    if viewType == enums.ViewType.Full then
         f:SetSize(width, fullHeight)
-        f:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT')
+
+        local setPoint = inventoryType == enums.InventoryType.Inventory and 'TOPRIGHT' or 'TOPLEFT'
+        f:SetPoint(setPoint, UIParent, setPoint)
     else
         f:SetSize(width, database:GetViewHeight(inventoryType))
         local position = database:GetViewPosition(inventoryType)
@@ -120,7 +120,7 @@ function view:Create(inventoryType)
 
     f.texture = f:CreateTexture(nil, 'BACKGROUND')
     f.texture:SetAllPoints(f)
-    f.texture:SetColorTexture(0, 0, 0, 0.75)
+    f.texture:SetColorTexture(0, 0, 0, database:GetBackgroundOpacity())
 
     if _G['ConsolePort'] then
         -- Stop ConsolePort from reading buttons
@@ -196,8 +196,26 @@ function view:Create(inventoryType)
     if inventoryType == enums.InventoryType.Bank then
         header.Additions = bankHeader:CreateAdditions(i, header)
     else
+        local configButton = CreateFrame('Button', nil, header)
+        configButton:SetSize(24, 24)
+        configButton:SetPoint('LEFT', header, 'LEFT', 12, 0)
+        configButton:SetNormalTexture('Interface\\Addons\\ConsoleBags\\Media\\Logo_Normal')
+
+        configButton:SetScript('OnEnter', function()
+            GameTooltip:SetOwner(configButton, 'ANCHOR_TOPLEFT')
+            GameTooltip:SetText('Open Options', 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        configButton:SetScript('OnLeave', function()
+            GameTooltip:Hide()
+        end)
+
+        configButton:SetScript('OnClick', function()
+            LibStub("AceConfigDialog-3.0"):Open(addonName)
+        end)
+
         local text = header:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-        text:SetPoint('LEFT', header, 'LEFT', 12, 0)
+        text:SetPoint('LEFT', configButton, 'RIGHT', 12, 0)
         text:SetJustifyH('LEFT')
         text:SetText(viewName)
         text:SetFont(font.path, fontSize)
@@ -242,7 +260,7 @@ function view:Create(inventoryType)
         addon.status.visitingWarbank = false
     end)
 
-    if not isFullInventory then
+    if viewType ~= enums.ViewType.Full then
         header:RegisterForDrag('LeftButton')
         header:SetScript('OnDragStart', function(self, button)
             self:GetParent():StartMoving()
@@ -559,6 +577,8 @@ function view.proto:UpdateGUI(inventoryType)
             self.widget.DragBag = drag
         end
     end
+
+    self.widget.texture:SetColorTexture(0, 0, 0, database:GetBackgroundOpacity())
 
     -- Update the width of the rest of the elements
     self.widget.Header:UpdateGUI()

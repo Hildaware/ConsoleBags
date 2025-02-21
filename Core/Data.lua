@@ -14,6 +14,7 @@ local defaults = {
     global = {
         Characters = {},
         ViewType = enums.ViewType.Compact,
+        BackgroundOpacity = 0.75,
         Font = {
             Name = 'Accidental Presidency',
             Path = 'Interface\\AddOns\\ConsoleBags\\Fonts\\AccidentalPresidency.ttf',
@@ -219,6 +220,17 @@ end
 function database:SetViewType(type)
     database.internal.global.ViewType = type
     addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
+end
+
+---@param opacity number
+function database:SetBackgroundOpacity(opacity)
+    database.internal.global.BackgroundOpacity = opacity
+    addon.bags.Inventory:UpdateGUI(enums.InventoryType.Inventory)
+end
+
+---@return number
+function database:GetBackgroundOpacity()
+    return database.internal.global.BackgroundOpacity
 end
 
 database:Enable()
