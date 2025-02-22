@@ -42,6 +42,9 @@ local itemFrame = addon:GetModule('ItemFrame')
 ---@class BankHeader: AceModule
 local bankHeader = addon:GetModule('BankHeader')
 
+---@class Currency: AceModule
+local currency = addon:GetModule('Currency')
+
 ---@class Header: Frame
 ---@field texture Texture
 ---@field Additions BankHeaderFrame
@@ -50,6 +53,7 @@ local bankHeader = addon:GetModule('BankHeader')
 ---@field Header Header
 ---@field ListView Frame
 ---@field gold FontString
+---@field currency CurrencyFrame
 
 ---@class (exact) BagView
 ---@field items ListItem[]
@@ -308,13 +312,10 @@ function view:Create(inventoryType)
     footer.texture:SetColorTexture(0, 0, 0, 0.5)
 
     if inventoryType == enums.InventoryType.Inventory then
-        local goldView = footer:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-        goldView:SetPoint('LEFT', footer, 'LEFT', 12, 0)
-        goldView:SetJustifyH('LEFT')
-        goldView:SetText(C_CurrencyInfo.GetCoinTextureString(GetMoney(), fontSize))
-        goldView:SetFont(font.path, fontSize)
+        local currencyFrame = currency:CreateFrame(footer)
 
-        f.gold = goldView
+        f.currency = currencyFrame
+        f.gold = f.currency.gold
     end
 
     -- Drag Bar
@@ -611,7 +612,7 @@ function view.proto:GetName()
     return self.widget:GetName()
 end
 
-function view.proto:UpdateCurrency()
+function view.proto:UpdateMoney()
     if self.type == enums.InventoryType.Inventory then
         local money = GetMoney()
         if money == nil then return end
@@ -625,6 +626,48 @@ function view.proto:UpdateCurrency()
         self.selectedBankType == enums.BankType.Warbank then
         self.widget.Header.Additions:Update()
     end
+end
+
+---@param currencyId number?
+---@param value number?
+function view.proto:UpdateCurrency(currencyId, value)
+    -- Generic Update
+    if not currencyId and not value then
+        local index = 1
+        local trackedCurrencies = {}
+        repeat
+            local currencyInfo = C_CurrencyInfo.GetCurrencyListInfo(index)
+            if currencyInfo.isShowInBackpack then
+                if not self.widget.currency.trackedCurrencies[currencyInfo.currencyID] then
+                    -- Create
+                    local frame = currency:Create()
+                    self.widget.currency.trackedCurrencies[currencyInfo.currencyID] = frame
+                    frame:Build(currencyInfo, self.widget.currency)
+                else
+                    -- Update
+                    self.widget.currency.trackedCurrencies[currencyInfo.currencyID]:Update(currencyInfo.quantity)
+                end
+                tinsert(trackedCurrencies, currencyInfo.currencyID)
+            end
+            index = index + 1
+        until index > C_CurrencyInfo.GetCurrencyListSize()
+
+
+        -- Remove untracked
+        for currencyId, frame in pairs(self.widget.currency.trackedCurrencies) do
+            if not tContains(trackedCurrencies, currencyId) then
+                frame:Clear()
+                self.widget.currency.trackedCurrencies[currencyId] = nil
+            end
+        end
+
+        -- Re-org frame
+        self.widget.currency:Rebuild()
+        return
+    end
+
+    if not self.widget.currency.trackedCurrencies[currencyId] then return end
+    self.widget.currency.trackedCurrencies[currencyId]:Update(value)
 end
 
 view:Enable()

@@ -21,6 +21,7 @@ function events:OnInitialize()
     self:RegisterEvent('PLAYERREAGENTBANKSLOTS_CHANGED')
     self:RegisterEvent('BAG_UPDATE')
     self:RegisterEvent('PLAYER_REGEN_DISABLED')
+    self:RegisterEvent('CURRENCY_DISPLAY_UPDATE')
 end
 
 function events:PLAYER_ENTERING_WORLD()

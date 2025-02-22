@@ -35,7 +35,7 @@ function categoryHeaders:OnInitialize()
 
     ---@type CategoryHeader[]
     local frames = {}
-    for i = 1, 100 do
+    for i = 1, 40 do
         frames[i] = self:Create()
     end
     for _, frame in pairs(frames) do

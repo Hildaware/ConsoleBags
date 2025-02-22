@@ -414,12 +414,12 @@ function itemFrame:_DoCreate()
     nameOnlyText:SetFont(font.path, fontSize)
 
     local nameText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    nameText:SetPoint('TOPLEFT', name, 'TOPLEFT', 0, -2)
+    nameText:SetPoint('BOTTOMLEFT', name, 'LEFT', 0, 2)
     nameText:SetJustifyH('LEFT')
     nameText:SetFont(font.path, fontSize)
 
     local setText = name:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-    setText:SetPoint('BOTTOMLEFT', name, 'BOTTOMLEFT', 0, 2)
+    setText:SetPoint('TOPLEFT', name, 'LEFT', 0, -2)
     setText:SetJustifyH('LEFT')
     setText:SetFont(font.path, fontSize)
 

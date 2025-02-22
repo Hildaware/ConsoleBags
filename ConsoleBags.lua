@@ -85,6 +85,9 @@ function addon:OnEnable()
     self:SecureHook('OpenAllBags')
     self:SecureHook('CloseAllBags')
 
+    -- Triggers when currency is Watch toggled
+    self:SecureHook(TokenFrame, 'SetTokenWatched', addon.UpdateCurrencyTracking)
+
     ---@diagnostic disable-next-line: undefined-field
     events:RegisterEvent('BANKFRAME_OPENED', function()
         addon.status.visitingBank = true
@@ -153,6 +156,7 @@ function addon.OnUpdate()
             addon.status.backpackShouldClose = false
 
             addon.bags.Inventory:UpdateCurrency()
+            addon.bags.Inventory:UpdateMoney()
             addon.bags.Inventory:Update()
 
             PlaySound(SOUNDKIT.IG_BACKPACK_OPEN)
@@ -206,14 +210,18 @@ function addon:CloseBank()
     addon:CloseSpecialWindows()
 end
 
---#region Events
-
-function events:PLAYER_MONEY()
+function addon:UpdateCurrencyTracking()
     addon.bags.Inventory:UpdateCurrency()
 end
 
+--#region Events
+
+function events:PLAYER_MONEY()
+    addon.bags.Inventory:UpdateMoney()
+end
+
 function events:ACCOUNT_MONEY()
-    addon.bags.Bank:UpdateCurrency()
+    addon.bags.Bank:UpdateMoney()
 end
 
 function events:BAG_CONTAINER_UPDATE()
@@ -276,6 +284,11 @@ end
 function events:PLAYERREAGENTBANKSLOTS_CHANGED()
     items.BuildBankCache()
     addon.bags.Bank:Update()
+end
+
+function events:CURRENCY_DISPLAY_UPDATE(_, currencyId, newValue)
+    if not addon.bags.Inventory then return end
+    addon.bags.Inventory:UpdateCurrency(currencyId, newValue)
 end
 
 --#endregion

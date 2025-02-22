@@ -4,6 +4,7 @@
     <Include file = 'Components/ItemFrame.lua' />
     <Include file = 'Components/CategoryHeaderFrame.lua' />
     <Include file = 'Components/BagContainer.lua' />
+    <Include file = 'Components/CurrencyFrame.lua' />
     <Include file = 'Components/BankHeader.lua' />
     <Include file = 'View.lua' />
 </UI>
