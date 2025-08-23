@@ -38,15 +38,16 @@ function session:OnInitialize()
     ---@type ViewData
     self.Bank = setmetatable({}, { __index = self.viewDataProto })
     self.Bank.Bags = {
-        [99] = setmetatable({}, { __index = self.bagDataProto }), -- Enum.BagIndex.Bank
-        [Enum.BagIndex.BankBag_1] = setmetatable({}, { __index = self.bagDataProto }),
-        [Enum.BagIndex.BankBag_2] = setmetatable({}, { __index = self.bagDataProto }),
-        [Enum.BagIndex.BankBag_3] = setmetatable({}, { __index = self.bagDataProto }),
-        [Enum.BagIndex.BankBag_4] = setmetatable({}, { __index = self.bagDataProto }),
-        [Enum.BagIndex.BankBag_5] = setmetatable({}, { __index = self.bagDataProto }),
-        [Enum.BagIndex.BankBag_6] = setmetatable({}, { __index = self.bagDataProto }),
-        [Enum.BagIndex.BankBag_7] = setmetatable({}, { __index = self.bagDataProto }),
-        [98] = setmetatable({}, { __index = self.bagDataProto }) -- Enum.BagIndex.ReagentBank
+        -- [99] = setmetatable({}, { __index = self.bagDataProto }), -- Enum.BagIndex.Bank
+        [Enum.BagIndex.Characterbanktab] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.CharacterBankTab_1] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.CharacterBankTab_2] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.CharacterBankTab_3] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.CharacterBankTab_4] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.CharacterBankTab_5] = setmetatable({}, { __index = self.bagDataProto }),
+        [Enum.BagIndex.CharacterBankTab_6] = setmetatable({}, { __index = self.bagDataProto }),
+        -- [Enum.BagIndex.BankBag_7] = setmetatable({}, { __index = self.bagDataProto }),
+        -- [98] = setmetatable({}, { __index = self.bagDataProto }) -- Enum.BagIndex.ReagentBank
     }
 
     ---@type ViewData

@@ -179,21 +179,21 @@ function items.BuildBankCache()
     session.Bank.Resolved = 0
 
     -- Bank Container
-    local replacedBagSlot = utils.ReplaceBagSlot(BANK_CONTAINER)
+    local replacedBagSlot = utils.ReplaceBagSlot(enums.BANK_CONTAINER)
     session.Bank.Bags[replacedBagSlot].TotalCount = 0
     session.Bank.Bags[replacedBagSlot].Count = 0
 
-    local bagSize = CreateBagData(BANK_CONTAINER, session.Bank)
+    local bagSize = CreateBagData(enums.BANK_CONTAINER, session.Bank)
     local requiresCleanup = {}
     for slot = 1, bagSize do
-        local created = CreateItem(BANK_CONTAINER, slot, invType, session.Bank, session.EquipmentSetItems)
+        local created = CreateItem(enums.BANK_CONTAINER, slot, invType, session.Bank, session.EquipmentSetItems)
         requiresCleanup[slot] = created
     end
 
     CleanupSessionItems(replacedBagSlot, bagSize, requiresCleanup)
 
     -- Bank Bags
-    for bag = ITEM_INVENTORY_BANK_BAG_OFFSET + 1, ITEM_INVENTORY_BANK_BAG_OFFSET + NUM_BANKBAGSLOTS do
+    for bag, _ in pairs(enums.BankBagIndex) do
         session.Bank.Bags[bag].TotalCount = 0
         session.Bank.Bags[bag].Count = 0
 
@@ -208,18 +208,18 @@ function items.BuildBankCache()
     end
 
     -- Bank Reagent Container
-    local replacedReagentBagSlot = utils.ReplaceBagSlot(REAGENTBANK_CONTAINER)
-    session.Bank.Bags[replacedReagentBagSlot].TotalCount = 0
-    session.Bank.Bags[replacedReagentBagSlot].Count = 0
+    -- local replacedReagentBagSlot = utils.ReplaceBagSlot(REAGENTBANK_CONTAINER)
+    -- session.Bank.Bags[replacedReagentBagSlot].TotalCount = 0
+    -- session.Bank.Bags[replacedReagentBagSlot].Count = 0
 
-    local reagentContainerSize = CreateBagData(REAGENTBANK_CONTAINER, session.Bank)
-    requiresCleanup = {}
-    for slot = 1, reagentContainerSize do
-        local created = CreateItem(REAGENTBANK_CONTAINER, slot, invType, session.Bank)
-        requiresCleanup[slot] = created
-    end
+    -- local reagentContainerSize = CreateBagData(REAGENTBANK_CONTAINER, session.Bank)
+    -- requiresCleanup = {}
+    -- for slot = 1, reagentContainerSize do
+    --     local created = CreateItem(REAGENTBANK_CONTAINER, slot, invType, session.Bank)
+    --     requiresCleanup[slot] = created
+    -- end
 
-    CleanupSessionItems(replacedReagentBagSlot, reagentContainerSize, requiresCleanup)
+    -- CleanupSessionItems(replacedReagentBagSlot, reagentContainerSize, requiresCleanup)
 
     -- Recalculate totals
     for _, bag in pairs(session.Bank.Bags) do

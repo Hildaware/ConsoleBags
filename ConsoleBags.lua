@@ -259,12 +259,12 @@ function events:PLAYERBANKSLOTS_CHANGED()
     addon.bags.Inventory:Update()
 end
 
-function events:PLAYERBANKBAGSLOTS_CHANGED()
-    items.BuildBankCache()
-    addon.bags.Bank:Update()
-    items.BuildItemCache()
-    addon.bags.Inventory:Update()
-end
+-- function events:PLAYERBANKBAGSLOTS_CHANGED()
+--     items.BuildBankCache()
+--     addon.bags.Bank:Update()
+--     items.BuildItemCache()
+--     addon.bags.Inventory:Update()
+-- end
 
 function events:EQUIPMENT_SETS_CHANGED()
     session.ShouldBuildEquipmentSetCache = true
@@ -281,10 +281,10 @@ function events:PLAYER_REGEN_DISABLED()
     end
 end
 
-function events:PLAYERREAGENTBANKSLOTS_CHANGED()
-    items.BuildBankCache()
-    addon.bags.Bank:Update()
-end
+-- function events:PLAYERREAGENTBANKSLOTS_CHANGED()
+--     items.BuildBankCache()
+--     addon.bags.Bank:Update()
+-- end
 
 function events:CURRENCY_DISPLAY_UPDATE(_, currencyId, newValue)
     if not addon.bags.Inventory then return end

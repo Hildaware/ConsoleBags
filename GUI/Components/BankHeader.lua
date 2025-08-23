@@ -90,7 +90,7 @@ function header:CreateAdditions(view, parent)
 
             BankFrame.selectedTab = 1
             BankFrame.activeTabIndex = 1
-            AccountBankPanel.selectedTabID = nil
+            -- AccountBankPanel.selectedTabID = nil
 
             if session.Bank.Resolved >= session.Bank.TotalCount then
                 addon.bags.Bank:Update()
@@ -115,13 +115,13 @@ function header:CreateAdditions(view, parent)
 
             BankFrame.selectedTab = 1
             BankFrame.activeTabIndex = 3
-            local tabData = C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
-            for _, data in pairs(tabData) do
-                if data.ID ~= nil then
-                    AccountBankPanel.selectedTabID = data.ID
-                    break
-                end
-            end
+            -- local tabData = C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
+            -- for _, data in pairs(tabData) do
+            --     if data.ID ~= nil then
+            --         AccountBankPanel.selectedTabID = data.ID
+            --         break
+            --     end
+            -- end
 
             if session.Warbank.Resolved >= session.Warbank.TotalCount then
                 addon.bags.Bank:Update()
@@ -150,8 +150,7 @@ function header:CreateAdditions(view, parent)
         addon.bags.Bank.filterContainer:OnSearch(cb)
     end)
 
-    -- TODO: # purchased tabs should go in the bag info shit
-    ---@class WarbankHeader
+    ---@class NewBankHeader
     local headerContainer = CreateFrame('Frame', nil, parent)
     headerContainer:SetPoint('TOPLEFT', searchBox, 'TOPRIGHT', 0, 8)
     headerContainer:SetPoint('BOTTOMRIGHT', parent, 'BOTTOMRIGHT', -200, 0)
@@ -165,16 +164,8 @@ function header:CreateAdditions(view, parent)
         'Garr_Building-AddFollowerPlus', baseButtonSize)
 
     purchase:SetPoint('LEFT', headerContainer, 'LEFT', 8, 0)
-    purchase:OnClick(function()
-        StaticPopup_Show("CONFIRM_BUY_BANK_TAB", nil, nil, { bankType = Enum.BankType.Account })
-    end)
 
-    local purchaseCost = utils.FormatMoney(C_Bank.FetchNextPurchasableBankTabCost(2))
-    purchase:SetTooltip(string.format('Purchase a Warbank Tab for %s', purchaseCost))
-
-    if C_Bank.HasMaxBankTabs(2) then
-        purchase.base:Hide()
-    end
+    -- Warbank Only
 
     local depositIconSize = { width = 20, height = 24 }
     local deposit = button:Create(headerContainer, 'Interface\\Minimap\\ObjectIconsAtlas',
@@ -187,6 +178,7 @@ function header:CreateAdditions(view, parent)
         C_Bank.AutoDepositItemsIntoBank(2)
     end)
     deposit:SetTooltip('Deposit All Warbound Items')
+
 
     ---@class CheckButton
     local reagentCheck = CreateFrame('CheckButton', nil, headerContainer, 'UICheckButtonTemplate')
@@ -206,12 +198,9 @@ function header:CreateAdditions(view, parent)
         SetCVar('bankAutoDepositReagents', reagentCheck:GetChecked())
     end)
 
-    --#endregion
-
-    --#region Money
 
     local moneyDeposit = button:Create(headerContainer, 'Interface\\MainMenuBar\\MainMenuBar',
-        'hud-MainMenuBar-arrowdown-up', baseButtonSize)
+    'hud-MainMenuBar-arrowdown-up', baseButtonSize)
 
     moneyDeposit:SetPoint('TOPLEFT', reagentCheck, 'TOPRIGHT', 8, 0)
     moneyDeposit:OnClick(function()
@@ -234,47 +223,72 @@ function header:CreateAdditions(view, parent)
     goldView:SetJustifyH('LEFT')
     goldView:SetText(C_CurrencyInfo.GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
 
-    --#endregion
-
     headerContainer.purchase = purchase
     headerContainer.deposit = deposit
     headerContainer.reagentCheck = reagentCheck
     headerContainer.money = goldView
+    headerContainer.moneyDeposit = moneyDeposit
+    headerContainer.moneyWithdraw = moneyWithdraw
 
-    headerContainer:Hide()
-    i.warbankHeader = headerContainer
+    headerContainer.deposit.base:Hide()
+    headerContainer.reagentCheck:Hide()
+    headerContainer.money:Hide()
+    headerContainer.moneyDeposit.base:Hide()
+    headerContainer.moneyWithdraw.base:Hide()
+
+    i.newBankHeader = headerContainer
 
     return i
 end
 
-function header.proto:Update()
-    if C_Bank.HasMaxBankTabs(2) then
-        local purchase = self.warbankHeader.purchase
-        purchase:Hide()
+---@param bankType Enums.BankType
+function header.proto:Update(bankType)
+    local type = bankType == enums.BankType.Bank and Enum.BankType.Character or Enum.BankType.Account
 
-        local setPoint = purchase.base:IsShown() and purchase.base or self.warbankHeader
-        local relativeTo = purchase.base:IsShown() and 'RIGHT' or 'LEFT'
-        self.warbankHeader.deposit:SetPoint('LEFT', setPoint, relativeTo, 8, 0)
+    local purchase = self.newBankHeader.purchase
+
+    if C_Bank.HasMaxBankTabs(type) then
+        purchase.base:Hide()
     else
-        local purchaseCost = utils.FormatMoney(C_Bank.FetchNextPurchasableBankTabCost(2))
-        self.warbankHeader.purchase:SetTooltip(string.format('Purchase a Warbank Tab for %s', purchaseCost))
+
+        purchase.base:Show()
+        purchase:OnClick(function()
+            StaticPopup_Show("CONFIRM_BUY_BANK_TAB", nil, nil, { bankType = type })
+        end)
+        local bankTabData = C_Bank.FetchNextPurchasableBankTabData(type)
+        local purchaseCost = "Unknown"
+        if bankTabData ~= nil then
+            purchaseCost = utils.FormatMoney(bankTabData.tabCost)
+        end
+        purchase:SetTooltip(string.format('Purchase a Tab for %s', purchaseCost))
     end
 
-    self.warbankHeader.money:SetText(C_CurrencyInfo.GetCoinTextureString(C_Bank.FetchDepositedMoney(2)))
+    local setPoint = purchase.base:IsShown() and purchase.base or self.newBankHeader
+    local relativeTo = purchase.base:IsShown() and 'RIGHT' or 'LEFT'
+    self.newBankHeader.deposit.base:SetPoint('LEFT', setPoint, relativeTo, 8, 0)
+
+
+    self.newBankHeader.money:SetText(C_CurrencyInfo.GetCoinTextureString(C_Bank.FetchDepositedMoney(type)))
 end
 
 ---@param bankType Enums.BankType
 function header.proto:UpdateState(bankType)
     if bankType == enums.BankType.Bank then
-        self.warbankHeader:Hide()
-        return
+        self.newBankHeader.deposit.base:Hide()
+        self.newBankHeader.reagentCheck:Hide()
+        self.newBankHeader.money:Hide()
+        self.newBankHeader.moneyDeposit.base:Hide()
+        self.newBankHeader.moneyWithdraw.base:Hide()
+    else
+        self.newBankHeader.deposit.base:Show()
+        self.newBankHeader.reagentCheck:Show()
+        self.newBankHeader.money:Show()
+        self.newBankHeader.moneyDeposit.base:Show()
+        self.newBankHeader.moneyWithdraw.base:Show()
     end
-    self.warbankHeader:Show()
 end
 
 function header.proto:SetAsBank()
-    self.warbankHeader:Hide()
-
     self.toggles.bank.text:SetTextColor(1, 1, 0)
     self.toggles.warbank.text:SetTextColor(1, 1, 1)
 

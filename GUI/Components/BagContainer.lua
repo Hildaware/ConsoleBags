@@ -74,18 +74,19 @@ function bags:Update(container, type, bankType)
     local bagEnd = NUM_TOTAL_EQUIPPED_BAG_SLOTS
     if type == enums.InventoryType.Bank then
         if bankType == enums.BankType.Warbank then
-            container.Bags.Container.purchase:Hide()
+            -- container.Bags.Container.purchase:Hide()
 
             bagStart = Enum.BagIndex.AccountBankTab_1
             bagEnd = Enum.BagIndex.AccountBankTab_5
         else
-            local _, full = GetNumBankSlots()
-            if full then
-                container.Bags.Container.purchase:Hide()
-            end
+
+            -- local _, full = GetNumBankSlots()
+            -- if full then
+            --     container.Bags.Container.purchase:Hide()
+            -- end
 
             bagStart = ITEM_INVENTORY_BANK_BAG_OFFSET + 1
-            bagEnd = NUM_BANKBAGSLOTS + NUM_BAG_SLOTS + 1
+            bagEnd = Enum.BagIndex.CharacterBankTab_6 + NUM_BAG_SLOTS + 1
         end
     end
 
@@ -125,10 +126,10 @@ function bags:Update(container, type, bankType)
             link = link
         }
 
-        if type == enums.InventoryType.Bank and bankType == enums.BankType.Bank then
-            local numSlots, _ = GetNumBankSlots()
-            bagData.isPurchased = bagIndex <= numSlots
-        end
+        -- if type == enums.InventoryType.Bank and bankType == enums.BankType.Bank then
+        --     local numSlots, _ = GetNumBankSlots()
+        --     bagData.isPurchased = bagIndex <= numSlots
+        -- end
 
         container.Bags.Container.Slots[bagIndex] = UpdateBagSlot(container.Bags.Container.Slots[bagIndex], bagData)
     end
@@ -136,7 +137,7 @@ function bags:Update(container, type, bankType)
     if bankType == enums.BankType.Warbank then
         container.Bags:SetEnabled(false)
     else
-        container.Bags:SetEnabled(true)
+        container.Bags:SetEnabled(false)
     end
 
     if type == enums.InventoryType.Inventory then
@@ -165,7 +166,7 @@ function CreateContainer(parent, type)
     local bagEnd = NUM_TOTAL_EQUIPPED_BAG_SLOTS
     if type == enums.InventoryType.Bank then
         bagStart = ITEM_INVENTORY_BANK_BAG_OFFSET + 1
-        bagEnd = NUM_BANKBAGSLOTS + NUM_BAG_SLOTS + 1
+        bagEnd = Enum.BagIndex.CharacterBankTab_6 + NUM_BAG_SLOTS + 1
     end
 
     for bag = bagStart, bagEnd do
@@ -186,7 +187,8 @@ function CreateContainer(parent, type)
         }
 
         if type == enums.InventoryType.Bank then
-            local numSlots, _ = GetNumBankSlots()
+            -- local numSlots, _ = GetNumBankSlots()
+            local numSlots = C_Bank.FetchNumPurchasedBankTabs(0) -- 0 = Character
             bagData.isPurchased = bagIndex <= numSlots
         end
 

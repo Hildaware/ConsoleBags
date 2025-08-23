@@ -285,7 +285,12 @@ function view:Create(inventoryType)
     local offset = session.Settings.Defaults.Sections.Header + (session.Settings.Defaults.Sections.Filters + 20)
         + session.Settings.Defaults.Sections.ListViewHeader
 
-    local scrollType = _G['ConsolePort'] and 'CPSmoothScrollTemplate' or 'UIPanelScrollFrameTemplate'
+    local scrollType = 'UIPanelScrollFrameTemplate'
+    if _G['ConsolePort'] then
+        C_AddOns.LoadAddOn('ConsolePort_Config')
+        scrollType = 'CPSmoothScrollTemplate'
+    end
+
     local scroller = CreateFrame('ScrollFrame', nil, f, scrollType)
     scroller:SetPoint('TOPLEFT', f, 'TOPLEFT', 0, -offset)
     scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', 0, session.Settings.Defaults.Sections.Footer + 2)
@@ -495,7 +500,7 @@ function view.proto:Update(searchText)
     bags:Update(self.widget, self.type, self.selectedBankType)
 
     if self.widget.Header.Additions then
-        self.widget.Header.Additions:Update()
+        self.widget.Header.Additions:Update(self.selectedBankType)
     end
 end
 
@@ -622,9 +627,8 @@ function view.proto:UpdateMoney()
         return
     end
 
-    if self.type == enums.InventoryType.Bank and
-        self.selectedBankType == enums.BankType.Warbank then
-        self.widget.Header.Additions:Update()
+    if self.type == enums.InventoryType.Bank then
+        self.widget.Header.Additions:Update(enums.BankType.Bank)
     end
 end
 

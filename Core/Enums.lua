@@ -4,6 +4,12 @@ local addon = LibStub('AceAddon-3.0'):GetAddon(addonName)
 ---@class Enums: AceModule
 local enums = addon:NewModule('Enums')
 
+--#region Constants
+
+enums.BANK_CONTAINER = BANK_CONTAINER or Enum.BagIndex.Characterbanktab
+
+--#endregion
+
 ---@enum Enums.PlayerInventoryBagIndex
 enums.PlayerInventoryBagIndex = {
     [Enum.BagIndex.Backpack] = Enum.BagIndex.Backpack,
@@ -25,15 +31,22 @@ enums.WarbankBagIndex = {
 
 ---@enum Enums.BankBagIndex
 enums.BankBagIndex = {
-    [Enum.BagIndex.Bank] = Enum.BagIndex.Bank,
-    [Enum.BagIndex.BankBag_1] = Enum.BagIndex.BankBag_1,
-    [Enum.BagIndex.BankBag_2] = Enum.BagIndex.BankBag_2,
-    [Enum.BagIndex.BankBag_3] = Enum.BagIndex.BankBag_3,
-    [Enum.BagIndex.BankBag_4] = Enum.BagIndex.BankBag_4,
-    [Enum.BagIndex.BankBag_5] = Enum.BagIndex.BankBag_5,
-    [Enum.BagIndex.BankBag_6] = Enum.BagIndex.BankBag_6,
-    [Enum.BagIndex.BankBag_7] = Enum.BagIndex.BankBag_7,
-    [Enum.BagIndex.Reagentbank] = Enum.BagIndex.Reagentbank
+    [Enum.BagIndex.Characterbanktab] = Enum.BagIndex.Characterbanktab,
+    [Enum.BagIndex.CharacterBankTab_1] = Enum.BagIndex.CharacterBankTab_1,
+    [Enum.BagIndex.CharacterBankTab_2] = Enum.BagIndex.CharacterBankTab_2,
+    [Enum.BagIndex.CharacterBankTab_3] = Enum.BagIndex.CharacterBankTab_3,
+    [Enum.BagIndex.CharacterBankTab_4] = Enum.BagIndex.CharacterBankTab_4,
+    [Enum.BagIndex.CharacterBankTab_5] = Enum.BagIndex.CharacterBankTab_5,
+    [Enum.BagIndex.CharacterBankTab_6] = Enum.BagIndex.CharacterBankTab_6,
+    -- [Enum.BagIndex.Bank] = Enum.BagIndex.Bank,
+    -- [Enum.BagIndex.BankBag_1] = Enum.BagIndex.BankBag_1,
+    -- [Enum.BagIndex.BankBag_2] = Enum.BagIndex.BankBag_2,
+    -- [Enum.BagIndex.BankBag_3] = Enum.BagIndex.BankBag_3,
+    -- [Enum.BagIndex.BankBag_4] = Enum.BagIndex.BankBag_4,
+    -- [Enum.BagIndex.BankBag_5] = Enum.BagIndex.BankBag_5,
+    -- [Enum.BagIndex.BankBag_6] = Enum.BagIndex.BankBag_6,
+    -- [Enum.BagIndex.BankBag_7] = Enum.BagIndex.BankBag_7,
+    -- [Enum.BagIndex.Reagentbank] = Enum.BagIndex.Reagentbank
 }
 
 ---@enum Enums.InventoryType
@@ -53,7 +66,7 @@ enums.ViewType = {
 ---@enum Enums.BankType
 enums.BankType = {
     Bank = 1,
-    ReagentBank = 2,
+    -- ReagentBank = 2,
     Warbank = 3
 }
 

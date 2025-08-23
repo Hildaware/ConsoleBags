@@ -28,7 +28,7 @@
 ---@field bank Button
 ---@field warbank Button
 
----@class WarbankHeader: Frame
+---@class NewBankHeader: Frame
 ---@field purchase SimpleButtonFrame
 ---@field deposit SimpleButtonFrame
 ---@field reagentCheck CheckButton
@@ -37,6 +37,6 @@
 ---@class BankHeaderFrame: Frame
 ---@field Update function
 ---@field toggles BankHeaderToggles
----@field warbankHeader WarbankHeader
+---@field warbankHeader NewBankHeader
 
 --#endregion

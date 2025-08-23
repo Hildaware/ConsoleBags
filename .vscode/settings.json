@@ -311,13 +311,16 @@
         "CONFIRM_BUY_BANK_SLOT",
         "RATED_BG_BLITZ_SIZE",
         "ReloadUI",
-        "TokenFrame"
+        "TokenFrame",
+        "GetCVar",
+        "tContains"
     ],
     "Lua.diagnostics.disable": [
         "inject-field",
         "param-type-mismatch",
         "duplicate-set-field",
-        "cast-local-type"
+        "cast-local-type",
+        "assign-type-mismatch"
     ],
     "Lua.runtime.version": "Lua 5.1",
     "Lua.runtime.builtin": {
@@ -332,6 +335,6 @@
         "utf8": "disable"
     },
     "Lua.workspace.library": [
-        "/Users/bferrari/.windsurf/extensions/ketho.wow-api-0.18.2/Annotations"
+        "~/.vscode/extensions/ketho.wow-api-0.21.0/Annotations/Core"
     ]
 }
