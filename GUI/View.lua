@@ -296,12 +296,10 @@ function view:Create(inventoryType)
     scroller:SetPoint('BOTTOMRIGHT', f, 'BOTTOMRIGHT', 0, session.Settings.Defaults.Sections.Footer + 2)
     scroller:SetWidth(f:GetWidth())
 
-    -- Disable targetting the scrollbar for CP users
     if _G['ConsolePort'] then
-        local scrollerName = addonName .. viewName .. 'ScrollBar'
-        if _G[scrollerName] then
-            _G[scrollerName]:EnableMouse(false)
-        end
+            print('Got dat scrollbar')
+            scroller.ScrollBar:Hide()
+            scroller.ScrollBar:EnableMouse(false)
     end
 
     local scrollChild = CreateFrame('Frame', nil, scroller)
