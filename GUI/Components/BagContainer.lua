@@ -38,6 +38,7 @@ function bags:Build(type, parent)
     CreateContainer(bagButton, type)
 
     bagButton:SetScript('OnClick', function(self)
+        print('Button Click')
         if self.Container:IsShown() then
             self.Container:Hide()
             self:GetParent().ItemCountContainer:Show()
@@ -137,7 +138,7 @@ function bags:Update(container, type, bankType)
     if bankType == enums.BankType.Warbank then
         container.Bags:SetEnabled(false)
     else
-        container.Bags:SetEnabled(false)
+        container.Bags:SetEnabled(true)
     end
 
     if type == enums.InventoryType.Inventory then

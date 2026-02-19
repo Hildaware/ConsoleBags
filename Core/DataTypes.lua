@@ -114,7 +114,7 @@ function Item:GetCategory()
         return enums.CustomCategory.Trinket
     elseif self.id == 82800 then
         return Enum.ItemClass.Battlepet
-    elseif self.type == nil then
+    elseif self.type == nil or not enums.Categories[self.type] then
         return Enum.ItemClass.Miscellaneous
     else
         return self.type

@@ -140,9 +140,11 @@ enums.Categories = {
     [Enum.ItemClass.Container] = { order = 18, name = 'Containers' },
     [Enum.ItemClass.Projectile] = { order = 19, name = 'Projectiles' },
     [Enum.ItemClass.Quiver] = { order = 20, name = 'Quivers' },
-    [Enum.ItemClass.Questitem] = { order = 21, name = 'Quest Items' },
-    [Enum.ItemClass.Key] = { order = 22, name = 'Keys' },
-    [Enum.ItemClass.WoWToken] = { order = 23, name = 'Tokens' }
+    [Enum.ItemClass.Housing] = { order = 21, name = 'Housing' },
+    [Enum.ItemClass.Questitem] = { order = 22, name = 'Quest Items' },
+    [Enum.ItemClass.Key] = { order = 23, name = 'Keys' },
+    [Enum.ItemClass.WoWToken] = { order = 24, name = 'Tokens' },
+
 }
 
 enums:Enable()
