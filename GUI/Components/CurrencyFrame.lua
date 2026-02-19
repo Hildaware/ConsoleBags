@@ -51,19 +51,8 @@ function currency.itemProto:Build(currencyInfo, parent)
         GameTooltip:Hide()
     end)
 
-    local numTracked = 0
-    for _ in pairs(parent.trackedCurrencies) do
-        numTracked = numTracked + 1
-    end
-
-    local iconSize = 24
-    local padding = 2
-
-    local col = (numTracked - 1) % 4
-    local xOffset = col * (80 + (iconSize + padding))
-
     self.widget:SetParent(parent.widget)
-    self.widget:SetPoint('LEFT', parent.widget, 'LEFT', xOffset, 0)
+    self.widget:SetPoint('LEFT', parent.widget, 'LEFT', 0, 0)
 
     self.widget:Show()
 end

@@ -24,6 +24,13 @@ function session:OnInitialize()
     ---@type table<number, table<number, Item>>
     self.Items = {}
 
+    ---@type Item[]
+    self.InventoryItems = {}
+    ---@type Item[]
+    self.BankItems = {}
+    ---@type Item[]
+    self.WarbankItems = {}
+
     ---@type ViewData
     self.Inventory = setmetatable({}, { __index = self.viewDataProto })
     self.Inventory.Bags = {

@@ -107,17 +107,6 @@ function itemFrame.proto:Build(item, offset, parent)
     local r, g, b, _ = C_Item.GetItemQualityColor(item.quality or 0)
     frame.itemButton.HighlightTexture:SetVertexColor(r, g, b, 1)
 
-    frame.itemButton:HookScript('OnEnter', function(s)
-        s.HighlightTexture:Show()
-    end)
-    frame.itemButton:HookScript('OnLeave', function(s)
-        s.HighlightTexture:Hide()
-        s.NewTexture:Hide()
-        if self.item ~= nil then
-            self.item.isNew = false
-        end
-    end)
-
     local questInfo = item.questInfo
     local isQuestItem = questInfo.isQuestItem;
     local questID = questInfo.questID;
@@ -343,6 +332,17 @@ function itemFrame:_DoCreate()
     desaturate:SetVertexColor(1, 0, 0, 0.5)
     desaturate:Hide()
     itemButton.Desaturate = desaturate
+
+    itemButton:HookScript('OnEnter', function(s)
+        s.HighlightTexture:Show()
+    end)
+    itemButton:HookScript('OnLeave', function(s)
+        s.HighlightTexture:Hide()
+        s.NewTexture:Hide()
+        if i.item ~= nil then
+            i.item.isNew = false
+        end
+    end)
 
     f.itemButton = itemButton
 

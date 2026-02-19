@@ -45,16 +45,19 @@ end
 
 ---@param item Item
 ---@param sessionData ViewData
-local function AddItemToSession(item, sessionData)
+---@param locationItems Item[]
+local function AddItemToSession(item, sessionData, locationItems)
     session.Items[utils.ReplaceBagSlot(item.bag)][item.slot] = item
     sessionData.Resolved = sessionData.Resolved + 1
+    locationItems[#locationItems + 1] = item
 end
 
 ---@param bag integer
 ---@param slot integer
 ---@param inventoryType Enums.InventoryType
 ---@param sessionData ViewData
-local function CreateItem(bag, slot, inventoryType, sessionData, equipmentSetItems)
+---@param locationItems Item[]
+local function CreateItem(bag, slot, inventoryType, sessionData, equipmentSetItems, locationItems)
     local itemObj = Item:CreateFromBagAndSlot(bag, slot)
     if itemObj:IsItemEmpty() then
         return false
@@ -63,7 +66,7 @@ local function CreateItem(bag, slot, inventoryType, sessionData, equipmentSetIte
     local function processItem()
         local item = GetItemData(bag, slot, inventoryType, equipmentSetItems)
         if item then
-            AddItemToSession(item, sessionData)
+            AddItemToSession(item, sessionData, locationItems)
             return true
         end
         return false
@@ -142,6 +145,8 @@ function items.BuildItemCache()
     session.Inventory.ReagentCount = 0
     session.Inventory.Resolved = 0
 
+    wipe(session.InventoryItems)
+
     for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
         session.Inventory.Bags[bag].TotalCount = 0
         session.Inventory.Bags[bag].Count = 0
@@ -149,7 +154,7 @@ function items.BuildItemCache()
         local bagSize = CreateBagData(bag, session.Inventory)
         local requiresCleanup = {}
         for slot = 1, bagSize do
-            local created = CreateItem(bag, slot, invType, session.Inventory, session.EquipmentSetItems)
+            local created = CreateItem(bag, slot, invType, session.Inventory, session.EquipmentSetItems, session.InventoryItems)
             requiresCleanup[slot] = created
         end
 
@@ -178,6 +183,8 @@ function items.BuildBankCache()
     session.Bank.ReagentCount = 0
     session.Bank.Resolved = 0
 
+    wipe(session.BankItems)
+
     -- Bank Container
     local replacedBagSlot = utils.ReplaceBagSlot(enums.BANK_CONTAINER)
     session.Bank.Bags[replacedBagSlot].TotalCount = 0
@@ -186,7 +193,7 @@ function items.BuildBankCache()
     local bagSize = CreateBagData(enums.BANK_CONTAINER, session.Bank)
     local requiresCleanup = {}
     for slot = 1, bagSize do
-        local created = CreateItem(enums.BANK_CONTAINER, slot, invType, session.Bank, session.EquipmentSetItems)
+        local created = CreateItem(enums.BANK_CONTAINER, slot, invType, session.Bank, session.EquipmentSetItems, session.BankItems)
         requiresCleanup[slot] = created
     end
 
@@ -200,7 +207,7 @@ function items.BuildBankCache()
         local bankBagSize = CreateBagData(bag, session.Bank)
         requiresCleanup = {}
         for slot = 1, bankBagSize do
-            local created = CreateItem(bag, slot, invType, session.Bank, session.EquipmentSetItems)
+            local created = CreateItem(bag, slot, invType, session.Bank, session.EquipmentSetItems, session.BankItems)
             requiresCleanup[slot] = created
         end
 
@@ -244,6 +251,8 @@ function items.BuildWarbankCache()
     warbank.Count = 0
     warbank.Resolved = 0
 
+    wipe(session.WarbankItems)
+
     -- Pre-cache warbank bags reference
     local warbankBags = warbank.Bags
     local totalCount = 0
@@ -257,7 +266,7 @@ function items.BuildWarbankCache()
         local bagSize = CreateBagData(bag, warbank)
         local requiresCleanup = {}
         for slot = 1, bagSize do
-            requiresCleanup[slot] = CreateItem(bag, slot, invType, warbank, equipmentSetItems)
+            requiresCleanup[slot] = CreateItem(bag, slot, invType, warbank, equipmentSetItems, session.WarbankItems)
         end
 
         CleanupSessionItems(bag, bagSize, requiresCleanup)
@@ -303,15 +312,36 @@ function items:UpdateBag(bagId, inventoryType)
     currentBag.TotalCount = 0
     currentBag.Count = 0
 
+    -- Determine the flat list for this location type
+    local locationItems
+    if inventoryType == enums.InventoryType.Inventory then
+        locationItems = session.InventoryItems
+    elseif inventoryType == enums.InventoryType.Bank then
+        locationItems = session.BankItems
+    else
+        locationItems = session.WarbankItems
+    end
+
     local bagSize = CreateBagData(bagId, sessionData)
     local requiresCleanup = {}
 
     -- Process slots
     for slot = 1, bagSize do
-        requiresCleanup[slot] = CreateItem(bagId, slot, inventoryType, sessionData, equipmentSetItems)
+        requiresCleanup[slot] = CreateItem(bagId, slot, inventoryType, sessionData, equipmentSetItems, locationItems)
     end
 
     CleanupSessionItems(replacedBagSlot, bagSize, requiresCleanup)
+
+    -- Rebuild the full flat list for this location type from all bags
+    wipe(locationItems)
+    for bagIndex in pairs(sessionData.Bags) do
+        local slots = session.Items[bagIndex]
+        if slots then
+            for _, item in pairs(slots) do
+                locationItems[#locationItems + 1] = item
+            end
+        end
+    end
 
     -- Calculate totals during bag processing
     local totalCount = 0

@@ -148,7 +148,7 @@ utils.FormatMoney = function(moneyValue)
         return GetMoneyString(math.floor(moneyValue / 10000) * 10000)
     else
         local n = math.floor(moneyValue / 10000000) * 10000
-        local s = "" .. n
+        local s = tostring(n)
         n = GetMoneyString(n)
         return n:sub(1, #s - 4) .. "K" .. n:sub(#s - 3)
     end

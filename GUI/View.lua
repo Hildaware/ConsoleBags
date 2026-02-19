@@ -271,7 +271,11 @@ function view:Create(inventoryType)
         local updatedFontSize = utils:GetFontScale()
         local updatedItemWidth = database:GetInventoryViewWidth()
         f.Header:SetWidth(updatedItemWidth)
-        f.Header.label:SetFont(updatedFont.path, updatedFontSize)
+        
+        if (f.Header.label ~= nil) then
+                f.Header.label:SetFont(updatedFont.path, updatedFontSize)
+        end
+
         f.ItemCountText:SetFont(updatedFont.path, updatedFontSize)
     end
 
@@ -297,7 +301,6 @@ function view:Create(inventoryType)
     scroller:SetWidth(f:GetWidth())
 
     if _G['ConsolePort'] then
-            print('Got dat scrollbar')
             scroller.ScrollBar:Hide()
             scroller.ScrollBar:EnableMouse(false)
     end
@@ -402,20 +405,22 @@ function view.proto:Update(searchText)
     local invType, bankType = enums.InventoryType, enums.BankType
     local searchTextLower = searchText and searchText:lower() or nil
 
-    for _, slots in pairs(session.Items) do
-        for _, item in pairs(slots) do
-            if (self.type == invType.Inventory and item.location == invType.Inventory) or
-                (self.type == invType.Bank and
-                    ((self.selectedBankType == bankType.Bank and item.location == self.type) or
-                        (self.selectedBankType == bankType.Warbank and item.location == invType.Shared))) then
-                if searchTextLower then
-                    if item.name:lower():find(searchTextLower, 1, true) then
-                        utils.AddItemToCategory(item, self._catTable)
-                    end
-                else
-                    utils.AddItemToCategory(item, self._catTable)
-                end
+    local locationItems
+    if self.type == invType.Inventory then
+        locationItems = session.InventoryItems
+    elseif self.selectedBankType == bankType.Warbank then
+        locationItems = session.WarbankItems
+    else
+        locationItems = session.BankItems
+    end
+
+    for _, item in ipairs(locationItems) do
+        if searchTextLower then
+            if item.name:lower():find(searchTextLower, 1, true) then
+                utils.AddItemToCategory(item, self._catTable)
             end
+        else
+            utils.AddItemToCategory(item, self._catTable)
         end
     end
 

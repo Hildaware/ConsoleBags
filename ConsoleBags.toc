@@ -1,8 +1,8 @@
-## Interface: 110200
+## Interface: 120001
 ## Title: Console Bags
 ## Notes: Inventory Addon designed for Gamepad users!
 ## Author: Sel
-## Version: 11.2.0
+## Version: 12.0.0
 ## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
 ## OptionalDeps: ConsolePort, Masque, Pawn, CanIMogIt, Scrap
 ## SavedVariables: ConsoleBagsDB

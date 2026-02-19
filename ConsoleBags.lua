@@ -43,7 +43,8 @@ function addon:OnInitialize()
         backpackShouldOpen = false,
         backpackShouldClose = false,
         visitingBank = false,
-        visitingWarbank = false
+        visitingWarbank = false,
+        bankTimerPending = false
     }
 
     local frame = CreateFrame('Frame')
@@ -136,8 +137,12 @@ function addon.OnBankUpdate()
         addon.bags.Bank:Show()
 
         items.BuildWarbankCache()
-    else
-        C_Timer.After(0.1, addon.OnBankUpdate)
+    elseif not addon.status.bankTimerPending then
+        addon.status.bankTimerPending = true
+        C_Timer.After(0.1, function()
+            addon.status.bankTimerPending = false
+            addon.OnBankUpdate()
+        end)
     end
 end
 
