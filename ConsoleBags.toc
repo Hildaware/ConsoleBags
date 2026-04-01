@@ -1,0 +1,10 @@
+## Interface: 120001
+## Title: Console Bags (Migration to CouchMode)
+## Notes: Safely migrates your old settings to CouchMode. 
+## Author: Sel
+## Version: 12.0.1
+## IconTexture: Interface\AddOns\ConsoleBags\Media\Logo
+## SavedVariables: ConsoleBagsDB
+## Dependencies: CouchMode
+
+ConsoleBags.lua
